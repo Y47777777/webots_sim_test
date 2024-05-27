@@ -1,6 +1,6 @@
 #include "ui_keyboardform.h"
 #include "nlohmann/json.hpp"
-#include "keyboardform/keyboardform.h"
+#include "keyboardform.h"
 
 KeyboardForm::KeyboardForm(std::shared_ptr<BaseController> ptr, QWidget *parent)
     : QWidget(parent), ui(new Ui::KeyboardForm) {
