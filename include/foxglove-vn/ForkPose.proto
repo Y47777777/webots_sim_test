@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+import "Quaternion.proto";
+import "Vector3.proto";
+
+package foxglove;
+
+// A position and orientation for an object or reference frame in 3D space
+message ForkPose {
+  float x = 1;   
+  bool  x_isvalid=2;
+  float y = 3;
+  bool  y_isvalid=4;
+  float z = 5;
+  bool  z_isvalid=6;
+  float r = 7;            //roll
+  bool  r_isvalid=8;
+  float p = 9;            //pitch
+  bool  p_isvalid=10;
+  float a = 11;         //yaw
+  bool  a_isvalid=12;
+  float c = 13;      //c
+  bool  c_isvalid=14;
+
+}
