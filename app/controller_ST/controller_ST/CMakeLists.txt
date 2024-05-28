@@ -9,15 +9,10 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(proto_file ${CMAKE_CURRENT_SOURCE_DIR}/proto_msg/point_cloud2.proto)
+
 FILE(GLOB src_files ${CMAKE_SOURCE_DIR}/controller_${PROJECT_NAME}/*.c*)
 FILE(GLOB header_files ${CMAKE_SOURCE_DIR}/controller_${PROJECT_NAME}/*.h*)
-FILE(GLOB proto_header_file ${CMAKE_CURRENT_BINARY_DIR}/protobuf/*.h*)
-FILE(GLOB proto_src_file ${CMAKE_CURRENT_BINARY_DIR}/protobuf/*.c*)
-message("proto header file ${proto_header_file}")
-message("proto header file ${proto_src_file}")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build/sub_build")
-set(proto_file ${CMAKE_CURRENT_SOURCE_DIR}/proto_msg/point_cloud2.proto)
 
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
@@ -46,15 +41,11 @@ set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/../../../../simulation_world/webots
 set(CONTROLLER_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/controller_${PROJECT_NAME})
 
 add_executable(controller_${PROJECT_NAME}
-  ${proto_header_file}
-  ${proto_src_file}
   ${src_files}
   ${header_files}
 )
 
 set_target_properties(controller_${PROJECT_NAME} PROPERTIES INSTALL_RPATH_USE_LINK_PATH TRUE)
-
-PROTOBUF_TARGET_CPP(controller_${PROJECT_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/proto_msg/ ${proto_file})
 
 include(GNUInstallDirs)
 
@@ -65,7 +56,7 @@ include_directories(${KEYBOARD_INCLUDE})
 include_directories(/usr/local/webots/include/controller/cpp)
 
 target_link_libraries(controller_${PROJECT_NAME}
-    # TODO: add logvn
+    ${LIBRARY_INSTALL_DIR}/liblogvn.so
     ${WEBOTSLIB_SO}/libCppController.so
     ${LIBRARY_INSTALL_DIR}/libkeyboardform.so
     eCAL::core

@@ -1,0 +1,22 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "include/*",
+                "/usr/local/webots/include/",
+                "/usr/local/webots/include/controller/cpp",
+                "/usr/include/x86_64-linux-gnu/qt5/QtCore",
+                "/usr/local/webots/include/qt/QtWidgets/QtWidgets",
+                "/usr/include/x86_64-linux-gnu/qt5"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/clang",
+            "cStandard": "c17",
+            "cppStandard": "c++14",
+            "intelliSenseMode": "linux-clang-x64"
+        }
+    ],
+    "version": 4
+}
