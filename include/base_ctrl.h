@@ -36,8 +36,11 @@ class BaseController : public QThread {
         }
     }
 
-    void run(){this->whileSpin();};
-    virtual void setRobotState(const std::map<std::string, double> &msg){};
+    void run() {
+        this->init();
+        this->whileSpin();
+    }
+    virtual void setRobotState(const std::map<std::string, double> &msg) {}
     virtual void getRobotState(std::map<std::string, double> &msg) {}
     void shiftControlMode(bool mode) { isManual_ = mode; }
 
@@ -50,6 +53,7 @@ class BaseController : public QThread {
     virtual void getIMUState() = 0;
 
     // spin task
+    virtual void init() = 0;
     virtual void whileSpin() = 0;
 
    protected:
@@ -67,7 +71,7 @@ class BaseController : public QThread {
 
     /*IMU*/
     webots::InertialUnit *inertial_unit_ptr_ = nullptr;
-    webots::Gyro *gyro_prt_ = nullptr;
+    webots::Gyro *gyro_ptr_ = nullptr;
     webots::Accelerometer *accelerometer_ptr_ = nullptr;
 
     bool webotsExited_ = false;

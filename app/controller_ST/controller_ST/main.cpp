@@ -7,9 +7,9 @@ using namespace VNSim;
 
 int main(int argc, char *argv[]) {
     // init glog
+    // TODO:FIXME....
     g_Logger.initLog("../../plugins/log_config/general_controller.ini");
     LOG_INFO("log init...");
-
     QApplication a(argc, argv);
 
     // init ctrl
@@ -24,6 +24,6 @@ int main(int argc, char *argv[]) {
     // init keyboard
     KeyboardForm f(ctrl_ptr);
     f.show();
-    
+
     return a.exec();
 }

@@ -8,6 +8,32 @@ namespace VNSim {
 
 #define MILLSTEP_5 5
 
+struct CommonVehicleParams {
+    double steer_speed;
+    double steer_yaw;
+    double steer_position;
+    double fork_speed;
+    double fork_height;
+    double vehicle_yaw;
+    double real_speed;
+};
+
+struct IMU {
+    double angle[3];
+    double velocity[3];
+    double acceleration[3];
+};
+
+struct ST_Internal_Param {
+    int fork_state;
+};
+
+struct ST_Internal_Vehicle_Param {
+    struct CommonVehicleParams common_vehicle_params;
+    struct IMU imu;
+    double rpm;
+};
+
 class NormalSTController : public BaseController {
    public:
     NormalSTController();
@@ -19,7 +45,7 @@ class NormalSTController : public BaseController {
 
    protected:
     // init
-    // TODO: 
+    // TODO:
     void enableMotor();
     void enableLidar3D();
     void enableIMU();
@@ -32,25 +58,31 @@ class NormalSTController : public BaseController {
     void getIMUState();
 
     // task
+    void init();
     void whileSpin();
-    void lidarBPSpin();
-    void lidarMid360Spin();
-    void imuSpin();
-
+    // void lidarBPSpin();
+    // void lidarMid360Spin();
     // publish_fn 这个应该放入至传感器类中(自定格式proto)
-    void lidarBPPublish();
+    // void lidarBPPublish();
 
     // subscribe
-    void subCallBack();
+    // void subCallBack();
 
-   private:
+    //    private:
     // webots sensor
     // TODO: 抽象成类(.h)
-    webots::Lidar *BP_ptr_ = nullptr;
-    webots::Node *mid360_node_ptr_ = nullptr;
-    webots::Lidar *mid360_ptr_ = nullptr;
+    // webots::Lidar *BP_ptr_ = nullptr;
+    // webots::Node *mid360_node_ptr_ = nullptr;
+    // webots::Lidar *mid360_ptr_ = nullptr;
+    //    private:
+    //     std::unique_ptr<VNSimLidar::BPLidar> bp_ptr_;
 
+   private:
+    void setWebotSteerWheel(double yaw);
+    void getVehicleYaw();
     // publisher
+    struct ST_Internal_Vehicle_Param st_internal_vehicle_params_;
+    // struct ST_Internal_Param st_internal_params_;
 };
 
 }  // namespace VNSim
