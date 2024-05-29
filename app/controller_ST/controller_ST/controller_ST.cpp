@@ -18,7 +18,6 @@ enum FORK_STATE { ON_FORK_BOTTOM = 0, ON_FORK_MIDDLE = 1, ON_FORK_TOP = 2 };
 
 NormalSTController::NormalSTController() {
     supervisor_ = Supervisor::getSupervisorInstance();
-
     enableMotor();
     enableLidar3D();
     enableIMU();
@@ -30,7 +29,7 @@ void NormalSTController::enableMotor() {
     steer_motor_ptr_ = supervisor_->getMotor("FL");
     steer_pos_sensor_ptr_ = steer_motor_ptr_->getPositionSensor();
     steer_node_ptr_ = supervisor_->getFromDef("SteerSolid");
-
+    steerwheel_node_ptr_ = supervisor_->getFromDef("SteerWheel");
     fork_motor_ptr_ = supervisor_->getMotor("fork height motor");
     fork_pos_sensor_ptr_ = fork_motor_ptr_->getPositionSensor();
 
@@ -122,7 +121,7 @@ void NormalSTController::setWebotSteerWheel(double yaw) {
 
     Eigen::AngleAxisd a(q);
     double new_aa[4] = {a.axis().x(), a.axis().y(), a.axis().z(), a.angle()};
-    steer_node_ptr_->getField("rotation")->setSFRotation(new_aa);
+    steerwheel_node_ptr_->getField("rotation")->setSFRotation(new_aa);
 }
 
 void NormalSTController::setForkState() {
@@ -180,6 +179,7 @@ void NormalSTController::getRobotState(std::map<std::string, double> &msg) {
         st_internal_vehicle_params_.common_vehicle_params.fork_speed;
     msg["fork_height"] =
         st_internal_vehicle_params_.common_vehicle_params.fork_height;
+    msg["real_speed"] = 0;
 }
 
 void NormalSTController::getVehicleYaw() {
@@ -221,7 +221,7 @@ void NormalSTController::whileSpin() {
     foxglove::ForkPose payload_forkPose;
     foxglove::Imu payload_imu;
     foxglove::Vector2 payload_wheelPosition;
-    std::cout << 2 << std::endl;
+    webotsExited_ = false;
     while (supervisor_->step(SIMULATION_STEP) != -1) {
         // READ
         getForkState();
@@ -233,10 +233,8 @@ void NormalSTController::whileSpin() {
         // REPORT
         payload_forkPose.set_z(
             st_internal_vehicle_params_.common_vehicle_params.fork_height);
-        std::cout << 7.1 << std::endl;
         payload_imu.add_orientation_covariance(
             st_internal_vehicle_params_.common_vehicle_params.vehicle_yaw);
-        std::cout << 7.2 << std::endl;
         for (int i = 0; i < 3; i++) {
             payload_imu.add_angular_velocity_covariance(
                 st_internal_vehicle_params_.imu.velocity[i]);

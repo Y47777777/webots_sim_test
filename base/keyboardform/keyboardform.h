@@ -35,10 +35,10 @@ class KeyboardForm : public QWidget {
     void on_pushButton_liftUp_clicked();
     void on_pushButton_liftDown_clicked();
     void on_pushButton_liftStop_clicked();
+    void setStatus();
 
    private:
     void sendMsg();
-    void setStatus();
     struct ManualState {
         double steer_speed;
         double steer_yaw;
@@ -51,7 +51,7 @@ class KeyboardForm : public QWidget {
     Ui::KeyboardForm *ui;
 
     std::shared_ptr<VNSim::BaseController> model_ptr_;
-  
+
     QTimer timer_;
 };
 

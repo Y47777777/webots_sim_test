@@ -4,9 +4,8 @@
 
 using namespace VNSim;
 
-KeyboardForm::KeyboardForm(std::shared_ptr<BaseController> ptr,
-                           QWidget *parent)
-{
+KeyboardForm::KeyboardForm(std::shared_ptr<BaseController> ptr, QWidget *parent)
+    : QWidget(parent), ui(new Ui::KeyboardForm) {
     ui->setupUi(this);
 
     model_ptr_ = ptr;
@@ -21,7 +20,7 @@ KeyboardForm::KeyboardForm(std::shared_ptr<BaseController> ptr,
     manual_state_.fork_speed = 0;
 
     if (model_ptr_ == nullptr) {
-        LOG_ERROR("model_ptr_ is nullptr");
+        // LOG_ERROR("model_ptr_ is nullptr");
     }
 }
 
@@ -42,20 +41,21 @@ void KeyboardForm::setStatus() {
     }
 
     if (msg.find("steer_yaw") != msg.end()) {
-        ui->label_steerSpeed_value->setText(QString::number(msg["steer_yaw"]));
+        ui->label_steerYaw_value->setText(
+            QString::number(msg["steer_yaw"] * 180 / 3.14));
     }
 
     if (msg.find("fork_speed") != msg.end()) {
-        ui->label_steerSpeed_value->setText(QString::number(msg["fork_speed"]));
+        ui->label_forkSpeed_value->setText(QString::number(msg["fork_speed"]));
     }
 
     if (msg.find("fork_height") != msg.end()) {
-        ui->label_steerSpeed_value->setText(
+        ui->label_forkHeight_value->setText(
             QString::number(msg["fork_height"]));
     }
 
     if (msg.find("real_speed") != msg.end()) {
-        ui->label_steerSpeed_value->setText(QString::number(msg["real_speed"]));
+        ui->label_realspeed_value->setText(QString::number(msg["real_speed"]));
     }
 }
 
@@ -149,6 +149,10 @@ void KeyboardForm::sendMsg() {
     msg["fork_speed"] = manual_state_.fork_speed;
     msg["fork_height"] = manual_state_.fork_height;
     msg["real_speed"] = manual_state_.real_speed;
-
     model_ptr_->setRobotState(msg);
 }
+
+void KeyboardForm::decodeMsg(const char *msg,
+                             std::map<std::string, double> &decode_msg) {}
+void KeyboardForm::encodeMsg(const std::map<std::string, double> &msg,
+                             std::string &encode_msg) {}

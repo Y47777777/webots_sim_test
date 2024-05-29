@@ -34,7 +34,7 @@ set(LIBRARY_INSTALL_DIR ${CMAKE_SOURCE_DIR}/../../../../simulation_world/webots/
 
 set(BUILD_DIR ${CMAKE_SOURCE_DIR}/build)
 
-set(CMAKE_INSTALL_RPATH "$ORIGIN/../../libraries")
+set(CMAKE_INSTALL_RPATH "../../libraries")
 
 set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/../../../../simulation_world/webots/controllers)
 

@@ -64,6 +64,7 @@ class BaseController : public QThread {
     webots::Motor *steer_motor_ptr_ = nullptr;
     webots::PositionSensor *steer_pos_sensor_ptr_ = nullptr;
     webots::Node *steer_node_ptr_ = nullptr;
+    webots::Node *steerwheel_node_ptr_ = nullptr;
 
     /* Fork */
     webots::Motor *fork_motor_ptr_ = nullptr;
