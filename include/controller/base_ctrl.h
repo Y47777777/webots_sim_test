@@ -19,6 +19,7 @@
 #include <webots/Robot.hpp>
 #include <webots/Supervisor.hpp>
 #include <webots/VacuumGripper.hpp>
+#include "webots_device/w_base.h"
 
 namespace VNSim {
 
@@ -37,23 +38,25 @@ class BaseController : public QThread {
     }
 
     void run() {
-        this->init();
+        // this->init();
         this->whileSpin();
     }
-    virtual void setRobotState(const std::map<std::string, double> &msg) {}
-    virtual void getRobotState(std::map<std::string, double> &msg) {}
+
+    virtual void manualGetState(std::map<std::string, double> &msg) = 0;
+    virtual void manualSetState(const std::map<std::string, double> &msg) = 0;
+
     void shiftControlMode(bool mode) { isManual_ = mode; }
 
    protected:
     // state interface
-    virtual void getSteerWheelState() = 0;
-    virtual void setSteerWheelState() = 0;
-    virtual void setForkState() = 0;
-    virtual void getForkState() = 0;
-    virtual void getIMUState() = 0;
+    // virtual void getSteerWheelState() = 0;
+    // virtual void setSteerWheelState() = 0;
+    // virtual void setForkState() = 0;
+    // virtual void getForkState() = 0;
+    // virtual void getIMUState() = 0;
 
     // spin task
-    virtual void init() = 0;
+    // virtual void init() = 0;
     virtual void whileSpin() = 0;
 
    protected:
@@ -61,23 +64,10 @@ class BaseController : public QThread {
     // webots
     webots::Supervisor *supervisor_ = nullptr;
 
-    webots::Motor *steer_motor_ptr_ = nullptr;
-    webots::PositionSensor *steer_pos_sensor_ptr_ = nullptr;
-    webots::Node *steer_node_ptr_ = nullptr;
-    webots::Node *steerwheel_node_ptr_ = nullptr;
-
-    /* Fork */
-    webots::Motor *fork_motor_ptr_ = nullptr;
-    webots::PositionSensor *fork_pos_sensor_ptr_ = nullptr;
-
-    /*IMU*/
-    webots::InertialUnit *inertial_unit_ptr_ = nullptr;
-    webots::Gyro *gyro_ptr_ = nullptr;
-    webots::Accelerometer *accelerometer_ptr_ = nullptr;
-
     bool webotsExited_ = false;
 
     std::map<std::string, std::thread> m_thread_;
+    std::vector<std::function<void(void)>> v_while_spin_;
 };
 
 }  // namespace VNSim

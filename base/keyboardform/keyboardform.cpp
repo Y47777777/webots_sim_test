@@ -33,7 +33,7 @@ void KeyboardForm::setStatus() {
         return;
     }
     std::map<std::string, double> msg;
-    model_ptr_->getRobotState(msg);
+    model_ptr_->manualGetState(msg);
 
     if (msg.find("steer_speed") != msg.end()) {
         ui->label_steerSpeed_value->setText(
@@ -149,7 +149,7 @@ void KeyboardForm::sendMsg() {
     msg["fork_speed"] = manual_state_.fork_speed;
     msg["fork_height"] = manual_state_.fork_height;
     msg["real_speed"] = manual_state_.real_speed;
-    model_ptr_->setRobotState(msg);
+    model_ptr_->manualSetState(msg);
 }
 
 void KeyboardForm::decodeMsg(const char *msg,

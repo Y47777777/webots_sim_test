@@ -3,13 +3,15 @@
 #include "controller_ST.h"
 #include "logvn/logvn.h"
 
+
+
 using namespace VNSim;
 
 int main(int argc, char *argv[]) {
     // init glog
     // TODO:FIXME path....
-    // g_Logger.initLog("../../plugins/log_config/general_controller.ini");
-    // LOG_INFO("log init...");
+    g_Logger.initLog("../../plugins/log_config/general_controller.ini");
+    LOG_INFO("log init...");
     QApplication a(argc, argv);
 
     // init ctrl

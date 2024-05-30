@@ -73,6 +73,9 @@
         "qelapsedtimer": "cpp",
         "source_location": "cpp",
         "qstring": "cpp",
-        "qthread": "cpp"
+        "qthread": "cpp",
+        "shared_mutex": "cpp",
+        "core": "cpp",
+        "geometry": "cpp"
     }
 }

@@ -10,3 +10,7 @@ cd ..
 cd actionservice
 ./make.sh
 cd ..
+
+cd keyboardform
+./make.sh
+cd ..

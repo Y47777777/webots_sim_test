@@ -5,7 +5,7 @@
 #include <QTimer>
 #include <QtWidgets/QtWidgets>
 #include <map>
-#include "base_ctrl.h"
+#include "controller/base_ctrl.h"
 
 namespace Ui {
 class KeyboardForm;
