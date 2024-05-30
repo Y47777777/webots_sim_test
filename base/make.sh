@@ -11,6 +11,10 @@ cd actionservice
 ./make.sh
 cd ..
 
+cd sim_data_flow
+./make.sh
+cd ..
+
 cd keyboardform
 ./make.sh
 cd ..

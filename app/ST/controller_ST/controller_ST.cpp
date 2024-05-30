@@ -1,9 +1,11 @@
 #include <ecal/msg/protobuf/publisher.h>
 #include "geometry/geometry.h"
-#include "foxglove-vn/Imu.pb.h"       // IMU
-#include "foxglove-vn/ForkPose.pb.h"  // vehicle height
-#include "foxglove-vn/Vector2.pb.h"   // use for origin steer wheel position
+// #include "foxglove-vn/Imu.pb.h"       // IMU
+// #include "foxglove-vn/ForkPose.pb.h"  // vehicle height
+// #include "foxglove-vn/Vector2.pb.h"   // use for origin steer wheel position
 #include "controller_ST.h"
+
+#include "sim_data_flow/ST_msg.pb.h"
 
 using namespace VNSim;
 using namespace webots;
@@ -62,16 +64,20 @@ void NormalSTController::manualGetState(std::map<std::string, double> &msg) {
 }
 
 void NormalSTController::whileSpin() {
-    eCAL::protobuf::CPublisher<foxglove::ForkPose> pubFork("webot/forkpose");
-    eCAL::protobuf::CPublisher<foxglove::Imu> pubIMU("webot/IMUData");
-    eCAL::protobuf::CPublisher<foxglove::Vector2> pubWheelPosition(
-        "webot/SteerWheelPosition");
-    foxglove::ForkPose payload_forkPose;
-    foxglove::Imu payload_imu;
-    foxglove::Vector2 payload_wheelPosition;
+    // eCAL::protobuf::CPublisher<foxglove::ForkPose> pubFork("webot/forkpose");
+    // eCAL::protobuf::CPublisher<foxglove::Imu> pubIMU("webot/IMUData");
+    // eCAL::protobuf::CPublisher<foxglove::Vector2> pubWheelPosition(
+    //     "webot/SteerWheelPosition");
+    // foxglove::ForkPose payload_forkPose;
+    // foxglove::Imu payload_imu;
+    // foxglove::Vector2 payload_wheelPosition;
+
+
     webotsExited_ = false;
     while (supervisor_->step(SIMULATION_STEP) != -1) {
         for (int i = 0; i < v_while_spin_.size(); ++i) { v_while_spin_[i](); }
+
+        sim_data_flow::ST_msg a;
     }
     webotsExited_ = true;
 }

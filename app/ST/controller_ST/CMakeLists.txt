@@ -43,6 +43,7 @@ set(CONTROLLER_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/controller_${PROJECT_NAME})
 add_executable(controller_${PROJECT_NAME}
   ${src_files}
   ${header_files}
+#   ${VN_INCLUDE}/sim_data_flow/ST_msg.pb.cc
 )
 
 set_target_properties(controller_${PROJECT_NAME} PROPERTIES INSTALL_RPATH_USE_LINK_PATH TRUE)
@@ -50,6 +51,7 @@ set_target_properties(controller_${PROJECT_NAME} PROPERTIES INSTALL_RPATH_USE_LI
 include(GNUInstallDirs)
 
 include_directories(${VN_INCLUDE})
+include_directories(${VN_INCLUDE}/foxglove-vn)
 include_directories(${ECAL_INCLUDE_DIRS})
 include_directories(${PCL_INCLUDE_DIRS})
 include_directories(${KEYBOARD_INCLUDE})
@@ -61,6 +63,7 @@ target_link_libraries(controller_${PROJECT_NAME}
     ${WEBOTSLIB_SO}/libCppController.so
     ${LIBRARY_INSTALL_DIR}/libkeyboardform.so
     ${LIBRARY_INSTALL_DIR}/libfoxglove-vn.a
+    ${LIBRARY_INSTALL_DIR}/libsim_data_flow.a
     eCAL::core
     Qt${QT_VERSION_MAJOR}::Core 
     Qt${QT_VERSION_MAJOR}::Widgets

@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+import "Imu.proto";
+import "SteeringThetaInFrame.proto";
+import "Speed.proto";
+
+package sim_data_flow;
+
+// A position and orientation for an object or reference frame in 3D space
+message ST_msg {
+  google.protobuf.Timestamp timestamp = 1;
+  foxglove.Imu imu = 2;
+  foxglove.SteeringTheta steering = 3;
+  foxglove.Speed speed = 4;
+}
