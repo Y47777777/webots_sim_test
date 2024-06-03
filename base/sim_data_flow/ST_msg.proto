@@ -2,15 +2,24 @@ syntax = "proto3";
 
 import "google/protobuf/timestamp.proto";
 import "Imu.proto";
-import "SteeringThetaInFrame.proto";
-import "Speed.proto";
 
 package sim_data_flow;
 
+message STUp{
+  foxglove.Imu imu = 1;
+  double forkposeZ = 2;
+  double steerPosition = 3;
+}
+
+message STDown{
+  double steering_theta = 1;
+  double steering_speed = 2;
+  double forkspeedZ = 3;
+}
+
 // A position and orientation for an object or reference frame in 3D space
-message ST_msg {
+message STMsg {
   google.protobuf.Timestamp timestamp = 1;
-  foxglove.Imu imu = 2;
-  foxglove.SteeringTheta steering = 3;
-  foxglove.Speed speed = 4;
+  STDown down_msg = 2;
+  STUp up_msg = 3;
 }

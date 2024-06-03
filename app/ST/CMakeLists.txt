@@ -10,3 +10,4 @@ project(ST LANGUAGES CXX)
 # set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_subdirectory(controller_ST controller_ST/sub_build)
+add_subdirectory(svc_model_ST svc_model_ST/sub_build)
