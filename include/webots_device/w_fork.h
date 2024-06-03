@@ -20,7 +20,7 @@ class WFork : public WBase {
      * @param[solid_name]   需要旋转 或 控制旋转轴 填入webots solid 名称
      * @param[sensor_name] positionSensor
      */
-    WFork(std::string fork_motor_name = "", std::string  solid_name= "",
+    WFork(std::string fork_motor_name = "", std::string solid_name = "",
           std::string sensor_name = "")
         : WBase() {
         // creat fork
@@ -29,7 +29,7 @@ class WFork : public WBase {
             motor_->setPosition(INFINITY);
             motor_->setVelocity(0);
 
-            LOG_INFO("creat fork: %s", fork_motor_name.c_str());
+            // LOG_INFO("creat fork: %s", fork_motor_name.c_str());
         }
 
         // creat node
@@ -38,7 +38,7 @@ class WFork : public WBase {
             webots::Field *translation_ptr_ = node->getField("translation");
             webots::Field *rotation_ptr_ = node->getField("rotation");
 
-            //TODO: 如果需要添加再修改
+            // TODO: 如果需要添加再修改
         }
 
         // creat pose sensor
@@ -51,8 +51,8 @@ class WFork : public WBase {
 
             if (position_sensor_ != nullptr) {
                 position_sensor_->enable(5);
-                LOG_INFO("creat fork:%s  fork sensor :%s", fork_motor_name.c_str(),
-                         sensor_name.c_str());
+                // LOG_INFO("creat fork:%s  fork sensor :%s",
+                //          fork_motor_name.c_str(), sensor_name.c_str());
             }
         }
     }
@@ -61,7 +61,8 @@ class WFork : public WBase {
 
     void setVelocity(double v) { speed_ = v; }
 
-    double getSenosorValue() { pos_sensor_value_; }
+    double getSenosorValue() { return pos_sensor_value_; }
+    double getVelocityValue() { return speed_; }
 
     void forkSpin() {
         // get fork pos value
@@ -80,9 +81,9 @@ class WFork : public WBase {
             motor_->setVelocity(speed_);
         }
     }
-    
-    void spin(){
-         // get wheel pos value
+
+    void spin() {
+        // get wheel pos value
         if (position_sensor_ != nullptr) {
             pos_sensor_value_ = position_sensor_->getValue();
         }

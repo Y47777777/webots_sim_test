@@ -20,7 +20,7 @@ class WLidar : public WBase {
         // creat lidar
         lidar_ = super_->getLidar(lidar);
         if (lidar_ == nullptr) {
-            LOG_ERROR("lidar_ptr is nullptr");
+            // LOG_ERROR("lidar_ptr is nullptr");
             return;
         }
 
@@ -34,7 +34,7 @@ class WLidar : public WBase {
             v_point_ptr_.push_back(lidar_->getLayerPointCloud(i));
         }
 
-        LOG_INFO("%s creat success", lidar.c_str());
+        // LOG_INFO("%s creat success", lidar.c_str());
 
         // creat pose
         Node *node_ = super_->getFromDef(pose_name);
@@ -47,16 +47,18 @@ class WLidar : public WBase {
             memcpy(tf_translation_, translation_ptr_->getSFVec3f(),
                    3 * sizeof(tf_translation_[0]));
 
-            LOG_INFO("pose node :", pose_name.c_str());
-            LOG_INFO("pose rotation %.3f, %.3f, %.3f, %.3f", tf_rotation_[0],
-                     tf_rotation_[1], tf_rotation_[2], tf_rotation_[3]);
+            // LOG_INFO("pose node :", pose_name.c_str());
+            // LOG_INFO("pose rotation %.3f, %.3f, %.3f, %.3f", tf_rotation_[0],
+            //          tf_rotation_[1], tf_rotation_[2], tf_rotation_[3]);
 
-            LOG_INFO("pose translation %.3f, %.3f, %.3f", tf_translation_[0],
-                     tf_translation_[1], tf_translation_[2]);
+            // LOG_INFO("pose translation %.3f, %.3f, %.3f", tf_translation_[0],
+            //          tf_translation_[1], tf_translation_[2]);
         }
     }
 
     ~WLidar() {}
+
+    const Lidar *getLidarPtr() { return lidar_; }
 
     void getPointCloudPtr(std::vector<const LidarPoint *> &v_ptr) {
         v_ptr.clear();

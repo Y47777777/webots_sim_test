@@ -20,7 +20,7 @@ class WBase {
     WBase() {
         super_ = Supervisor::getSupervisorInstance();
         if (super_ == nullptr) {
-            LOG_ERROR("Supervisor is nullptr");
+            // LOG_ERROR("Supervisor is nullptr");
         }
     }
     ~WBase() {}

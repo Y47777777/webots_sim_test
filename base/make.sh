@@ -18,3 +18,7 @@ cd ..
 cd keyboardform
 ./make.sh
 cd ..
+
+cd Parser
+./make.sh
+cd ..

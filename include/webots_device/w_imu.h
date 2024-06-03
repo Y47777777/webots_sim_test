@@ -26,13 +26,28 @@ class WImu : public WBase {
 
     ~WImu() {}
 
-    void getImuValue() {}
+    double getInertialValue(int index) { return ginertial_[index]; }
+    double getGyroValue(int index) { return gyro_[index]; }
+    double getAccValue(int index) { return acc_[index]; }
+    double getVehicleYaw() {
+        static auto *robot_rot =
+            super_->getFromDef("RobotNode_ST")->getField("rotation");
+
+        auto tmp_r = robot_rot->getSFRotation();
+
+        Eigen::AngleAxisd tmp_angleaxis(
+            tmp_r[3], Eigen::Vector3d(tmp_r[0], tmp_r[1], tmp_r[2]));
+        Eigen::Vector3d r_eulerangle3 =
+            tmp_angleaxis.matrix().eulerAngles(2, 1, 0);
+        vehicle_yaw_ = r_eulerangle3[0];
+        return vehicle_yaw_;
+    }
 
     void spin() {
-        memcpy(gyro_, gyro_ptr_->getValues(), 4 * sizeof(gyro_[0]));
-        memcpy(acc_, acc_ptr_->getValues(), 4 * sizeof(acc_[0]));
-        // memcpy(ginertial_, inertial_unit_ptr_->getValues(),
-        //        4 * sizeof(ginertial_[0]));
+        memcpy(gyro_, gyro_ptr_->getValues(), 3 * sizeof(gyro_[0]));
+        memcpy(acc_, acc_ptr_->getValues(), 3 * sizeof(acc_[0]));
+        memcpy(ginertial_, inertial_unit_ptr_->getRollPitchYaw(),
+               3 * sizeof(ginertial_[0]));
     }
 
    private:
@@ -45,6 +60,7 @@ class WImu : public WBase {
     double gyro_[3] = {0, 0, 0};
     double acc_[3] = {0, 0, 0};
     double ginertial_[3] = {0, 0, 0};
+    double vehicle_yaw_ = {0};
 };
 
 }  // namespace VNSim
