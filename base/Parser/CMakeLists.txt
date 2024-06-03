@@ -6,32 +6,24 @@ VERSION 1.0.0)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-SET(VN_INCLUDE
-    ~/workspace/vn_source/include)
-SET(SYS_INCLUDE
-    /usr/local/include)
-SET(GOOGLE_INCLUDE
-    /usr/include/google)
+set(VN_INCLUDE
+    ${CMAKE_SOURCE_DIR}/../../include)
+set(LIBRARY_INSTALL_DIR 
+    ${CMAKE_SOURCE_DIR}/../../../../simulation_world/webots/libraries)
 
-SET(LIB_SO
-    /usr/local/lib)
-SET(VNLIB_SO
-    ~/webots/SimRobot/libraries)
+file(GLOB src_files "src/*.c*")  
+file(GLOB header_files "src/*.h*")
 
 
 SET(USER_INCLUDE /usr/include)
-SET(LOCAL_BASE ~/workspace/vn_source/base/${PROJECT_NAME})
-SET(LOCAL_INCLUDE ${LOCAL_BASE}/include)
 option(ENABLE_EXAMPLE "Build Example" OFF)
 
-include_directories(${USER_INCLUDE} ${LOCAL_INCLUDE})
+include_directories(${USER_INCLUDE} ${VN_INCLUDE})
 
-file(GLOB src_file src/*.cpp)
-
-message(${src_file})
+message(${src_files})
 
 add_library(${PROJECT_NAME} SHARED
-  ${src_file}
+  ${src_files}
 )
 
 # target_compile_definitions(actionservice PRIVATE ACTIONSERVICE_LIBRARY)
