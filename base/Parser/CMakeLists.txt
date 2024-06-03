@@ -18,7 +18,7 @@ file(GLOB header_files "src/*.h*")
 SET(USER_INCLUDE /usr/include)
 option(ENABLE_EXAMPLE "Build Example" OFF)
 
-include_directories(${USER_INCLUDE} ${VN_INCLUDE})
+include_directories(${USER_INCLUDE} ${VN_INCLUDE} ${CMAKE_SOURCE_DIR}/include)
 
 message(${src_files})
 
