@@ -104,7 +104,6 @@ NormalSTController::NormalSTController() {
     ecal_wrapper_.init(true, "webots_ST");
     ecal_wrapper_.addEcal("webot/ST_msg");
     ecal_wrapper_.addEcal("webot/pointCloud");
-    // ecal_wrapper_.addEcal("192.168.1.55");
     ecal_wrapper_.addEcal(
         "svc_model_st/ST_msg",
         std::bind(&NormalSTController::onRemoteSerialMsg, this,
@@ -135,20 +134,12 @@ void NormalSTController::manualGetState(std::map<std::string, double> &msg) {
     msg["fork_speed"] = fork_ptr_->getVelocityValue();
     msg["fork_height"] = fork_ptr_->getSenosorValue();
     msg["real_speed"] = 0;
-    // msg["steer_speed"] = 0;
-    // msg["steer_yaw"] = 0;
-    // msg["fork_speed"] = 0;
-    // msg["fork_height"] = 0;
-    // msg["real_speed"] = 0;
     // TODO: fork_speed real_speed
 }
 
 void NormalSTController::whileSpin() {
     webotsExited_ = false;
     while (supervisor_->step(SIMULATION_STEP) != -1) {
-        // std::cout << __FUNCTION__
-        //           << " running..., spin size = " << v_while_spin_.size()
-        //           << std::endl;
         for (int i = 0; i < v_while_spin_.size(); ++i) { v_while_spin_[i](); }
         this->sendSerialSpin();
     }
@@ -160,11 +151,6 @@ void NormalSTController::onRemoteSerialMsg(
     if (!isManual_) {
         sim_data_flow::STMsg payload;
         payload.ParseFromArray(data->buf, data->size);
-        // std::cout << __FUNCTION__
-        //           << "speed = " << payload.down_msg().steering_speed()
-        //           << ",theta = " << payload.down_msg().steering_theta()
-        //           << ",fork_speed = " << payload.down_msg().forkspeedz()
-        //           << std::endl;
         stree_ptr_->setSpeed(payload.down_msg().steering_speed(),
                              payload.down_msg().steering_theta());
         fork_ptr_->setVelocity(payload.down_msg().forkspeedz());
@@ -172,7 +158,6 @@ void NormalSTController::onRemoteSerialMsg(
 }
 
 void NormalSTController::sendSerialSpin() {
-    // uint8_t buf[SERIAL_MSG_BUF];
     payload_Up.set_forkposez(fork_ptr_->getSenosorValue());
     payload_Up.set_steerposition(stree_ptr_->getSenosorValue());
     payload_imu.add_orientation_covariance(imu_ptr_->getVehicleYaw());  //
@@ -182,9 +167,6 @@ void NormalSTController::sendSerialSpin() {
         payload_imu.add_linear_acceleration_covariance(
             imu_ptr_->getAccValue(i));
     }
-    // payload_Up.set_allocated_imu(&payload_imu);
-    // std::cout << 6 << std::endl;
-    // payload.set_allocated_up_msg(&payload_Up);
     payload.SerializePartialToArray(buf, payload.ByteSize());
     ecal_wrapper_.send("webot/ST_msg", buf, payload.ByteSize());
     payload_imu.Clear();
@@ -193,7 +175,7 @@ void NormalSTController::sendSerialSpin() {
 void NormalSTController::BpReportSpin() {
     eCAL::protobuf::CPublisher<pb::PointCloud2> pubPts("webot/pointCloud");
     uint8_t buf[BP_LIDAR_MSG_BUF];
-    std::cout << "BpReportSpin --> starting..." << std::endl;
+    LOG_INFO("BpReportSpin start\n");
     // TODO: solve this
     // std::vector<const LidarPoint *> points;
     // BP_ptr_->getPointCloudPtr(points);
@@ -204,10 +186,8 @@ void NormalSTController::BpReportSpin() {
     auto all_pt_count = layer_count * pt_count;
     if (all_pt_count == 0) {
         // LOG_ERROR("BpReportSpin --> empty lidar list\n");
-        std::cout << __FUNCTION__ << " --> empty lidar list" << std::endl;
         return;
     }
-    std::cout << "point cloud size = " << all_pt_count << std::endl;
     // auto pc_ptr = lidar_list[0]->getPointCloud();
     // auto layer_count = lidar_list[0]->getNumberOfLayers();
     // auto pt_count = lidar_list[0]->getNumberOfPoints();
@@ -232,18 +212,17 @@ void NormalSTController::BpReportSpin() {
         }
         payload.set_is_dense(false);
         if (BP_LIDAR_MSG_BUF < payload.ByteSize()) {
-            std::cout << "byte size not good, ignore sending..., point cloud "
-                         "size = "
-                      << payload.ByteSize() << std::endl;
+            LOG_WARN(
+                "byte size not good, ignore sending..., point cloud "
+                "size = %d",
+                payload.ByteSize());
             std::this_thread::sleep_for(
                 std::chrono::milliseconds(50 - bpTimer.elapsed()));
             bpTimer.restart();
             continue;
         }
         payload.SerializePartialToArray(buf, payload.ByteSize());
-        // pubPts.Send(payload);
         ecal_wrapper_.send("webot/pointCloud", buf, payload.ByteSize());
-        // ecal_wrapper_.send("192.168.1.55", buf, payload.ByteSize());
         std::this_thread::sleep_for(
             std::chrono::milliseconds(50 - bpTimer.elapsed()));
         bpTimer.restart();

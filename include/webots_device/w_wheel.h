@@ -28,9 +28,9 @@ class WWheel : public WBase {
            std::string solid_name = "", std::string radius_name = "",
            std::string sensor_name = "")
         : WBase() {
-        // LOG_INFO("init wheel: %s,%s,%s,%s,%s", motor_name.c_str(),
-        //          yaw_node_name.c_str(), solid_name.c_str(),
-        //          radius_name.c_str(), sensor_name.c_str());
+        LOG_INFO("init wheel: %s,%s,%s,%s,%s", motor_name.c_str(),
+                 yaw_node_name.c_str(), solid_name.c_str(), radius_name.c_str(),
+                 sensor_name.c_str());
 
         // creat motor
         motor_ = super_->getMotor(motor_name);
@@ -38,7 +38,7 @@ class WWheel : public WBase {
             motor_->setPosition(INFINITY);
             motor_->setVelocity(0);
 
-            // LOG_INFO("creat motor: %s", motor_name.c_str());
+            LOG_INFO("creat motor: %s", motor_name.c_str());
         }
 
         Node *mid360Node = super_->getFromDef(yaw_node_name);
@@ -55,15 +55,15 @@ class WWheel : public WBase {
             memcpy(&get_yaw_rotation_, set_yaw_rotation_,
                    4 * sizeof(get_yaw_rotation_[0]));
 
-            // LOG_INFO("yaw node :", yaw_node_name.c_str());
-            // LOG_INFO("yaw rotation %.3f, %.3f, %.3f, %.3f",
-            //          set_yaw_rotation_[0], set_yaw_rotation_[1],
-            //          set_yaw_rotation_[2], set_yaw_rotation_[3]);
+            LOG_INFO("yaw node :", yaw_node_name.c_str());
+            LOG_INFO("yaw rotation %.3f, %.3f, %.3f, %.3f",
+                     set_yaw_rotation_[0], set_yaw_rotation_[1],
+                     set_yaw_rotation_[2], set_yaw_rotation_[3]);
         }
 
         // creat wheel solid
         Node *soild_node = super_->getFromDef(solid_name);
-        if (soild_node == nullptr) {
+        if (soild_node != nullptr) {
             solid_rotation_ptr_ = soild_node->getField("rotation");
             solid_translation_ptr_ = soild_node->getField("translation");
 
@@ -73,14 +73,14 @@ class WWheel : public WBase {
                    solid_translation_ptr_->getSFVec3f(),
                    3 * sizeof(solid_translation_ptr_[0]));
 
-            // LOG_INFO("soild node :", solid_name.c_str());
-            // LOG_INFO("soild rotation %.3f, %.3f, %.3f, %.3f",
-            //          solid_init_rotation_[0], solid_init_rotation_[1],
-            //          solid_init_rotation_[2], solid_init_rotation_[3]);
+            LOG_INFO("soild node :", solid_name.c_str());
+            LOG_INFO("soild rotation %.3f, %.3f, %.3f, %.3f",
+                     solid_init_rotation_[0], solid_init_rotation_[1],
+                     solid_init_rotation_[2], solid_init_rotation_[3]);
 
-            // LOG_INFO("soild translation %.3f, %.3f, %.3f",
-            //          solid_init_translation_[0], solid_init_translation_[1],
-            //          solid_init_translation_[2]);
+            LOG_INFO("soild translation %.3f, %.3f, %.3f",
+                     solid_init_translation_[0], solid_init_translation_[1],
+                     solid_init_translation_[2]);
         }
 
         // creat pose sensor
@@ -93,9 +93,8 @@ class WWheel : public WBase {
 
             if (position_sensor_ != nullptr) {
                 position_sensor_->enable(5);
-                // LOG_INFO("creat motor:%s  motor sensor :%s",
-                // motor_name.c_str(),
-                //          sensor_name.c_str());
+                LOG_INFO("creat motor:%s  motor sensor :%s", motor_name.c_str(),
+                         sensor_name.c_str());
             }
         }
 
@@ -104,8 +103,7 @@ class WWheel : public WBase {
             radius_ = super_->getFromDef(radius_name)
                           ->getField("radius")
                           ->getSFFloat();
-            // LOG_INFO("%s radius :%s", motor_name.c_str(),
-            // radius_name.c_str());
+            LOG_INFO("%s radius :%s", motor_name.c_str(), radius_name.c_str());
         }
     }
 
@@ -139,13 +137,10 @@ class WWheel : public WBase {
         if (solid_rotation_ptr_ != nullptr) {
             // set translation
             solid_translation_ptr_->setSFVec3f(solid_init_translation_);
-            std::cout << "set to origin [" << solid_init_translation_[0] << ","
-                      << solid_init_translation_[1] << ","
-                      << solid_init_translation_[2] << "]" << std::endl;
             // set rotation axis
             const double *angle = solid_rotation_ptr_->getSFRotation();
             solid_init_rotation_[3] = angle[3];
-            solid_rotation_ptr_->setSFVec3f(solid_init_rotation_);
+            solid_rotation_ptr_->setSFRotation(solid_init_rotation_);
         }
 
         // set speed

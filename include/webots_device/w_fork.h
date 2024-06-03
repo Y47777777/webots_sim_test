@@ -29,7 +29,7 @@ class WFork : public WBase {
             motor_->setPosition(INFINITY);
             motor_->setVelocity(0);
 
-            // LOG_INFO("creat fork: %s", fork_motor_name.c_str());
+            LOG_INFO("creat fork: %s", fork_motor_name.c_str());
         }
 
         // creat node
@@ -51,8 +51,8 @@ class WFork : public WBase {
 
             if (position_sensor_ != nullptr) {
                 position_sensor_->enable(5);
-                // LOG_INFO("creat fork:%s  fork sensor :%s",
-                //          fork_motor_name.c_str(), sensor_name.c_str());
+                LOG_INFO("creat fork:%s  fork sensor :%s",
+                         fork_motor_name.c_str(), sensor_name.c_str());
             }
         }
     }

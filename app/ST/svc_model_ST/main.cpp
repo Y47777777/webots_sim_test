@@ -9,6 +9,8 @@ using namespace VNSim;
 
 int main(int argc, char *argv[]) {
     // serial service
+    g_Logger.initLog("../../plugins/log_config/general_controller.ini");
+    LOG_INFO("start svc_ST");
     std::shared_ptr<BaseSVCModel> serial_service =
         std::make_shared<SVCModelSerial>();
     serial_service->init(true, "svc_ST");

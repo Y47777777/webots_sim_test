@@ -8,17 +8,15 @@ using namespace VNSim;
 int main(int argc, char *argv[]) {
     // init glog
     // TODO:FIXME path....
-    // g_Logger.initLog("../../plugins/log_config/general_controller.ini");
-    // LOG_INFO("log init...");
+    g_Logger.initLog("../../plugins/log_config/general_controller.ini");
+    LOG_INFO("log init...");
     QApplication a(argc, argv);
-    std::cout << "init" << std::endl;
     // init ctrl
     std::shared_ptr<BaseController> ctrl_ptr =
         std::make_shared<NormalSTController>();
-    std::cout << "start" << std::endl;
     // ctrl_ptr->init() ;
     ctrl_ptr->start();
-    std::cout << "svc_ST start" << std::endl;
+    LOG_INFO("try start svc_ST");
     // TODO: start svc_model_ST and close svc_model_ST....
     system("./svc_ST &");
     QObject::connect(ctrl_ptr.get(), SIGNAL(finished()), &a, SLOT(quit()));
@@ -28,6 +26,7 @@ int main(int argc, char *argv[]) {
     f.show();
 
     a.exec();
+    LOG_INFO("try stop svc_ST");
     system("killall svc_ST");
     return 0;
 }

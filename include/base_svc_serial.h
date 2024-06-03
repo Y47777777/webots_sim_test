@@ -1,6 +1,7 @@
 #ifndef __BASE_SERIAL_SVC_SERIAL_H__
 #define __BASE_SERIAL_SVC_SERIAL_H__
 #include <thread>
+#include "logvn/logvn.h"
 #include "Parser/parser.hpp"
 #include "base_svc_ctrl.h"
 
@@ -33,11 +34,13 @@ class BaseSerialSVCModel : public BaseSVCModel {
         do { /*load config*/
             int l_ret = decoder_.loadConfig(decoder_file);
             if (l_ret != 0) {
+                LOG_WARN("decoder loadConfig ret = %d", l_ret);
                 ret = -1;
                 break;
             }
             l_ret = encoder_.loadConfig(encoder_file);
             if (l_ret != 0) {
+                LOG_WARN("encoder loadConfig ret = %d", l_ret);
                 ret = -2;
                 break;
             }
@@ -77,7 +80,6 @@ class BaseSerialSVCModel : public BaseSVCModel {
             });
             sensor_msg_report_thread_ = std::move(sensor_msg_report_thread);
         } while (0);
-        std::cout << "ret = " << ret << std::endl;
         return ret;
     }
 
