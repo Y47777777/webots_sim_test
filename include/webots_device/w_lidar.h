@@ -34,6 +34,7 @@ class WLidar : public WBase {
         lidar_->enable(frequency_);
         lidar_->enablePointCloud();
 
+        webots_point_could_address_ = lidar_->getPointCloud();
         int size_of_layer = lidar_->getNumberOfLayers();
         int size_of_point_cloud = lidar_->getNumberOfPoints();
         int size_of_each_layer = size_of_point_cloud / size_of_layer;
@@ -41,7 +42,6 @@ class WLidar : public WBase {
         point_cloud_.set_size_of_layer(size_of_layer);
         point_cloud_.set_size_of_each_layer(size_of_each_layer);
         point_cloud_.set_size_of_point_cloud(size_of_point_cloud);
-        setStashSize(size_of_point_cloud);
 
         // creat pose
         Node *node_ = super_->getFromDef(pose_name);
@@ -71,15 +71,16 @@ class WLidar : public WBase {
      * @param[flag]  true->使能    ，false->失能
      */
     void setSimulationNRLS(bool flag) {
-        // std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
         is_sim_NRLS_ = flag;
 
         point_cloud_.clear_point_cloud();
         // TODO:完善非重复线扫的模拟
+        // set size();
     }
 
     void moveLidar() {
-        // std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
         if (translation_ptr_ == nullptr) {
             LOG_ERROR("");
             return;
@@ -87,29 +88,33 @@ class WLidar : public WBase {
         // TODO:mid 360 移动
     }
 
+    // TODO: delete
     const Lidar *getLidarPtr() { return lidar_; }
 
     void spin() {
-        // std::unique_lock<std::shared_mutex> lock(rw_mutex_);
+        std::unique_lock<std::shared_mutex> lock(rw_mutex_);
         // TODO: 模拟非重复线扫
-        if (is_sim_NRLS_ = true) {
+        if (is_sim_NRLS_) {
             // 拷贝结束后直接返回
 
         } else {
-            // copy to stash
-            memcpy(point_cloud_.mutable_point_cloud()->mutable_data(),
-                   webots_point_could_address_,
-                   sizeof(LidarPoint) * point_cloud_.size_of_point_cloud());
+            // // copy to stash
+            point_cloud_.clear_point_cloud();
+            int size = point_cloud_.size_of_point_cloud();
+            const LidarPoint *address = webots_point_could_address_;
+            for (int i = 0; i < size; i++) {
+                sim_data_flow::LidarPoint *point =
+                    point_cloud_.add_point_cloud();
+                point->set_x(address[i].x);
+                point->set_y(address[i].y);
+                point->set_z(address[i].z);
+                point->set_time(address[i].time);
+                point->set_layer_id(address[i].layer_id);
+            }
         }
     }
 
    private:
-    void setStashSize(size_t size) {
-        // 创建缓存
-        point_cloud_.clear_point_cloud();
-        for (int i = 0; i < size; i++) { point_cloud_.add_point_cloud(); }
-        point_cloud_.set_size_of_point_cloud(size);
-    }
 
    private:
     std::string lidar_name_ = "";

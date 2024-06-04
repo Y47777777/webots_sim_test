@@ -1,2 +1,9 @@
 build/
+include/actionservice
+include/foxglove-vn
+include/sim_data_flow
+include/keyboardform
+include/logvn
+include/geometry
+include/Parser
 
