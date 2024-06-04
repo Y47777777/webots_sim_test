@@ -10,15 +10,18 @@
 
 // TODO: 整理成time.hpp
 #include <chrono>
-// #include <QElapsedTimer>
-// #include <QTime>
+#include <QElapsedTimer>
+#include <QTime>
 
 namespace VNSim {
 
 class BaseController : public QThread {
    public:
     explicit BaseController(QObject *parent = nullptr) : QThread{parent} {
-        supervisor_ = WSupervisor::getSupervisorInstance();
+        supervisor_ = Supervisor::getSupervisorInstance();
+        if (supervisor_ == nullptr) {
+            LOG_ERROR("Supervisor is nullptr");
+        }
         step_duration_ = supervisor_->getBasicTimeStep();
 
         // init 设置为最快的模式
@@ -53,27 +56,30 @@ class BaseController : public QThread {
         // task
         webotsExited_ = false;
         auto start = std::chrono::system_clock::now();
-        auto step_time = std::chrono::microseconds(step_duration_*1000);
+        auto step_time = std::chrono::microseconds(step_duration_ * 1000);
         int step_cnt = 0;
 
         // QElapsedTimer t;
         // QElapsedTimer t_1;
+        // QElapsedTimer sleep_t;
 
         while (supervisor_->step(step_duration_) != -1) {
             // LOG_INFO("step %d", t_1.elapsed());
             // t.restart();
-
             for (int i = 0; i < v_while_spin_.size(); ++i) {
                 v_while_spin_[i]();
             }
 
             this->whileSpin();
+            // LOG_INFO("copy spend %d", t.elapsed());
+
 
             // TODO: 整理至time.hpp
             // 休眠直到目标时间
+            // sleep_t.restart();
             std::this_thread::sleep_until(start + (++step_cnt * step_time));
+            // LOG_INFO("sleep %d", sleep_t.elapsed());
 
-            // LOG_INFO("time %d", t.elapsed());
             // t_1.restart();
         }
         webotsExited_ = true;
