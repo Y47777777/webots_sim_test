@@ -3,16 +3,17 @@
 #define DEFAULT_LIDAR_MSG 900000
 
 #include "time/time.h"
-#include "base_svc_lidar.h"
+#include "svc/base_svc_ctrl.h"
 
 namespace VNSim {
-class SVCModelLidarSlam : public BaseLidarSVCModel {
+// This is for BP
+class SVCModelLidarSlam : public BaseSVCModel {
    public:
     SVCModelLidarSlam();
     ~SVCModelLidarSlam();
 
    public:
-    int onInitService();
+    int initService();
 
    public:
     void onLidarMsg(const char *topic_name,

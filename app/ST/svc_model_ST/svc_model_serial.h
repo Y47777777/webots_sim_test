@@ -3,7 +3,7 @@
 
 #include "foxglove-vn/Speed.pb.h"
 #include "sim_data_flow/ST_msg.pb.h"
-#include "base_svc_serial.h"
+#include "svc/base_svc_serial.h"
 
 #define SERIAL_MSG_BUF 128
 

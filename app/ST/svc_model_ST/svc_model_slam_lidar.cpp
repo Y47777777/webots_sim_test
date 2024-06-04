@@ -3,12 +3,11 @@
 
 using namespace VNSim;
 
-SVCModelLidarSlam::SVCModelLidarSlam()
-    : BaseLidarSVCModel(), size_(DEFAULT_LIDAR_MSG) {}
+SVCModelLidarSlam::SVCModelLidarSlam() : BaseSVCModel() {}
 
 SVCModelLidarSlam::~SVCModelLidarSlam() {}
 
-int SVCModelLidarSlam::onInitService() {
+int SVCModelLidarSlam::initService() {
     ecal_wrapper_.addEcal(
         "webot/pointCloud",
         std::bind(&SVCModelLidarSlam::onLidarMsg, this, std::placeholders::_1,

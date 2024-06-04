@@ -114,7 +114,7 @@ void SVCModelSerial::onUpStreamProcess() {
         encoder_.updateValue(Imu_Function.c_str(), 1,
                              report_msg_.webot_msg.imu.velocity[i]);
     }
-    lidar_count_++;
+    // lidar_count_++;
     const struct Package *pack = encoder_.encodePackage();
     ecal_wrapper_.send("Sensor/read", pack->buf, pack->len);
 }

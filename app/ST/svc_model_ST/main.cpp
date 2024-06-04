@@ -17,10 +17,8 @@ int main(int argc, char *argv[]) {
     std::shared_ptr<BaseSVCModel> lidar_service =
         std::make_shared<SVCModelLidarSlam>();
     lidar_service->init(false, "lidar");
-    dynamic_cast<SVCModelLidarSlam *>(lidar_service.get())
-        ->addSerialPtr(serial_service);
     bool flag = true;
-    // // TODO: How to exit
+    // TODO: How to exit
     while (flag) {
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
