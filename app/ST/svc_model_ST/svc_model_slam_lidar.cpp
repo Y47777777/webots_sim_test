@@ -1,5 +1,4 @@
 #include "sim_data_flow/point_cloud2.pb.h"
-#include "timestamp_generator.h"
 #include "svc_model_slam_lidar.h"
 
 using namespace VNSim;
@@ -23,9 +22,7 @@ void SVCModelLidarSlam::onLidarMsg(const char *topic_name,
     // directly send the msg to slam..., try...
     pb::PointCloud2 payload;
     payload.ParseFromArray(data->buf, data->size);
-    payload.mutable_header()->set_timestamp(
-        generate_timestamp(dynamic_cast<BaseSerialSVCModel *>(serial_ptr_.get())
-                               ->getLidarCount()));
+    payload.mutable_header()->set_timestamp(timestamp_generator_.timestamp());
     if (payload.ByteSize() > DEFAULT_LIDAR_MSG) {
         return;
     }

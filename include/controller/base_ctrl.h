@@ -5,6 +5,7 @@
 #include <map>
 #include <QThread>
 #include <thread>
+#include "time/time.h"
 
 #include "webots_device/w_base.h"
 
@@ -52,8 +53,9 @@ class BaseController : public QThread {
 
         // task
         webotsExited_ = false;
-        auto start = std::chrono::system_clock::now();
-        auto step_time = std::chrono::microseconds(step_duration_*1000);
+        // auto start = std::chrono::system_clock::now();
+        // auto step_time = std::chrono::microseconds(step_duration_ * 1000);
+        wakeup_timer_.ready(step_duration_);
         int step_cnt = 0;
 
         // QElapsedTimer t;
@@ -71,8 +73,8 @@ class BaseController : public QThread {
 
             // TODO: 整理至time.hpp
             // 休眠直到目标时间
-            std::this_thread::sleep_until(start + (++step_cnt * step_time));
-
+            // std::this_thread::sleep_until(start + (++step_cnt * step_time));
+            wakeup_timer_.wait();
             // LOG_INFO("time %d", t.elapsed());
             // t_1.restart();
         }
@@ -91,7 +93,7 @@ class BaseController : public QThread {
     // webots
     webots::Supervisor *supervisor_ = nullptr;
     int step_duration_ = 0;
-
+    FixedTimeWakeUpTimer wakeup_timer_;
     bool webotsExited_ = false;
 
     std::map<std::string, std::thread> m_thread_;

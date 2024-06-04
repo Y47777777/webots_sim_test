@@ -2,6 +2,7 @@
 #define __SVC_MODEL_SLAM_LIDAR_H__
 #define DEFAULT_LIDAR_MSG 900000
 
+#include "time/time.h"
 #include "base_svc_lidar.h"
 
 namespace VNSim {
@@ -20,6 +21,8 @@ class SVCModelLidarSlam : public BaseLidarSVCModel {
    private:
     uint8_t buf_[DEFAULT_LIDAR_MSG];
     int size_;
+    FixedTimeTimestampGenerator timestamp_generator_{
+        10, 1640966400000000 + 8 * 3600 + 1000000};
 };
 }  // namespace VNSim
 

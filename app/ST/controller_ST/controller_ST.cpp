@@ -116,8 +116,8 @@ NormalSTController::NormalSTController() : BaseController() {
         std::bind(&NormalSTController::onRemoteSerialMsg, this,
                   std::placeholders::_1, std::placeholders::_2));
 
-        payload_Up.set_allocated_imu(&payload_imu);
-        payload.set_allocated_up_msg(&payload_Up);
+    payload_Up.set_allocated_imu(&payload_imu);
+    payload.set_allocated_up_msg(&payload_Up);
 }
 
 NormalSTController::~NormalSTController() {}
