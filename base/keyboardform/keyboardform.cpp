@@ -14,13 +14,8 @@ KeyboardForm::KeyboardForm(std::shared_ptr<BaseController> ptr, QWidget *parent)
     connect(&timer_, SIGNAL(timeout()), this, SLOT(setStatus()));
     timer_.start();
 
-    // Init Keyboard
-    manual_state_.steer_speed = 0;
-    manual_state_.steer_yaw = 0;
-    manual_state_.fork_speed = 0;
-
     if (model_ptr_ == nullptr) {
-        // LOG_ERROR("model_ptr_ is nullptr");
+        LOG_ERROR("model_ptr_ is nullptr");
     }
 }
 

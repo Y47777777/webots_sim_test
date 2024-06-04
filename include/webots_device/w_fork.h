@@ -59,30 +59,23 @@ class WFork : public WBase {
 
     ~WFork(){};
 
-    void setVelocity(double v) { speed_ = v; }
+    void setVelocity(double v) {
+        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+        speed_ = v;
+    }
 
-    double getSenosorValue() { return pos_sensor_value_; }
-    double getVelocityValue() { return speed_; }
-
-    void forkSpin() {
-        // get fork pos value
-        if (position_sensor_ != nullptr) {
-            pos_sensor_value_ = position_sensor_->getValue();
-        }
-
-        // set fork rotate center
-        if (rotation_ptr_ != nullptr) {
-            // TODO: set fork rotate center
-
-            // TODO: set fork yaw
-        }
-
-        if (motor_ != nullptr) {
-            motor_->setVelocity(speed_);
-        }
+    double getSenosorValue() {
+        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+        return pos_sensor_value_;
+    }
+    double getVelocityValue() {
+        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+        return speed_;
     }
 
     void spin() {
+        std::unique_lock<std::shared_mutex> lock(rw_mutex_);
+
         // get wheel pos value
         if (position_sensor_ != nullptr) {
             pos_sensor_value_ = position_sensor_->getValue();

@@ -40,11 +40,11 @@ class KeyboardForm : public QWidget {
    private:
     void sendMsg();
     struct ManualState {
-        double steer_speed;
-        double steer_yaw;
-        double fork_speed;
-        double fork_height;
-        double real_speed;
+        double steer_speed = 0;
+        double steer_yaw = 0;
+        double fork_speed = 0;
+        double fork_height = 0;
+        double real_speed = 0;
     };
     ManualState manual_state_;
 

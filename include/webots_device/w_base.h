@@ -1,19 +1,21 @@
 #pragma once
 
 #include <webots/Supervisor.hpp>
+#include <shared_mutex>
 #include "logvn/logvn.h"
+
 
 namespace VNSim {
 using namespace webots;
-// namespace WSupervisor {
-// inline Supervisor *getSupervisorInstance() {
-//     Supervisor *_super = Supervisor::getSupervisorInstance();
-//     if (_super == nullptr) {
-//         LOG_ERROR("Supervisor is nullptr");
-//     }
-//     return _super;
-// }
-// }  // namespace WSupervisor
+namespace WSupervisor {
+inline Supervisor *getSupervisorInstance() {
+    Supervisor *_super = Supervisor::getSupervisorInstance();
+    if (_super == nullptr) {
+        LOG_ERROR("Supervisor is nullptr");
+    }
+    return _super;
+}
+}  // namespace WSupervisor
 
 class WBase {
    public:
@@ -29,5 +31,6 @@ class WBase {
 
    protected:
     Supervisor *super_;
+    std::shared_mutex rw_mutex_;  // 读写锁
 };
 }  // namespace VNSim

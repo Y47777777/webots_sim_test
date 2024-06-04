@@ -26,10 +26,20 @@ class WImu : public WBase {
 
     ~WImu() {}
 
-    double getInertialValue(int index) { return ginertial_[index]; }
-    double getGyroValue(int index) { return gyro_[index]; }
-    double getAccValue(int index) { return acc_[index]; }
+    double getInertialValue(int index) {
+        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+        return ginertial_[index];
+    }
+    double getGyroValue(int index) {
+        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+        return gyro_[index];
+    }
+    double getAccValue(int index) {
+        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+        return acc_[index];
+    }
     double getVehicleYaw() {
+        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
         static auto *robot_rot =
             super_->getFromDef("RobotNode_ST")->getField("rotation");
 
@@ -44,6 +54,7 @@ class WImu : public WBase {
     }
 
     void spin() {
+        std::unique_lock<std::shared_mutex> lock(rw_mutex_);
         memcpy(gyro_, gyro_ptr_->getValues(), 3 * sizeof(gyro_[0]));
         memcpy(acc_, acc_ptr_->getValues(), 3 * sizeof(acc_[0]));
         memcpy(ginertial_, inertial_unit_ptr_->getRollPitchYaw(),

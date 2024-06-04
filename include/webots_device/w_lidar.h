@@ -4,6 +4,7 @@
 #include <webots/Lidar.hpp>
 
 #include "webots_device/w_base.h"
+#include "sim_data_flow/point_cloud.pb.h"
 #include "logvn/logvn.h"
 
 namespace VNSim {
@@ -13,28 +14,34 @@ class WLidar : public WBase {
     /*
      * @brief  构建 Lidar
      *
-     * @param[motor_name]  webots 下 lidar名字
-     * @param[pose_name]   lidar 外层pose
+     * @param[lidar_name]  webots 下 lidar名字
+     * @param[pose_name]   lidar_name 外层pose
+     * @param[frequency]   ladir 频率 (ms)
      */
-    WLidar(std::string lidar, std::string pose_name = "") : WBase() {
-        // creat lidar
-        lidar_ = super_->getLidar(lidar);
+    WLidar(std::string lidar_name, std::string pose_name = "",
+           int frequency = 100)
+        : WBase() {
+        // creat lidar_name
+        lidar_name_ = lidar_name;
+        frequency_ = frequency;
+
+        lidar_ = super_->getLidar(lidar_name);
         if (lidar_ == nullptr) {
-            LOG_ERROR("lidar_ptr is nullptr");
+            LOG_ERROR("%s is nullptr", lidar_name.c_str());
             return;
         }
 
-        lidar_->enable(5);
+        lidar_->enable(frequency_);
         lidar_->enablePointCloud();
 
-        layer_count_ = lidar_->getNumberOfLayers();
-        point_cloud_size_ = lidar_->getNumberOfPoints();
+        int size_of_layer = lidar_->getNumberOfLayers();
+        int size_of_point_cloud = lidar_->getNumberOfPoints();
+        int size_of_each_layer = size_of_point_cloud / size_of_layer;
 
-        for (int i = 0; i < layer_count_; i++) {
-            v_point_ptr_.push_back(lidar_->getLayerPointCloud(i));
-        }
-
-        LOG_INFO("%s creat success", lidar.c_str());
+        point_cloud_.set_size_of_layer(size_of_layer);
+        point_cloud_.set_size_of_each_layer(size_of_each_layer);
+        point_cloud_.set_size_of_point_cloud(size_of_point_cloud);
+        setStashSize(size_of_point_cloud);
 
         // creat pose
         Node *node_ = super_->getFromDef(pose_name);
@@ -58,40 +65,67 @@ class WLidar : public WBase {
 
     ~WLidar() {}
 
-    const Lidar *getLidarPtr() { return lidar_; }
+    /*
+     * @brief  使能非重复线扫模拟 Non-repetitive Line Scan LIDAR
+     *
+     * @param[flag]  true->使能    ，false->失能
+     */
+    void setSimulationNRLS(bool flag) {
+        // std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+        is_sim_NRLS_ = flag;
 
-    void getPointCloudPtr(std::vector<const LidarPoint *> &v_ptr) {
-        v_ptr.clear();
-        for (int i = 0; i < v_point_ptr_.size(); ++i) {
-            v_ptr.push_back(v_point_ptr_[i]);
-        }
-    }
-
-    void getPointCloud2() {
-        // TODO: exchange to PointCloud2
-    }
-
-    void getPointCloudAllMessage() {
-        // TODO:exchange to PointCloudAllMessage
+        point_cloud_.clear_point_cloud();
+        // TODO:完善非重复线扫的模拟
     }
 
     void moveLidar() {
-        // TODO: move lidat
+        // std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+        if (translation_ptr_ == nullptr) {
+            LOG_ERROR("");
+            return;
+        }
+        // TODO:mid 360 移动
     }
 
-    void spin() {}
+    const Lidar *getLidarPtr() { return lidar_; }
+
+    void spin() {
+        // std::unique_lock<std::shared_mutex> lock(rw_mutex_);
+        // TODO: 模拟非重复线扫
+        if (is_sim_NRLS_ = true) {
+            // 拷贝结束后直接返回
+
+        } else {
+            // copy to stash
+            memcpy(point_cloud_.mutable_point_cloud()->mutable_data(),
+                   webots_point_could_address_,
+                   sizeof(LidarPoint) * point_cloud_.size_of_point_cloud());
+        }
+    }
 
    private:
+    void setStashSize(size_t size) {
+        // 创建缓存
+        point_cloud_.clear_point_cloud();
+        for (int i = 0; i < size; i++) { point_cloud_.add_point_cloud(); }
+        point_cloud_.set_size_of_point_cloud(size);
+    }
+
+   private:
+    std::string lidar_name_ = "";
     Lidar *lidar_ = nullptr;
     Field *rotation_ptr_ = nullptr;
     Field *translation_ptr_ = nullptr;
 
-    std::vector<const LidarPoint *> v_point_ptr_;
-    int layer_count_ = 0;
-    int point_cloud_size_ = 0;
+    int frequency_ = 0;
+
+    const LidarPoint *webots_point_could_address_;
+    sim_data_flow::WBPointCloud point_cloud_;
 
     double tf_translation_[3] = {0, 0, 0};
     double tf_rotation_[4] = {0, 0, 0, 0};
+
+    bool is_sim_NRLS_ = false;
 };
 
 }  // namespace VNSim

@@ -109,9 +109,13 @@ class WWheel : public WBase {
 
     ~WWheel(){};
 
-    void setVelocity(double v) { speed_ = v / radius_; }
+    void setVelocity(double v) {
+        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+        speed_ = v / radius_;
+    }
 
     void setYaw(double yaw) {
+        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
         yaw = yaw > PI / 2 ? PI / 2 : yaw;
         yaw = yaw < -PI / 2 ? -PI / 2 : yaw;
 
@@ -119,15 +123,27 @@ class WWheel : public WBase {
     }
 
     void setSpeed(double v, double yaw) {
+        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
         setVelocity(v);
         setYaw(yaw);
     }
 
-    double getSenosorValue() { return pos_sensor_value_; }
-    double getMotorYaw() { return get_yaw_rotation_[3]; }
-    double getSpeed() { return speed_ * radius_; }
+    double getSenosorValue() {
+        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+        return pos_sensor_value_;
+    }
+    double getMotorYaw() {
+        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+        return get_yaw_rotation_[3];
+    }
+    double getSpeed() {
+        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+        return speed_ * radius_;
+    }
 
     void spin() {
+        std::unique_lock<std::shared_mutex> lock(rw_mutex_);
+
         // get wheel pos value
         if (position_sensor_ != nullptr) {
             pos_sensor_value_ = position_sensor_->getValue();

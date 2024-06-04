@@ -6,6 +6,8 @@
 // #include "foxglove-vn/ForkPose.pb.h"  // vehicle height
 // #include "foxglove-vn/Vector2.pb.h"   // use for origin steer wheel position
 #include "controller_ST.h"
+#include <QElapsedTimer>
+#include <QTime>
 
 using namespace VNSim;
 using namespace webots;
@@ -85,22 +87,27 @@ inline void NormalSTController::PointCloud2Init(pb::PointCloud2 &pb, int size) {
 }
 ////////////////////////////////////////////////////////////////////////////////////////
 
-NormalSTController::NormalSTController() {
-    supervisor_ = Supervisor::getSupervisorInstance();
+NormalSTController::NormalSTController() : BaseController() {
     // sensor init
     BP_ptr_ = std::make_shared<WLidar>("BP");
-    mid360_ptr_ = std::make_shared<WLidar>("mid360", "MID360");
+    mid360_ptr_ = std::make_shared<WLidar>("mid360", "MID360", 100);
     imu_ptr_ = std::make_shared<WImu>("inertial unit", "gyro", "accelerometer");
     // motor init
     fork_ptr_ = std::make_shared<WFork>("fork height motor");
     stree_ptr_ =
         std::make_shared<WWheel>("FL", "SteerWheel", "SteerSolid", "S");
+
+    // TODO: creat task
     v_while_spin_.push_back(bind(&WBase::spin, stree_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, fork_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, imu_ptr_));
+    v_while_spin_.push_back(bind(&WBase::spin, BP_ptr_));
+    // v_while_spin_.push_back(bind(&WBase::spin, mid360_ptr_));
+
     std::thread local_thread(
         std::bind(&NormalSTController::BpReportSpin, this));
     m_thread_["bp_report"] = std::move(local_thread);
+
     ecal_wrapper_.init(true, "webots_ST");
     ecal_wrapper_.addEcal("webot/ST_msg");
     ecal_wrapper_.addEcal("webot/pointCloud");
@@ -108,9 +115,11 @@ NormalSTController::NormalSTController() {
         "svc_model_st/ST_msg",
         std::bind(&NormalSTController::onRemoteSerialMsg, this,
                   std::placeholders::_1, std::placeholders::_2));
-    payload_Up.set_allocated_imu(&payload_imu);
-    payload.set_allocated_up_msg(&payload_Up);
+
+        payload_Up.set_allocated_imu(&payload_imu);
+        payload.set_allocated_up_msg(&payload_Up);
 }
+
 NormalSTController::~NormalSTController() {}
 
 void NormalSTController::manualSetState(
@@ -138,12 +147,8 @@ void NormalSTController::manualGetState(std::map<std::string, double> &msg) {
 }
 
 void NormalSTController::whileSpin() {
-    webotsExited_ = false;
-    while (supervisor_->step(SIMULATION_STEP) != -1) {
-        for (int i = 0; i < v_while_spin_.size(); ++i) { v_while_spin_[i](); }
-        this->sendSerialSpin();
-    }
-    webotsExited_ = true;
+    // 主循环 在super_->step()后
+    this->sendSerialSpin();
 }
 
 void NormalSTController::onRemoteSerialMsg(

@@ -36,6 +36,7 @@ class NormalSTController : public BaseController {
     std::shared_ptr<WImu> imu_ptr_;
     std::shared_ptr<WWheel> stree_ptr_;
     std::shared_ptr<WFork> fork_ptr_;
+
     EcalWrapper ecal_wrapper_;
     sim_data_flow::STMsg payload;
     sim_data_flow::STUp payload_Up;
