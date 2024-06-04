@@ -7,6 +7,10 @@ cd foxglove-vn
 ./make.sh
 cd ..
 
+cd geometry
+./make.sh
+cd ..
+
 cd actionservice
 ./make.sh
 cd ..
