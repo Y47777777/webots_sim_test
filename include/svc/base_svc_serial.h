@@ -65,8 +65,8 @@ class BaseSerialSVCModel : public BaseSVCModel {
                 FixedTimeWakeUpTimer wakeup_timer;
                 wakeup_timer.ready(10);
                 while (!SVCExit_) {
-                    wakeup_timer.wait();
                     this->onUpStreamProcess();
+                    wakeup_timer.wait();
                 }
             });
             sensor_msg_report_thread_ = std::move(sensor_msg_report_thread);
