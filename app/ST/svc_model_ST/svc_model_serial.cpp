@@ -32,6 +32,9 @@ void SVCModelSerial::onWebotMsg(const char *topic_name,
                                 const eCAL::SReceiveCallbackData *data) {
     sim_data_flow::STMsg payload;
     payload.ParseFromArray(data->buf, data->size);
+    // use a spin lock to manage data copy
+    // if the time consumption is huge, use a real mutex instead
+    spin_lock_upward_.lock();
     report_msg_.webot_msg.imu.angle[2] =
         payload.up_msg().imu().orientation_covariance(0);  // vehicle_yaw
     double forkZ = payload.up_msg().forkposez();           // forkZ Height
@@ -58,6 +61,7 @@ void SVCModelSerial::onWebotMsg(const char *topic_name,
     report_msg_.rpm =
         (wheel_position - report_msg_.webot_msg.last_wheel_position) * SIM_FAC;
     report_msg_.webot_msg.last_wheel_position = wheel_position;
+    spin_lock_upward_.unlock();
 }
 
 void SVCModelSerial::onDownStreamProcess(uint8_t *msg, int len) {
@@ -79,8 +83,10 @@ void SVCModelSerial::onDownStreamProcess(uint8_t *msg, int len) {
     payload_Down.set_steering_theta(SteeringDevice);
     payload.SerializePartialToArray(buf, payload.ByteSize());
     ecal_wrapper_.send("svc_model_st/ST_msg", buf, payload.ByteSize());
+    spin_lock_upward_.lock();
     report_msg_.dataidx = data_idx;
     report_msg_.webot_msg.wheel_yaw = SteeringDevice;
+    spin_lock_upward_.unlock();
 }
 
 void SVCModelSerial::onUpStreamProcess() {
@@ -88,33 +94,39 @@ void SVCModelSerial::onUpStreamProcess() {
     uint32_t dataidx_upload = report_msg_.dataidx_upload++;
     bool fork[2] = {false, false};
     const char Axis[3] = {'X', 'Y', 'Z'};
+    spin_lock_upward_.lock();
+    uint32_t l_dataidx = report_msg_.dataidx;
+    double l_steer_yaw = report_msg_.webot_msg.wheel_yaw;
+    double l_rpm = report_msg_.rpm;
     // 38 is up, 39 is down
     if (report_msg_.fork_state == int(FORK_STATE::ON_FORK_TOP)) {
         fork[0] = true;
     } else if (report_msg_.fork_state == int(FORK_STATE::ON_FORK_BOTTOM)) {
         fork[1] = true;
     }
+    struct Serial_Imu l_Imu;
+    l_Imu.angle[2] = report_msg_.webot_msg.imu.angle[2];
+    for (int i = 0; i < 3; i++) {
+        l_Imu.acceleration[i] = report_msg_.webot_msg.imu.acceleration[i];
+        l_Imu.velocity[i] = report_msg_.webot_msg.imu.velocity[i];
+    }
+    spin_lock_upward_.unlock();
     // Data to Upload
     std::string Imu_Function = "";
-    encoder_.updateValue("IncrementalSteeringCoder", 1,
-                         report_msg_.webot_msg.wheel_yaw);
-    encoder_.updateValue("Gyroscope", 1, report_msg_.webot_msg.imu.angle[2]);
-    encoder_.updateValue("RPMSensor", 1, report_msg_.rpm);
+    encoder_.updateValue("IncrementalSteeringCoder", 1, l_steer_yaw);
+    encoder_.updateValue("Gyroscope", 1, l_Imu.angle[2]);
+    encoder_.updateValue("RPMSensor", 1, l_rpm);
     encoder_.updateValue2("BatterySencer", &battery_device, sizeof(uint16_t));
     encoder_.updateValue2("DataIndex", &dataidx_upload, sizeof(uint32_t));
-    encoder_.updateValue2("DataIndexReturn", &report_msg_.dataidx,
-                          sizeof(uint32_t));
+    encoder_.updateValue2("DataIndexReturn", &l_dataidx, sizeof(uint32_t));
     for (int i = 0; i < 2; i++)
         encoder_.updateSwitchValue("SwitchSencer", 38 + i, fork[i]);
     for (int i = 0; i < 3; i++) {
         Imu_Function = "Accelerometer" + std::string(&Axis[i]);
-        encoder_.updateValue(Imu_Function.c_str(), 1,
-                             report_msg_.webot_msg.imu.acceleration[i]);
+        encoder_.updateValue(Imu_Function.c_str(), 1, l_Imu.acceleration[i]);
         Imu_Function = "AngularVelocitySensor" + std::string(&Axis[i]);
-        encoder_.updateValue(Imu_Function.c_str(), 1,
-                             report_msg_.webot_msg.imu.velocity[i]);
+        encoder_.updateValue(Imu_Function.c_str(), 1, l_Imu.velocity[i]);
     }
-    // lidar_count_++;
     const struct Package *pack = encoder_.encodePackage();
     ecal_wrapper_.send("Sensor/read", pack->buf, pack->len);
 }

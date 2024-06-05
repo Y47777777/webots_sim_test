@@ -4,6 +4,7 @@
 #include "logvn/logvn.h"
 #include "Parser/parser.hpp"
 #include "time/time.h"
+#include "lock/Spinlock.h"
 #include "base_svc_ctrl.h"
 
 namespace VNSim {
@@ -14,6 +15,8 @@ class BaseSerialSVCModel : public BaseSVCModel {
     OutputEncoder encoder_;
     uint64_t lidar_count_;
     std::thread sensor_msg_report_thread_;  // not lidar, sensors.config
+    Spinlock spin_lock_upward_;
+
    public:
     BaseSerialSVCModel() : BaseSVCModel(), lidar_count_(0) {}
     ~BaseSerialSVCModel() {
