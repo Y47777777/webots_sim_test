@@ -75,7 +75,6 @@ class BaseController : public QThread {
             this->whileSpin();
             // LOG_INFO("copy spend %d", t.elapsed());
 
-
             // TODO: 整理至time.hpp
             // 休眠直到目标时间
             // std::this_thread::sleep_until(start + (++step_cnt * step_time));

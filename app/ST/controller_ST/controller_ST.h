@@ -2,7 +2,6 @@
 #define __WEBOTST_HPP__
 #include <thread>
 
-#include "sim_data_flow/point_cloud2.pb.h"
 #include "sim_data_flow/ST_msg.pb.h"
 #include "controller/base_ctrl.h"
 #include "webots_device/w_fork.h"
@@ -43,8 +42,8 @@ class NormalSTController : public BaseController {
     foxglove::Imu payload_imu;
     uint8_t buf[SERIAL_MSG_BUF];
 
-   private:
-    void PointCloud2Init(pb::PointCloud2 &pb, int size);
+    // private:
+    //  void PointCloud2Init(pb::PointCloud2 &pb, int size);
 
    public:
     void onRemoteSerialMsg(const char *topic_name,

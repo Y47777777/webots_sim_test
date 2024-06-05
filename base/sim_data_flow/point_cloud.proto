@@ -15,7 +15,7 @@ message LidarPoint
 
 message WBPointCloud
 {
-    google.protobuf.Timestamp timestamp = 1;    // TODO: 修改时间戳格式
+    uint64 timestamp = 1;                       // use uint64_t
     string name = 2;                            // lidar name
     uint32 size_of_layer = 3;                   // 层数
     uint32 size_of_each_layer = 4;              // 每层的点数
