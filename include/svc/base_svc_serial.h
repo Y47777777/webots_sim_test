@@ -1,6 +1,7 @@
 #ifndef __BASE_SERIAL_SVC_SERIAL_H__
 #define __BASE_SERIAL_SVC_SERIAL_H__
 #include <thread>
+#include <shared_mutex>
 #include "logvn/logvn.h"
 #include "Parser/parser.hpp"
 #include "time/time.h"
@@ -15,7 +16,7 @@ class BaseSerialSVCModel : public BaseSVCModel {
     OutputEncoder encoder_;
     uint64_t lidar_count_;
     std::thread sensor_msg_report_thread_;  // not lidar, sensors.config
-    Spinlock spin_lock_upward_;
+    std::shared_mutex lock_mutex_;
 
    public:
     BaseSerialSVCModel() : BaseSVCModel(), lidar_count_(0) {}

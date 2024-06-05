@@ -34,34 +34,36 @@ void SVCModelSerial::onWebotMsg(const char *topic_name,
     payload.ParseFromArray(data->buf, data->size);
     // use a spin lock to manage data copy
     // if the time consumption is huge, use a real mutex instead
-    spin_lock_upward_.lock();
-    report_msg_.webot_msg.imu.angle[2] =
-        payload.up_msg().imu().orientation_covariance(0);  // vehicle_yaw
-    double forkZ = payload.up_msg().forkposez();           // forkZ Height
-    if (std::abs(forkZ - FORK_LIFTUP_HEIGHT) <= HEIGHT_DEVIATION) {
-        report_msg_.fork_state = int(FORK_STATE::ON_FORK_TOP);
-    } else if (std::abs(forkZ - FORK_LIFTDOWN_HEIGHT) <= HEIGHT_DEVIATION) {
-        report_msg_.fork_state = int(FORK_STATE::ON_FORK_BOTTOM);
-    } else {
-        report_msg_.fork_state = int(FORK_STATE::ON_FORK_MIDDLE);
-    }
-    for (int i = 0; i < 3; i++) {
-        report_msg_.webot_msg.imu.velocity[i] =
-            payload.up_msg().imu().angular_velocity_covariance(
-                i);  // angular_velocity
-        report_msg_.webot_msg.imu.acceleration[i] =
-            payload.up_msg().imu().linear_acceleration_covariance(
-                i);  // accelerator
-    }
-    double wheel_position = payload.up_msg().steerposition();
-    if (!rpm_init_) {
+    std::shared_lock<std::shared_mutex> lock(lock_mutex_);
+    {
+        report_msg_.webot_msg.imu.angle[2] =
+            payload.up_msg().imu().orientation_covariance(0);  // vehicle_yaw
+        double forkZ = payload.up_msg().forkposez();           // forkZ Height
+        if (std::abs(forkZ - FORK_LIFTUP_HEIGHT) <= HEIGHT_DEVIATION) {
+            report_msg_.fork_state = int(FORK_STATE::ON_FORK_TOP);
+        } else if (std::abs(forkZ - FORK_LIFTDOWN_HEIGHT) <= HEIGHT_DEVIATION) {
+            report_msg_.fork_state = int(FORK_STATE::ON_FORK_BOTTOM);
+        } else {
+            report_msg_.fork_state = int(FORK_STATE::ON_FORK_MIDDLE);
+        }
+        for (int i = 0; i < 3; i++) {
+            report_msg_.webot_msg.imu.velocity[i] =
+                payload.up_msg().imu().angular_velocity_covariance(
+                    i);  // angular_velocity
+            report_msg_.webot_msg.imu.acceleration[i] =
+                payload.up_msg().imu().linear_acceleration_covariance(
+                    i);  // accelerator
+        }
+        double wheel_position = payload.up_msg().steerposition();
+        if (!rpm_init_) {
+            report_msg_.webot_msg.last_wheel_position = wheel_position;
+            rpm_init_ = true;
+        }
+        report_msg_.rpm =
+            (wheel_position - report_msg_.webot_msg.last_wheel_position) *
+            SIM_FAC;
         report_msg_.webot_msg.last_wheel_position = wheel_position;
-        rpm_init_ = true;
     }
-    report_msg_.rpm =
-        (wheel_position - report_msg_.webot_msg.last_wheel_position) * SIM_FAC;
-    report_msg_.webot_msg.last_wheel_position = wheel_position;
-    spin_lock_upward_.unlock();
 }
 
 void SVCModelSerial::onDownStreamProcess(uint8_t *msg, int len) {
@@ -83,10 +85,11 @@ void SVCModelSerial::onDownStreamProcess(uint8_t *msg, int len) {
     payload_Down.set_steering_theta(SteeringDevice);
     payload.SerializePartialToArray(buf, payload.ByteSize());
     ecal_wrapper_.send("svc_model_st/ST_msg", buf, payload.ByteSize());
-    spin_lock_upward_.lock();
-    report_msg_.dataidx = data_idx;
-    report_msg_.webot_msg.wheel_yaw = SteeringDevice;
-    spin_lock_upward_.unlock();
+    std::shared_lock<std::shared_mutex> lock(lock_mutex_);
+    {
+        report_msg_.dataidx = data_idx;
+        report_msg_.webot_msg.wheel_yaw = SteeringDevice;
+    }
 }
 
 void SVCModelSerial::onUpStreamProcess() {
@@ -94,23 +97,28 @@ void SVCModelSerial::onUpStreamProcess() {
     uint32_t dataidx_upload = report_msg_.dataidx_upload++;
     bool fork[2] = {false, false};
     const char Axis[3] = {'X', 'Y', 'Z'};
-    spin_lock_upward_.lock();
-    uint32_t l_dataidx = report_msg_.dataidx;
-    double l_steer_yaw = report_msg_.webot_msg.wheel_yaw;
-    double l_rpm = report_msg_.rpm;
-    // 38 is up, 39 is down
-    if (report_msg_.fork_state == int(FORK_STATE::ON_FORK_TOP)) {
-        fork[0] = true;
-    } else if (report_msg_.fork_state == int(FORK_STATE::ON_FORK_BOTTOM)) {
-        fork[1] = true;
-    }
+    uint32_t l_dataidx = 0;
+    double l_steer_yaw = 0;
+    double l_rpm = 0;
     struct Serial_Imu l_Imu;
-    l_Imu.angle[2] = report_msg_.webot_msg.imu.angle[2];
-    for (int i = 0; i < 3; i++) {
-        l_Imu.acceleration[i] = report_msg_.webot_msg.imu.acceleration[i];
-        l_Imu.velocity[i] = report_msg_.webot_msg.imu.velocity[i];
+    std::unique_lock<std::shared_mutex> lock(lock_mutex_);
+    {
+        l_dataidx = report_msg_.dataidx;
+        l_steer_yaw = report_msg_.webot_msg.wheel_yaw;
+        l_rpm = report_msg_.rpm;
+        // 38 is up, 39 is down
+        if (report_msg_.fork_state == int(FORK_STATE::ON_FORK_TOP)) {
+            fork[0] = true;
+        } else if (report_msg_.fork_state == int(FORK_STATE::ON_FORK_BOTTOM)) {
+            fork[1] = true;
+        }
+        l_Imu.angle[2] = report_msg_.webot_msg.imu.angle[2];
+        for (int i = 0; i < 3; i++) {
+            l_Imu.acceleration[i] = report_msg_.webot_msg.imu.acceleration[i];
+            l_Imu.velocity[i] = report_msg_.webot_msg.imu.velocity[i];
+        }
     }
-    spin_lock_upward_.unlock();
+
     // Data to Upload
     std::string Imu_Function = "";
     encoder_.updateValue("IncrementalSteeringCoder", 1, l_steer_yaw);
