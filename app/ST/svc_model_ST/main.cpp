@@ -15,7 +15,7 @@ int main(int argc, char *argv[]) {
         std::make_shared<SVCModelSerial>();
     serial_service->init(true, "svc_ST");
     std::shared_ptr<BaseSVCModel> lidar_service =
-        std::make_shared<SVCModelLidarSlam>();
+        std::make_shared<SVCModelLidar>();
     lidar_service->init(false, "lidar");
     bool flag = true;
     // TODO: How to exit

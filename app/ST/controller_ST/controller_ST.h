@@ -27,6 +27,7 @@ class NormalSTController : public BaseController {
     // task
     void whileSpin();
     void BpReportSpin();
+    void Mid360ReportSpin();
     void sendSerialSpin();
 
    private:
