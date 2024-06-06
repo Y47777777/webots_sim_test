@@ -113,8 +113,7 @@ void NormalSTController::Mid360ReportSpin() {
     LOG_INFO("Mid360ReportSpin start\n");
     sim_data_flow::WBPointCloud payload;
     FixedTimeWakeUpTimer wake_up_timer;
-    FixedTimeTimestampGenerator timestamp_generator{
-        100, 1640966400000000 + 8 * 3600 + 100000};  // 100 ms
+    FixedTimeTimestampGenerator timestamp_generator{100};  // 100 ms
     wake_up_timer.ready(100);
     while (!webotsExited_) {
         payload.set_timestamp(timestamp_generator.timestamp());
@@ -137,8 +136,7 @@ void NormalSTController::BpReportSpin() {
     LOG_INFO("BpReportSpin start\n");
     sim_data_flow::WBPointCloud payload;
     FixedTimeWakeUpTimer wake_up_timer;
-    FixedTimeTimestampGenerator timestamp_generator{
-        50, 1640966400000000 + 8 * 3600 + 100000};  // 50 ms
+    FixedTimeTimestampGenerator timestamp_generator{50};  // 50 ms
     wake_up_timer.ready(50);
     while (!webotsExited_) {
         payload.set_timestamp(timestamp_generator.timestamp());
