@@ -1,10 +1,11 @@
-#ifndef __FB_LOADER__H__
-#define __FB_LOADER__H__
+#ifndef __NRLS__H__
+#define __NRLS__H__
 
 #include <vector>
 #include <string>
 #include <sstream>
 #include <fstream>
+#include "sim_data_flow/point_cloud.pb.h"
 #include "logvn/logvn.h"
 
 #define M_PI 3.14
@@ -28,13 +29,13 @@ struct LidarInfo {
     float min_Z2{3500};
 };
 
-class FB_Loader {
+class NRLS {
    private:
     std::vector<struct FBContain> fb_list_;
 
    public:
-    FB_Loader() {}
-    ~FB_Loader() {}
+    NRLS() {}
+    ~NRLS() {}
     int load(const char *path, const struct LidarInfo &input) {
         int ret = 0;
         std::vector<std::string> csv_data_;
@@ -65,7 +66,35 @@ class FB_Loader {
         } while (0);
         return ret;
     }
-    const std::vector<struct FBContain> *getInfo() { return &fb_list_; }
+    void doCopyProcess(const Lidar *lidar,
+                       sim_data_flow::WBPointCloud &point_cloud) {
+        auto layers = lidar->getNumberOfLayers();
+        auto number = lidar->getNumberOfPoints();
+        auto npl = number / layers;
+        point_cloud.clear_point_cloud();
+        for (const auto &unit : fb_list_) {
+            if (unit.layer_count < 0 || unit.pc_idx < 0)
+                continue;
+            if (unit.layer_count >= layers || unit.pc_idx >= npl)
+                continue;
+            auto pts = lidar->getLayerPointCloud(unit.layer_count);
+            double x = pts[unit.pc_idx].x;
+            double y = pts[unit.pc_idx].y;
+            double z = pts[unit.pc_idx].z;
+            if (std::abs(x) != INFINITY && std::abs(y) != INFINITY &&
+                std::abs(z) != INFINITY) {
+                sim_data_flow::LidarPoint *point =
+                    point_cloud.add_point_cloud();
+                point->set_x(x);
+                point->set_y(y);
+                point->set_z(z);
+                point->set_time(pts[unit.pc_idx].time);
+                point->set_layer_id(pts[unit.pc_idx].layer_id);
+            }
+        }
+        point_cloud.set_size_of_each_layer(-1);
+        point_cloud.set_size_of_layer(-1);
+    }
 
    private:
     int readCSV(const char *path, std::vector<std::string> &csv_data) {

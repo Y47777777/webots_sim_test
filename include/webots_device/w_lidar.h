@@ -3,7 +3,7 @@
 #include <webots/Node.hpp>
 #include <webots/Lidar.hpp>
 
-#include "FB_loader.h"
+#include "NRLS.h"
 #include "webots_device/w_base.h"
 #include "sim_data_flow/point_cloud.pb.h"
 #include "logvn/logvn.h"
@@ -95,10 +95,10 @@ class WLidar : public WBase {
                 node_->getField("numberOfLayers")->getSFInt32()  // read
             // TODO: minZ
         };
-        if (fb_loader_ == nullptr) {
-            fb_loader_ = std::make_shared<FB_Loader>();
+        if (NRLS_ == nullptr) {
+            NRLS_ = std::make_shared<NRLS>();
         }
-        fb_loader_->load(file.c_str(), input);
+        NRLS_->load(file.c_str(), input);
     }
 
     void moveLidar() {
@@ -118,33 +118,7 @@ class WLidar : public WBase {
         // TODO: 模拟非重复线扫
         if (is_sim_NRLS_) {
             // 拷贝结束后直接返回
-            auto layers = lidar_->getNumberOfLayers();
-            auto number = lidar_->getNumberOfPoints();
-            auto npl = number / layers;
-            auto check_list = fb_loader_->getInfo();
-            point_cloud_.clear_point_cloud();
-            for (const auto &unit : *check_list) {
-                if (unit.layer_count < 0 || unit.pc_idx < 0)
-                    continue;
-                if (unit.layer_count >= layers || unit.pc_idx >= npl)
-                    continue;
-                auto pts = lidar_->getLayerPointCloud(unit.layer_count);
-                double x = pts[unit.pc_idx].x;
-                double y = pts[unit.pc_idx].y;
-                double z = pts[unit.pc_idx].z;
-                if (std::abs(x) != INFINITY && std::abs(y) != INFINITY &&
-                    std::abs(z) != INFINITY) {
-                    sim_data_flow::LidarPoint *point =
-                        point_cloud_.add_point_cloud();
-                    point->set_x(x);
-                    point->set_y(y);
-                    point->set_z(z);
-                    point->set_time(pts[unit.pc_idx].time);
-                    point->set_layer_id(pts[unit.pc_idx].layer_id);
-                }
-            }
-            point_cloud_.set_size_of_each_layer(-1);
-            point_cloud_.set_size_of_layer(-1);
+            NRLS_->doCopyProcess(lidar_, point_cloud_);
         } else {
             // // copy to stash
             point_cloud_.clear_point_cloud();
@@ -191,8 +165,9 @@ class WLidar : public WBase {
 
     double tf_translation_[3] = {0, 0, 0};
     double tf_rotation_[4] = {0, 0, 0, 0};
-    std::shared_ptr<FB_Loader> fb_loader_{nullptr};
+    std::shared_ptr<NRLS> NRLS_{nullptr};
     bool is_sim_NRLS_ = false;
+
 };  // namespace VNSim
 
 }  // namespace VNSim
