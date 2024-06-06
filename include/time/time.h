@@ -2,7 +2,9 @@
 #define __TIME_H__
 #include <chrono>
 #include <thread>
+#include <qelapsedtimer.h>
 
+namespace VNSim {
 class FixedTimeWakeUpTimer {
    private:
     uint32_t duration_;  // ms
@@ -30,7 +32,8 @@ class FixedTimeTimestampGenerator {
 
    public:
     FixedTimeTimestampGenerator(uint32_t duration = 10,
-                                uint64_t base_timestamp = 1640966400000000)
+                                uint64_t base_timestamp = (1640966400000000 +
+                                                           8 * 3600 + 1000000))
         : next_timestamp_(base_timestamp), duration_(duration) {}
     ~FixedTimeTimestampGenerator() {}
     uint64_t timestamp() {
@@ -39,5 +42,33 @@ class FixedTimeTimestampGenerator {
         return l_timestamp;
     }
 };
+
+class ElapsedTimer {
+   private:
+    QElapsedTimer timer_;
+    uint64_t next_timestamp_;
+
+   public:
+    void start(uint64_t base_timestamp = (1640966400000000 + 8 * 3600 +
+                                          1000000)) {
+        next_timestamp_ = base_timestamp;
+        timer_.start();
+        return;
+    }
+    void restart() {
+        timer_.restart();
+        return;
+    }
+    uint64_t elapsed() {
+        if (!timer_.isValid()) {
+            return 0;
+        }
+        uint64_t l_elapsed = timer_.elapsed();
+        next_timestamp_ += (l_elapsed * 1000);
+        return l_elapsed;
+    }
+    uint64_t timestamp() { return next_timestamp_; }
+};
+}  // namespace VNSim
 
 #endif
