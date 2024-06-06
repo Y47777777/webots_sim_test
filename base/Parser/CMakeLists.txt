@@ -6,8 +6,7 @@ VERSION 1.1.0)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(VN_INCLUDE
-    ${CMAKE_SOURCE_DIR}/../../include)
+
 set(LIBRARY_INSTALL_DIR 
     ${CMAKE_SOURCE_DIR}/../../../../simulation_world/webots/libraries)
 
@@ -18,7 +17,7 @@ file(GLOB header_files "src/*.h*")
 SET(USER_INCLUDE /usr/include)
 option(ENABLE_EXAMPLE "Build Example" OFF)
 
-include_directories(${USER_INCLUDE} ${VN_INCLUDE} ${CMAKE_SOURCE_DIR}/include)
+include_directories(${USER_INCLUDE} ${CMAKE_SOURCE_DIR}/include)
 
 message(${src_files})
 

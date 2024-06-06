@@ -22,46 +22,57 @@ class WLidar : public WBase {
     WLidar(std::string lidar_name, std::string pose_name = "",
            int frequency = 100)
         : WBase() {
-        // creat lidar_name
-        lidar_name_ = lidar_name;
-        frequency_ = frequency;
+        // creat lidar
+        {
+            lidar_name_ = lidar_name;
+            frequency_ = frequency;
+            frequency_cnt_ = std::round(double(frequency_ / step_duration_));
 
-        lidar_ = super_->getLidar(lidar_name);
-        if (lidar_ == nullptr) {
-            LOG_ERROR("%s is nullptr", lidar_name.c_str());
-            return;
+            lidar_ = super_->getLidar(lidar_name);
+            if (lidar_ == nullptr) {
+                LOG_ERROR("%s is nullptr", lidar_name.c_str());
+                return;
+            }
+
+            lidar_->enable(frequency_);
+            lidar_->enablePointCloud();
+
+            webots_point_could_address_ = lidar_->getPointCloud();
+            int size_of_layer = lidar_->getNumberOfLayers();
+            int size_of_point_cloud = lidar_->getNumberOfPoints();
+            int size_of_each_layer = size_of_point_cloud / size_of_layer;
+
+            point_cloud_.set_size_of_layer(size_of_layer);
+            point_cloud_.set_size_of_each_layer(size_of_each_layer);
+            point_cloud_.set_size_of_point_cloud(size_of_point_cloud);
         }
-
-        lidar_->enable(frequency_);
-        lidar_->enablePointCloud();
-
-        webots_point_could_address_ = lidar_->getPointCloud();
-        int size_of_layer = lidar_->getNumberOfLayers();
-        int size_of_point_cloud = lidar_->getNumberOfPoints();
-        int size_of_each_layer = size_of_point_cloud / size_of_layer;
-
-        point_cloud_.set_size_of_layer(size_of_layer);
-        point_cloud_.set_size_of_each_layer(size_of_each_layer);
-        point_cloud_.set_size_of_point_cloud(size_of_point_cloud);
 
         // creat pose
-        node_ = super_->getFromDef(pose_name);
-        if (node_ != nullptr) {
-            translation_ptr_ = node_->getField("translation");
-            rotation_ptr_ = node_->getField("rotation");
+        {
+            node_ = super_->getFromDef(pose_name);
+            if (node_ != nullptr) {
+                translation_ptr_ = node_->getField("translation");
+                rotation_ptr_ = node_->getField("rotation");
 
-            memcpy(tf_rotation_, rotation_ptr_->getSFRotation(),
-                   4 * sizeof(tf_rotation_[0]));
-            memcpy(tf_translation_, translation_ptr_->getSFVec3f(),
-                   3 * sizeof(tf_translation_[0]));
+                memcpy(tf_rotation_, rotation_ptr_->getSFRotation(),
+                       4 * sizeof(tf_rotation_[0]));
+                memcpy(tf_translation_, translation_ptr_->getSFVec3f(),
+                       3 * sizeof(tf_translation_[0]));
 
-            LOG_INFO("pose node :", pose_name.c_str());
-            LOG_INFO("pose rotation %.3f, %.3f, %.3f, %.3f", tf_rotation_[0],
-                     tf_rotation_[1], tf_rotation_[2], tf_rotation_[3]);
+                LOG_INFO("pose node :", pose_name.c_str());
+                LOG_INFO("pose rotation %.3f, %.3f, %.3f, %.3f",
+                         tf_rotation_[0], tf_rotation_[1], tf_rotation_[2],
+                         tf_rotation_[3]);
 
-            LOG_INFO("pose translation %.3f, %.3f, %.3f", tf_translation_[0],
-                     tf_translation_[1], tf_translation_[2]);
+                LOG_INFO("pose translation %.3f, %.3f, %.3f",
+                         tf_translation_[0], tf_translation_[1],
+                         tf_translation_[2]);
+            }
         }
+
+        // 设置雷达数据生成其实步数，间隔雷达数据
+        start_step_ = super_->getStepCnt();
+        super_->step(step_duration_);
     }
 
     ~WLidar() {}
@@ -104,7 +115,7 @@ class WLidar : public WBase {
     void moveLidar() {
         std::shared_lock<std::shared_mutex> lock(rw_mutex_);
         if (translation_ptr_ == nullptr) {
-            LOG_ERROR("");
+            LOG_ERROR("can`t move %s", lidar_name_.c_str());
             return;
         }
         // TODO:mid 360 移动
@@ -115,6 +126,15 @@ class WLidar : public WBase {
 
     void spin() {
         std::unique_lock<std::shared_mutex> lock(rw_mutex_);
+
+        // 根据频率拷贝数据
+        int now_step_cnt = super_->getStepCnt() - start_step_;
+        if (now_step_cnt % frequency_cnt_ != 0) {
+            return;
+        }
+        // LOG_INFO("%s,!!!!!!!!,copy  cnt%d", lidar_name_.c_str(),
+        //          now_step_cnt);
+
         // TODO: 模拟非重复线扫
         if (is_sim_NRLS_) {
             // 拷贝结束后直接返回
@@ -159,6 +179,7 @@ class WLidar : public WBase {
     Node *node_ = nullptr;
 
     int frequency_ = 0;
+    int frequency_cnt_ = 0;
 
     const LidarPoint *webots_point_could_address_;
     sim_data_flow::WBPointCloud point_cloud_;
