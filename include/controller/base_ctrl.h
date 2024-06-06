@@ -80,7 +80,6 @@ class BaseController : public QThread {
     // webots
     WSupervisor *supervisor_ = nullptr;
     int step_duration_ = 0;
-    FixedTimeWakeUpTimer wakeup_timer_;
     bool webotsExited_ = false;
 
     std::map<std::string, std::thread> m_thread_;

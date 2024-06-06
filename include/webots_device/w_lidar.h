@@ -3,6 +3,7 @@
 #include <webots/Node.hpp>
 #include <webots/Lidar.hpp>
 
+#include "time/time.h"
 #include "NRLS.h"
 #include "webots_device/w_base.h"
 #include "sim_data_flow/point_cloud.pb.h"
@@ -73,6 +74,7 @@ class WLidar : public WBase {
         // 设置雷达数据生成其实步数，间隔雷达数据
         start_step_ = super_->getStepCnt();
         super_->step(step_duration_);
+        data_is_ready_ = false;
     }
 
     ~WLidar() {}
@@ -120,10 +122,13 @@ class WLidar : public WBase {
         // TODO:mid 360 移动
     }
 
+    bool checkDataReady() { return data_is_ready_; }
+
     void getLocalPointCloud(sim_data_flow::WBPointCloud &t_lidar,
                             int target_size = -1) {
         std::shared_lock<std::shared_mutex> lock(rw_mutex_);
         t_lidar.CopyFrom(point_cloud_);
+        data_is_ready_ = false;
     }
 
     void spin() {
@@ -134,7 +139,8 @@ class WLidar : public WBase {
         if (now_step_cnt % frequency_cnt_ != 0) {
             return;
         }
-
+        data_is_ready_ = true;
+        
         if (is_sim_NRLS_) {
             // 模拟非重复线扫
             NRLS_->doCopyProcess(lidar_, point_cloud_);
@@ -142,7 +148,7 @@ class WLidar : public WBase {
             // 增加时间戳
             point_cloud_.set_timestamp(Timer::getInstance()->getTimeStamp());
             point_cloud_.clear_point_cloud();
-            // int size = point_cloud_.size_of_point_cloud();
+
             const LidarPoint *address = webots_point_could_address_;
             for (int i = 0; i < size_of_point_cloud_; i++) {
                 double x = address[i].x;
@@ -183,6 +189,7 @@ class WLidar : public WBase {
     double tf_rotation_[4] = {0, 0, 0, 0};
     std::shared_ptr<NRLS> NRLS_{nullptr};
     bool is_sim_NRLS_ = false;
+    bool data_is_ready_ = false;
 };
 
 }  // namespace VNSim

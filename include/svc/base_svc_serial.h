@@ -27,6 +27,7 @@ class BaseSerialSVCModel : public BaseSVCModel {
     }
 
    protected:
+    // TODO: config 路径修改
     int initService() {
         const char *decoder_file =
             "../../../../../AGVServices/general/config/"
@@ -66,11 +67,11 @@ class BaseSerialSVCModel : public BaseSVCModel {
             this->onInitService();
             // report thread
             std::thread sensor_msg_report_thread([&]() {
-                FixedTimeWakeUpTimer wakeup_timer;
-                wakeup_timer.ready(10);
+                Timer alarm;
+                alarm.alarmTimerInit(10);
                 while (!SVCExit_) {
                     this->onUpStreamProcess();
-                    wakeup_timer.wait();
+                    alarm.wait();
                 }
             });
             sensor_msg_report_thread_ = std::move(sensor_msg_report_thread);

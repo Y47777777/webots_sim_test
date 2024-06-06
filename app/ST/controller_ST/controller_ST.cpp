@@ -115,10 +115,13 @@ void NormalSTController::Mid360ReportSpin() {
     uint8_t buf[BP_LIDAR_MSG_BUF];
     LOG_INFO("Mid360ReportSpin start\n");
     sim_data_flow::WBPointCloud payload;
-    FixedTimeWakeUpTimer wake_up_timer;
+    // FixedTimeWakeUpTimer wake_up_timer;
 
-    wake_up_timer.ready(100);
+    // wake_up_timer.ready(100);
     while (!webotsExited_) {
+        if(!mid360_ptr_->checkDataReady()){
+            continue;
+        }
         mid360_ptr_->getLocalPointCloud(payload, MAXIMUM_MID360_UPLOAD);
         if (payload.ByteSize() > BP_LIDAR_MSG_BUF) {
             LOG_WARN(
@@ -128,7 +131,7 @@ void NormalSTController::Mid360ReportSpin() {
         }
         payload.SerializePartialToArray(buf, payload.ByteSize());
         ecal_wrapper_.send("webot/perception", buf, payload.ByteSize());
-        wake_up_timer.wait();
+        // wake_up_timer.wait();
     }
     return;
 }
@@ -137,10 +140,12 @@ void NormalSTController::BpReportSpin() {
     uint8_t buf[BP_LIDAR_MSG_BUF];
     LOG_INFO("BpReportSpin start\n");
     sim_data_flow::WBPointCloud payload;
-    FixedTimeWakeUpTimer wake_up_timer;
 
-    wake_up_timer.ready(50);
+    // wake_up_timer.ready(50);
     while (!webotsExited_) {
+        if(!BP_ptr_->checkDataReady()){
+            continue;
+        }
         BP_ptr_->getLocalPointCloud(payload, MAXIMUM_BP_UPLOAD);
         if (payload.ByteSize() > BP_LIDAR_MSG_BUF) {
             LOG_WARN(
@@ -150,7 +155,7 @@ void NormalSTController::BpReportSpin() {
         }
         payload.SerializePartialToArray(buf, payload.ByteSize());
         ecal_wrapper_.send("webot/pointCloud", buf, payload.ByteSize());
-        wake_up_timer.wait();
+        // wake_up_timer.wait();
     }
     return;
 }
