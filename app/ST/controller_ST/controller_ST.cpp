@@ -15,13 +15,16 @@ using namespace webots;
 #define MAXIMUM_BP_UPLOAD 28800
 #define MAXIMUM_MID360_UPLOAD 20722
 
+// TODO: 构造的位置要想想
+std::shared_ptr<Timer> Timer::static_timer_ptr_ = nullptr;
+
 NormalSTController::NormalSTController() : BaseController() {
     // sensor init
+    imu_ptr_ = std::make_shared<WImu>("inertial unit", "gyro", "accelerometer");
     BP_ptr_ = std::make_shared<WLidar>("BP");
     mid360_ptr_ = std::make_shared<WLidar>("mid360", "MID360", 100);
-    mid360_ptr_->loadNRLSFB();
     mid360_ptr_->setSimulationNRLS(true);
-    imu_ptr_ = std::make_shared<WImu>("inertial unit", "gyro", "accelerometer");
+
     // motor init
     fork_ptr_ = std::make_shared<WFork>("fork height motor");
     stree_ptr_ =
@@ -32,7 +35,7 @@ NormalSTController::NormalSTController() : BaseController() {
     v_while_spin_.push_back(bind(&WBase::spin, fork_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, imu_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, BP_ptr_));
-    // v_while_spin_.push_back(bind(&WBase::spin, mid360_ptr_));
+    v_while_spin_.push_back(bind(&WBase::spin, mid360_ptr_));
 
     std::thread local_thread(
         std::bind(&NormalSTController::BpReportSpin, this));
@@ -113,10 +116,9 @@ void NormalSTController::Mid360ReportSpin() {
     LOG_INFO("Mid360ReportSpin start\n");
     sim_data_flow::WBPointCloud payload;
     FixedTimeWakeUpTimer wake_up_timer;
-    FixedTimeTimestampGenerator timestamp_generator{100};  // 100 ms
+
     wake_up_timer.ready(100);
     while (!webotsExited_) {
-        payload.set_timestamp(timestamp_generator.timestamp());
         mid360_ptr_->getLocalPointCloud(payload, MAXIMUM_MID360_UPLOAD);
         if (payload.ByteSize() > BP_LIDAR_MSG_BUF) {
             LOG_WARN(
@@ -136,10 +138,9 @@ void NormalSTController::BpReportSpin() {
     LOG_INFO("BpReportSpin start\n");
     sim_data_flow::WBPointCloud payload;
     FixedTimeWakeUpTimer wake_up_timer;
-    FixedTimeTimestampGenerator timestamp_generator{50};  // 50 ms
+
     wake_up_timer.ready(50);
     while (!webotsExited_) {
-        payload.set_timestamp(timestamp_generator.timestamp());
         BP_ptr_->getLocalPointCloud(payload, MAXIMUM_BP_UPLOAD);
         if (payload.ByteSize() > BP_LIDAR_MSG_BUF) {
             LOG_WARN(

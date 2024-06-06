@@ -38,13 +38,13 @@ class WLidar : public WBase {
             lidar_->enablePointCloud();
 
             webots_point_could_address_ = lidar_->getPointCloud();
-            int size_of_layer = lidar_->getNumberOfLayers();
-            int size_of_point_cloud = lidar_->getNumberOfPoints();
-            int size_of_each_layer = size_of_point_cloud / size_of_layer;
+            size_of_layer_ = lidar_->getNumberOfLayers();
+            size_of_point_cloud_ = lidar_->getNumberOfPoints();
+            size_of_each_layer_ = size_of_point_cloud_ / size_of_layer_;
 
-            point_cloud_.set_size_of_layer(size_of_layer);
-            point_cloud_.set_size_of_each_layer(size_of_each_layer);
-            point_cloud_.set_size_of_point_cloud(size_of_point_cloud);
+            point_cloud_.set_size_of_layer(size_of_layer_);
+            point_cloud_.set_size_of_each_layer(size_of_each_layer_);
+            point_cloud_.set_size_of_point_cloud(size_of_point_cloud_);
         }
 
         // creat pose
@@ -87,12 +87,11 @@ class WLidar : public WBase {
         is_sim_NRLS_ = flag;
 
         point_cloud_.clear_point_cloud();
-        // TODO:完善非重复线扫的模拟
-        // set size();
-    }
 
-    void loadNRLSFB() {
-        // only NRLS lidar need do this initialization
+        if (is_sim_NRLS_ == false) {
+            return;
+        }
+
         const char *base_path = "../../plugins/lidar_scan_mode_config/";
         std::string file = std::string(base_path) + lidar_name_ + ".csv";
         struct LidarInfo input = {
@@ -121,8 +120,11 @@ class WLidar : public WBase {
         // TODO:mid 360 移动
     }
 
-    // TODO: delete
-    const Lidar *getLidarPtr() { return lidar_; }
+    void getLocalPointCloud(sim_data_flow::WBPointCloud &t_lidar,
+                            int target_size = -1) {
+        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+        t_lidar.CopyFrom(point_cloud_);
+    }
 
     void spin() {
         std::unique_lock<std::shared_mutex> lock(rw_mutex_);
@@ -132,20 +134,17 @@ class WLidar : public WBase {
         if (now_step_cnt % frequency_cnt_ != 0) {
             return;
         }
-        // LOG_INFO("%s,!!!!!!!!,copy  cnt%d", lidar_name_.c_str(),
-        //          now_step_cnt);
 
-        // TODO: 模拟非重复线扫
         if (is_sim_NRLS_) {
-            // 拷贝结束后直接返回
+            // 模拟非重复线扫
             NRLS_->doCopyProcess(lidar_, point_cloud_);
         } else {
-            // // copy to stash
+            // 增加时间戳
+            point_cloud_.set_timestamp(Timer::getInstance()->getTimeStamp());
             point_cloud_.clear_point_cloud();
             // int size = point_cloud_.size_of_point_cloud();
             const LidarPoint *address = webots_point_could_address_;
-            int size = lidar_->getNumberOfPoints();
-            for (int i = 0; i < size; i++) {
+            for (int i = 0; i < size_of_point_cloud_; i++) {
                 double x = address[i].x;
                 double y = address[i].y;
                 double z = address[i].z;
@@ -160,15 +159,7 @@ class WLidar : public WBase {
                     point->set_layer_id(address[i].layer_id);
                 }
             }
-            point_cloud_.set_size_of_each_layer(lidar_->getNumberOfLayers());
-            point_cloud_.set_size_of_layer(size / lidar_->getNumberOfLayers());
         }
-    }
-
-    void getLocalPointCloud(sim_data_flow::WBPointCloud &t_lidar,
-                            int target_size = -1) {
-        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
-        t_lidar.CopyFrom(point_cloud_);
     }
 
    private:
@@ -181,6 +172,10 @@ class WLidar : public WBase {
     int frequency_ = 0;
     int frequency_cnt_ = 0;
 
+    int size_of_layer_ = 0;
+    int size_of_point_cloud_ = 0;
+    int size_of_each_layer_ = 0;
+
     const LidarPoint *webots_point_could_address_;
     sim_data_flow::WBPointCloud point_cloud_;
 
@@ -188,7 +183,6 @@ class WLidar : public WBase {
     double tf_rotation_[4] = {0, 0, 0, 0};
     std::shared_ptr<NRLS> NRLS_{nullptr};
     bool is_sim_NRLS_ = false;
-
-};  // namespace VNSim
+};
 
 }  // namespace VNSim

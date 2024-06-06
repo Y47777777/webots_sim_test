@@ -9,11 +9,6 @@
 
 #include "webots_device/w_base.h"
 
-// TODO: 整理成time.hpp
-#include <chrono>
-#include <QElapsedTimer>
-#include <QTime>
-
 namespace VNSim {
 
 class BaseController : public QThread {
@@ -25,6 +20,9 @@ class BaseController : public QThread {
         // init 设置为最快的模式
         supervisor_->step(step_duration_);
         supervisor_->simulationSetMode(Supervisor::SIMULATION_MODE_FAST);
+
+        // 初始化timer
+        timer_ptr_ = Timer::getInstance();
     }
 
     // 由base管理线程
@@ -53,18 +51,7 @@ class BaseController : public QThread {
 
         // task
         webotsExited_ = false;
-        wakeup_timer_.ready(step_duration_);
-
-        // FIXME: for test
-        // QElapsedTimer t;
-        // QElapsedTimer t_1;
-        // QElapsedTimer sleep_t;
-        // LOG_INFO("                         step %d", t_1.elapsed());
-        // t.restart();
-        // LOG_INFO("copy spend %d", t.elapsed());
-        // sleep_t.restart();
-        // LOG_INFO("sleep %d", sleep_t.elapsed());
-        // t_1.restart();
+        alarm_.alarmTimerInit(step_duration_);
 
         while (supervisor_->step(step_duration_) != -1) {
             // 循环遍历注册的任务
@@ -74,9 +61,9 @@ class BaseController : public QThread {
 
             // 特殊的需要执行的任务
             this->whileSpin();
-
+            
             // 休眠直到目标时间
-            wakeup_timer_.wait();
+            alarm_.wait();
         }
         webotsExited_ = true;
 
@@ -98,6 +85,8 @@ class BaseController : public QThread {
 
     std::map<std::string, std::thread> m_thread_;
     std::vector<std::function<void(void)>> v_while_spin_;
+    std::shared_ptr<Timer> timer_ptr_;
+    Timer alarm_;
 };
 
 }  // namespace VNSim

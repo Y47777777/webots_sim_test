@@ -76,6 +76,7 @@
         "qthread": "cpp",
         "shared_mutex": "cpp",
         "core": "cpp",
-        "geometry": "cpp"
+        "geometry": "cpp",
+        "*.ipp": "cpp"
     }
 }
