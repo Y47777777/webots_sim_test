@@ -174,21 +174,7 @@ class WLidar : public WBase {
     void getLocalPointCloud(sim_data_flow::WBPointCloud &t_lidar,
                             int target_size = -1) {
         std::shared_lock<std::shared_mutex> lock(rw_mutex_);
-        int size = point_cloud_.size_of_point_cloud();
-        int counter = 0;
-        if (target_size != -1)
-            size = target_size;
-        for (int i = 0; i < size; i++) {
-            sim_data_flow::LidarPoint *point = t_lidar.add_point_cloud();
-            point->set_x(point_cloud_.point_cloud().at(i).x());
-            point->set_y(point_cloud_.point_cloud().at(i).y());
-            point->set_z(point_cloud_.point_cloud().at(i).z());
-            point->set_time(point_cloud_.point_cloud().at(i).time());
-            point->set_layer_id(point_cloud_.point_cloud().at(i).layer_id());
-        }
-        t_lidar.set_size_of_point_cloud(size);
-        t_lidar.set_size_of_layer(point_cloud_.size_of_layer());
-        t_lidar.set_size_of_each_layer(point_cloud_.size_of_each_layer());
+        t_lidar.CopyFrom(point_cloud_);
     }
 
    private:
