@@ -34,8 +34,9 @@ void SVCModelSerial::onWebotMsg(const char *topic_name,
     payload.ParseFromArray(data->buf, data->size);
     // use a spin lock to manage data copy
     // if the time consumption is huge, use a real mutex instead
-    std::shared_lock<std::shared_mutex> lock(lock_mutex_);
     {
+        std::shared_lock<std::shared_mutex> lock(lock_mutex_);
+        // This period should be locked
         report_msg_.webot_msg.imu.angle[2] =
             payload.up_msg().imu().orientation_covariance(0);  // vehicle_yaw
         double forkZ = payload.up_msg().forkposez();           // forkZ Height
@@ -85,8 +86,9 @@ void SVCModelSerial::onDownStreamProcess(uint8_t *msg, int len) {
     payload_Down.set_steering_theta(SteeringDevice);
     payload.SerializePartialToArray(buf, payload.ByteSize());
     ecal_wrapper_.send("svc_model_st/ST_msg", buf, payload.ByteSize());
-    std::shared_lock<std::shared_mutex> lock(lock_mutex_);
     {
+        // This period should be locked
+        std::shared_lock<std::shared_mutex> lock(lock_mutex_);
         report_msg_.dataidx = data_idx;
         report_msg_.webot_msg.wheel_yaw = SteeringDevice;
     }
@@ -101,8 +103,9 @@ void SVCModelSerial::onUpStreamProcess() {
     double l_steer_yaw = 0;
     double l_rpm = 0;
     struct Serial_Imu l_Imu;
-    std::unique_lock<std::shared_mutex> lock(lock_mutex_);
     {
+        // This period should be locked
+        std::unique_lock<std::shared_mutex> lock(lock_mutex_);
         l_dataidx = report_msg_.dataidx;
         l_steer_yaw = report_msg_.webot_msg.wheel_yaw;
         l_rpm = report_msg_.rpm;
