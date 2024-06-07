@@ -2,9 +2,9 @@
  * @Author: weijchen weijchen@visionnav.com
  * @Date: 2024-06-06 15:18:08
  * @LastEditors: weijchen weijchen@visionnav.com
- * @LastEditTime: 2024-06-07 10:33:14
+ * @LastEditTime: 2024-06-07 11:30:21
  * @FilePath: /webots_ctrl/include/controller/base_ctrl.h
- * @Description: 
+ * @Description:  ctrler base 类
  * 
  * Copyright (c) 2024 by ${git_name_email}, All Rights Reserved. 
  */
@@ -84,6 +84,7 @@ class BaseController : public QThread {
     }
 
     // spin task
+    // 机器差异部分在该函数下实现
     virtual void whileSpin() = 0;
 
    protected:

@@ -1,3 +1,13 @@
+/*
+ * @Author: weijchen weijchen@visionnav.com
+ * @Date: 2024-06-06 15:18:00
+ * @LastEditors: weijchen weijchen@visionnav.com
+ * @LastEditTime: 2024-06-07 12:21:46
+ * @FilePath: /webots_ctrl/app/ST/controller_ST/controller_ST.cpp
+ * @Description: 
+ * 
+ * Copyright (c) 2024 by visionnav, All Rights Reserved. 
+ */
 #include <ecal/msg/protobuf/publisher.h>
 #include "sim_data_flow/point_cloud.pb.h"
 #include "time/time.h"
@@ -115,11 +125,10 @@ void NormalSTController::Mid360ReportSpin() {
     uint8_t buf[BP_LIDAR_MSG_BUF];
     LOG_INFO("Mid360ReportSpin start\n");
     sim_data_flow::WBPointCloud payload;
-    // FixedTimeWakeUpTimer wake_up_timer;
 
-    // wake_up_timer.ready(100);
+    // FIXME: 可以修改为信号量触发
     while (!webotsExited_) {
-        if(!mid360_ptr_->checkDataReady()){
+        if (!mid360_ptr_->checkDataReady()) {
             continue;
         }
         mid360_ptr_->getLocalPointCloud(payload, MAXIMUM_MID360_UPLOAD);
@@ -141,9 +150,9 @@ void NormalSTController::BpReportSpin() {
     LOG_INFO("BpReportSpin start\n");
     sim_data_flow::WBPointCloud payload;
 
-    // wake_up_timer.ready(50);
+    // FIXME: 可以修改为信号量触发
     while (!webotsExited_) {
-        if(!BP_ptr_->checkDataReady()){
+        if (!BP_ptr_->checkDataReady()) {
             continue;
         }
         BP_ptr_->getLocalPointCloud(payload, MAXIMUM_BP_UPLOAD);
@@ -155,7 +164,6 @@ void NormalSTController::BpReportSpin() {
         }
         payload.SerializePartialToArray(buf, payload.ByteSize());
         ecal_wrapper_.send("webot/pointCloud", buf, payload.ByteSize());
-        // wake_up_timer.wait();
     }
     return;
 }

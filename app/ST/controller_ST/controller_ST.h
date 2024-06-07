@@ -1,3 +1,23 @@
+/*
+ * @Author: weijchen weijchen@visionnav.com
+ * @Date: 2024-06-06 15:18:00
+ * @LastEditors: weijchen weijchen@visionnav.com
+ * @LastEditTime: 2024-06-07 12:21:50
+ * @FilePath: /webots_ctrl/app/ST/controller_ST/controller_ST.h
+ * @Description: 
+ * 
+ * Copyright (c) 2024 by visionnav, All Rights Reserved. 
+ */
+/*
+ * @Author: weijchen weijchen@visionnav.com
+ * @Date: 2024-06-06 15:18:00
+ * @LastEditors: weijchen weijchen@visionnav.com
+ * @LastEditTime: 2024-06-07 11:36:09
+ * @FilePath: /webots_ctrl/app/ST/controller_ST/controller_ST.h
+ * @Description:
+ *
+ * Copyright (c) 2024 by visionnav, All Rights Reserved.
+ */
 #ifndef __WEBOTST_HPP__
 #define __WEBOTST_HPP__
 #include <thread>
@@ -10,6 +30,7 @@
 #include "webots_device/w_imu.h"
 #include "ecal_wrapper.h"
 
+// TODO: 统一该定义
 #define SERIAL_MSG_BUF 256
 
 namespace VNSim {
@@ -42,9 +63,6 @@ class NormalSTController : public BaseController {
     sim_data_flow::STUp payload_Up;
     foxglove::Imu payload_imu;
     uint8_t buf[SERIAL_MSG_BUF];
-
-    // private:
-    //  void PointCloud2Init(pb::PointCloud2 &pb, int size);
 
    public:
     void onRemoteSerialMsg(const char *topic_name,

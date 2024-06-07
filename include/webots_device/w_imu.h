@@ -2,7 +2,7 @@
  * @Author: weijchen weijchen@visionnav.com
  * @Date: 2024-06-06 15:18:00
  * @LastEditors: weijchen weijchen@visionnav.com
- * @LastEditTime: 2024-06-07 11:19:05
+ * @LastEditTime: 2024-06-07 11:35:46
  * @FilePath: /webots_ctrl/include/webots_device/w_imu.h
  * @Description:   webots imu 接口
  * 
@@ -76,7 +76,7 @@ class WImu : public WBase {
         getData(result, acc_);
     }
 
-    // TODO: move to wheel
+    // TODO: 这段要改
     double getVehicleYaw() {
         std::shared_lock<std::shared_mutex> lock(rw_mutex_);
         static auto *robot_rot =
