@@ -2,7 +2,7 @@
  * @Author: weijchen weijchen@visionnav.com
  * @Date: 2024-06-06 15:18:00
  * @LastEditors: weijchen weijchen@visionnav.com
- * @LastEditTime: 2024-06-07 15:22:05
+ * @LastEditTime: 2024-06-07 17:37:28
  * @FilePath: /webots_ctrl/app/ST/controller_ST/controller_ST.cpp
  * @Description:
  *
@@ -16,7 +16,6 @@
 
 #include "controller_ST.h"
 #include <QElapsedTimer>
-#include <QTime>
 
 using namespace VNSim;
 using namespace webots;
@@ -26,7 +25,8 @@ using namespace webots;
 #define MAXIMUM_MID360_UPLOAD 20722
 
 // TODO: 构造的位置要想想
-std::shared_ptr<Timer> Timer::static_timer_ptr_ = nullptr;
+std::shared_ptr<Timer> Timer::instance_ptr_ = nullptr;
+std::shared_ptr<EcalWrapper> EcalWrapper::instance_ptr_ = nullptr;
 
 NormalSTController::NormalSTController() : BaseController() {
     // sensor init
@@ -51,14 +51,12 @@ NormalSTController::NormalSTController() : BaseController() {
         std::bind(&NormalSTController::BpReportSpin, this));
     m_thread_["bp_report"] = std::move(local_thread);
 
-    ecal_wrapper_.init(true, "webots_ST");
-    ecal_wrapper_.addEcal("webot/ST_msg");
-    ecal_wrapper_.addEcal("webot/pointCloud");
-    ecal_wrapper_.addEcal("webot/perception");
-    ecal_wrapper_.addEcal(
-        "svc_model_st/ST_msg",
-        std::bind(&NormalSTController::onRemoteSerialMsg, this,
-                  std::placeholders::_1, std::placeholders::_2));
+    ecal_ptr_->addEcal("webot/ST_msg");
+    ecal_ptr_->addEcal("webot/pointCloud");
+    ecal_ptr_->addEcal("webot/perception");
+    ecal_ptr_->addEcal("svc_model_st/ST_msg",
+                       std::bind(&NormalSTController::onRemoteSerialMsg, this,
+                                 std::placeholders::_1, std::placeholders::_2));
 
     payload_Up.set_allocated_imu(&payload_imu);
     payload.set_allocated_up_msg(&payload_Up);
@@ -117,7 +115,7 @@ void NormalSTController::sendSerialSpin() {
     //         imu_ptr_->getAccValue(i));
     // }
     // payload.SerializePartialToArray(buf, payload.ByteSize());
-    // ecal_wrapper_.send("webot/ST_msg", buf, payload.ByteSize());
+    // ecal_ptr_->send("webot/ST_msg", buf, payload.ByteSize());
     // payload_imu.Clear();
 
     sim_data_flow::STUp payload;
@@ -131,7 +129,7 @@ void NormalSTController::sendSerialSpin() {
     imu->mutable_linear_acceleration()->CopyFrom(imu_ptr_->getImuValue("Acc"));
 
     payload.SerializePartialToArray(buf, payload.ByteSize());
-    ecal_wrapper_.send("webot/ST_msg", buf, payload.ByteSize());
+    ecal_ptr_->send("webot/ST_msg", buf, payload.ByteSize());
 }
 
 void NormalSTController::Mid360ReportSpin() {
@@ -152,7 +150,7 @@ void NormalSTController::Mid360ReportSpin() {
             continue;
         }
         payload.SerializePartialToArray(buf, payload.ByteSize());
-        ecal_wrapper_.send("webot/perception", buf, payload.ByteSize());
+        ecal_ptr_->send("webot/perception", buf, payload.ByteSize());
         // wake_up_timer.wait();
     }
     return;
@@ -176,7 +174,7 @@ void NormalSTController::BpReportSpin() {
             continue;
         }
         payload.SerializePartialToArray(buf, payload.ByteSize());
-        ecal_wrapper_.send("webot/pointCloud", buf, payload.ByteSize());
+        ecal_ptr_->send("webot/pointCloud", buf, payload.ByteSize());
     }
     return;
 }

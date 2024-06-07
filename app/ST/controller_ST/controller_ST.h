@@ -2,7 +2,7 @@
  * @Author: weijchen weijchen@visionnav.com
  * @Date: 2024-06-06 15:18:00
  * @LastEditors: weijchen weijchen@visionnav.com
- * @LastEditTime: 2024-06-07 12:21:50
+ * @LastEditTime: 2024-06-07 16:22:54
  * @FilePath: /webots_ctrl/app/ST/controller_ST/controller_ST.h
  * @Description: 
  * 
@@ -28,7 +28,7 @@
 #include "webots_device/w_wheel.h"
 #include "webots_device/w_lidar.h"
 #include "webots_device/w_imu.h"
-#include "ecal_wrapper.h"
+
 
 // TODO: 统一该定义
 #define SERIAL_MSG_BUF 256
@@ -58,7 +58,6 @@ class NormalSTController : public BaseController {
     std::shared_ptr<WWheel> stree_ptr_;
     std::shared_ptr<WFork> fork_ptr_;
 
-    EcalWrapper ecal_wrapper_;
     sim_data_flow::STMsg payload;
     sim_data_flow::STUp payload_Up;
     foxglove::Imu payload_imu;

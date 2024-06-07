@@ -36,7 +36,10 @@ add_executable(svc_${PROJECT_NAME}
   ${src_files}
   ${header_files}
 )
-
+# add_executable(svc_${PROJECT_NAME}
+#   main_tmp.cpp
+#   process_service_ST.cpp
+# )
 set_target_properties(svc_${PROJECT_NAME} PROPERTIES INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 include(GNUInstallDirs)

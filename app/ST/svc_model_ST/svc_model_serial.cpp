@@ -11,18 +11,21 @@ enum FORK_STATE { ON_FORK_BOTTOM = 0, ON_FORK_MIDDLE = 1, ON_FORK_TOP = 2 };
 
 using namespace VNSim;
 
+std::shared_ptr<Timer> Timer::instance_ptr_ = nullptr;
+std::shared_ptr<EcalWrapper> EcalWrapper::instance_ptr_ = nullptr;
+
 SVCModelSerial::SVCModelSerial() : BaseSerialSVCModel(), rpm_init_(false) {}
 
 SVCModelSerial::~SVCModelSerial() {}
 
 int SVCModelSerial::onInitService() {
     // send msg to general
-    ecal_wrapper_.addEcal("Sensor/read");
+    ecal_ptr_->addEcal("Sensor/read");
     // Receive
-    ecal_wrapper_.addEcal("webot/ST_msg", std::bind(&SVCModelSerial::onWebotMsg,
+    ecal_ptr_->addEcal("webot/ST_msg", std::bind(&SVCModelSerial::onWebotMsg,
                                                     this, std::placeholders::_1,
                                                     std::placeholders::_2));
-    ecal_wrapper_.addEcal("svc_model_st/ST_msg");
+    ecal_ptr_->addEcal("svc_model_st/ST_msg");
     payload.set_allocated_down_msg(&payload_Down);
 
     return 0;
@@ -92,7 +95,7 @@ void SVCModelSerial::onDownStreamProcess(uint8_t *msg, int len) {
 
     // publish
     payload.SerializePartialToArray(buf, payload.ByteSize());
-    ecal_wrapper_.send("svc_model_st/ST_msg", buf, payload.ByteSize());
+    ecal_ptr_->send("svc_model_st/ST_msg", buf, payload.ByteSize());
     {
         // This period should be locked
         std::shared_lock<std::shared_mutex> lock(lock_mutex_);
@@ -147,5 +150,5 @@ void SVCModelSerial::onUpStreamProcess() {
         encoder_.updateValue(Imu_Function.c_str(), 1, l_Imu.velocity[i]);
     }
     const struct Package *pack = encoder_.encodePackage();
-    ecal_wrapper_.send("Sensor/read", pack->buf, pack->len);
+    ecal_ptr_->send("Sensor/read", pack->buf, pack->len);
 }
