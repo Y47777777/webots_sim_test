@@ -1,3 +1,14 @@
+/*
+ * @Author: weijchen weijchen@visionnav.com
+ * @Date: 2024-06-06 15:18:08
+ * @LastEditors: weijchen weijchen@visionnav.com
+ * @LastEditTime: 2024-06-07 11:26:16
+ * @FilePath: /webots_ctrl/include/webots_device/w_lidar.h
+ * @Description: 
+ *               webots lidar接口
+ * Copyright (c) 2024 by visionnav, All Rights Reserved. 
+ */
+
 #pragma once
 
 #include <webots/Node.hpp>
@@ -13,12 +24,12 @@ namespace VNSim {
 using namespace webots;
 class WLidar : public WBase {
    public:
-    /*
-     * @brief  构建 Lidar
+    /**
+     * @brief Construct a new WLidar object
      *
-     * @param[lidar_name]  webots 下 lidar名字
-     * @param[pose_name]   lidar_name 外层pose
-     * @param[frequency]   ladir 频率 (ms)
+     * @param[in] lidar_name  webots 下 lidar名字
+     * @param[in] pose_name   lidar_name 外层pose
+     * @param[in] frequency   ladir 频率 (ms)
      */
     WLidar(std::string lidar_name, std::string pose_name = "",
            int frequency = 100)
@@ -77,12 +88,10 @@ class WLidar : public WBase {
         data_is_ready_ = false;
     }
 
-    ~WLidar() {}
-
-    /*
-     * @brief  使能非重复线扫模拟 Non-repetitive Line Scan LIDAR
+    /**
+     * @brief 使能非重复线扫模拟 Non-repetitive Line Scan LIDAR
      *
-     * @param[flag]  true->使能    ，false->失能
+     * @param[in] flag true->使能    ，false->失能
      */
     void setSimulationNRLS(bool flag) {
         std::shared_lock<std::shared_mutex> lock(rw_mutex_);
@@ -113,21 +122,39 @@ class WLidar : public WBase {
         NRLS_->load(file.c_str(), input);
     }
 
-    void moveLidar() {
+    /*
+     * @brief  移动雷达(叉端mid360 随动)
+     *
+     * @param[values]  Vec3f
+     */
+    void moveLidar(const double values[3]) {
         std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+        // check lidar can be move
         if (translation_ptr_ == nullptr) {
             LOG_ERROR("can`t move %s", lidar_name_.c_str());
             return;
         }
-        // TODO:mid 360 移动
+        translation_ptr_->setSFVec3f(values);
     }
 
+    /**
+     * @brief 检查雷达数据更新状态
+     *
+     * @return true
+     * @return false
+     */
     bool checkDataReady() { return data_is_ready_; }
 
-    void getLocalPointCloud(sim_data_flow::WBPointCloud &t_lidar,
+    /**
+     * @brief Get the Local Point Cloud object
+     *
+     * @param[out] result
+     * @param[in]  target_size  FIXME: 如果需要拷贝指定大小
+     */
+    void getLocalPointCloud(sim_data_flow::WBPointCloud &result,
                             int target_size = -1) {
         std::shared_lock<std::shared_mutex> lock(rw_mutex_);
-        t_lidar.CopyFrom(point_cloud_);
+        result.CopyFrom(point_cloud_);
         data_is_ready_ = false;
     }
 
@@ -135,15 +162,15 @@ class WLidar : public WBase {
         std::unique_lock<std::shared_mutex> lock(rw_mutex_);
 
         // 根据频率拷贝数据
-        int now_step_cnt = super_->getStepCnt() - start_step_;
-        if (now_step_cnt % frequency_cnt_ != 0) {
+        int cur_step_cnt = super_->getStepCnt() - start_step_;
+        if (cur_step_cnt % frequency_cnt_ != 0) {
             return;
         }
         data_is_ready_ = true;
-        
+
         if (is_sim_NRLS_) {
             // 模拟非重复线扫
-            NRLS_->doCopyProcess(lidar_, point_cloud_);
+            NRLS_->simulation(webots_point_could_address_, point_cloud_);
         } else {
             // 增加时间戳
             point_cloud_.set_timestamp(Timer::getInstance()->getTimeStamp());

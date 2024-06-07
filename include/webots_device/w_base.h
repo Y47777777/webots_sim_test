@@ -1,3 +1,13 @@
+/*
+ * @Author: weijchen weijchen@visionnav.com
+ * @Date: 2024-06-06 15:18:08
+ * @LastEditors: weijchen weijchen@visionnav.com
+ * @LastEditTime: 2024-06-07 10:40:23
+ * @FilePath: /webots_ctrl/include/webots_device/w_base.h
+ * @Description:
+ *                  webots 接口base
+ * Copyright (c) 2024 by visionnav, All Rights Reserved.
+ */
 #pragma once
 
 #include <webots/Supervisor.hpp>
@@ -8,6 +18,11 @@ namespace VNSim {
 using namespace webots;
 class WSupervisor : public Supervisor {
    public:
+   /**
+    * @brief Get the Supervisor Instance object
+    * 
+    * @return WSupervisor* 
+    */
     static WSupervisor *getSupervisorInstance() {
         if (cInstance) {
             if (!dynamic_cast<WSupervisor *>(cInstance)) {
@@ -20,21 +35,35 @@ class WSupervisor : public Supervisor {
         return static_cast<WSupervisor *>(cInstance);
     }
 
+    /**
+     * @brief webots step  
+     *        webots 数据生成在step函数中完成，读取数据应该在step中完成
+     * 
+     * @param[in] duration step 的步长(ms) webots执行一步
+     * @return int 
+     */
     int step(int duration) {
+        // 计算方针总步数
         step_cnt++;
         return Supervisor::step(duration);
     }
 
-    int getStepCnt() { return step_cnt; }
+    /**
+     * @brief Get the Step Cnt object
+     * 
+     * @return uint64_t 
+     */
+    uint64_t getStepCnt() { return step_cnt; }
 
    private:
     WSupervisor() : Supervisor() {}
-    int step_cnt = 0;
+    uint64_t step_cnt = 0;
 };
 
 class WBase {
    public:
     WBase() {
+        // 获取supervisor basetime
         super_ = WSupervisor::getSupervisorInstance();
         step_duration_ = super_->getBasicTimeStep();
     }

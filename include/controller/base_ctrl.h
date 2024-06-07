@@ -1,3 +1,14 @@
+/*
+ * @Author: weijchen weijchen@visionnav.com
+ * @Date: 2024-06-06 15:18:08
+ * @LastEditors: weijchen weijchen@visionnav.com
+ * @LastEditTime: 2024-06-07 10:33:14
+ * @FilePath: /webots_ctrl/include/controller/base_ctrl.h
+ * @Description: 
+ * 
+ * Copyright (c) 2024 by ${git_name_email}, All Rights Reserved. 
+ */
+
 #ifndef __BASE_CTRL_H__
 #define __BASE_CTRL_H__
 
@@ -35,9 +46,9 @@ class BaseController : public QThread {
         }
     }
 
+    // 控制菜单相关，每个车型需要自己实现菜单控制相关部分
     virtual void manualGetState(std::map<std::string, double> &msg) = 0;
     virtual void manualSetState(const std::map<std::string, double> &msg) = 0;
-
     void shiftControlMode(bool mode) { isManual_ = mode; }
 
    protected:

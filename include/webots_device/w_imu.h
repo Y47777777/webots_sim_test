@@ -1,3 +1,13 @@
+/*
+ * @Author: weijchen weijchen@visionnav.com
+ * @Date: 2024-06-06 15:18:00
+ * @LastEditors: weijchen weijchen@visionnav.com
+ * @LastEditTime: 2024-06-07 11:19:05
+ * @FilePath: /webots_ctrl/include/webots_device/w_imu.h
+ * @Description:   webots imu 接口
+ * 
+ * Copyright (c) 2024 by visionnav, All Rights Reserved. 
+ */
 #pragma once
 
 #include <webots/Node.hpp>
@@ -12,20 +22,29 @@ namespace VNSim {
 using namespace webots;
 class WImu : public WBase {
    public:
+    /**
+     * @brief Construct a new WImu object
+     *
+     * @param[in] inertial_init     惯性模块名称
+     * @param[in] gyro              陀螺仪
+     * @param[in] accelerometer     加速度计
+     * @param[in] node              惯性模块solid(tf)
+     */
     WImu(std::string inertial_init = "", std::string gyro = "",
-         std::string accelerometer_ptr_ = "", std::string node = "")
+         std::string accelerometer = "", std::string node = "")
         : WBase() {
-        inertial_unit_ptr_ = super_->getInertialUnit("inertial unit");
-        gyro_ptr_ = super_->getGyro("gyro");
-        acc_ptr_ = super_->getAccelerometer("accelerometer");
+        inertial_unit_ptr_ = super_->getInertialUnit(inertial_init);
+        gyro_ptr_ = super_->getGyro(gyro);
+        acc_ptr_ = super_->getAccelerometer(accelerometer);
 
-        inertial_unit_ptr_->enable(5);
-        gyro_ptr_->enable(5);
-        acc_ptr_->enable(5);
+        inertial_unit_ptr_->enable(step_duration_);
+        gyro_ptr_->enable(step_duration_);
+        acc_ptr_->enable(step_duration_);
     }
 
     ~WImu() {}
 
+    // TODO: why not return Vector3d?
     double getInertialValue(int index) {
         std::shared_lock<std::shared_mutex> lock(rw_mutex_);
         return ginertial_[index];
@@ -38,6 +57,26 @@ class WImu : public WBase {
         std::shared_lock<std::shared_mutex> lock(rw_mutex_);
         return acc_[index];
     }
+
+    /**
+     * @brief Get the * value
+     *
+     * @param[out] result 需要拷贝的数据
+     */
+    void getInertialValue(std::vector<double> &result) {
+        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+        getData(result, ginertial_);
+    }
+    void getGyroValue(std::vector<double> &result) {
+        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+        getData(result, gyro_);
+    }
+    void getAccValue(std::vector<double> &result) {
+        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+        getData(result, acc_);
+    }
+
+    // TODO: move to wheel
     double getVehicleYaw() {
         std::shared_lock<std::shared_mutex> lock(rw_mutex_);
         static auto *robot_rot =
@@ -49,16 +88,22 @@ class WImu : public WBase {
             tmp_r[3], Eigen::Vector3d(tmp_r[0], tmp_r[1], tmp_r[2]));
         Eigen::Vector3d r_eulerangle3 =
             tmp_angleaxis.matrix().eulerAngles(2, 1, 0);
-        vehicle_yaw_ = r_eulerangle3[0];
-        return vehicle_yaw_;
+        return r_eulerangle3[0];
     }
 
     void spin() {
         std::unique_lock<std::shared_mutex> lock(rw_mutex_);
-        memcpy(gyro_, gyro_ptr_->getValues(), 3 * sizeof(gyro_[0]));
-        memcpy(acc_, acc_ptr_->getValues(), 3 * sizeof(acc_[0]));
-        memcpy(ginertial_, inertial_unit_ptr_->getRollPitchYaw(),
+        memcpy(gyro_.data(), gyro_ptr_->getValues(), 3 * sizeof(gyro_[0]));
+        memcpy(acc_.data(), acc_ptr_->getValues(), 3 * sizeof(acc_[0]));
+        memcpy(ginertial_.data(), inertial_unit_ptr_->getRollPitchYaw(),
                3 * sizeof(ginertial_[0]));
+    }
+
+   private:
+    void getData(std::vector<double> &result,
+                 const std::vector<double> &source) {
+        result.resize(source.size());
+        memcpy(result.data(), source.data(), source.size() * sizeof(source[0]));
     }
 
    private:
@@ -68,10 +113,9 @@ class WImu : public WBase {
     Gyro *gyro_ptr_ = nullptr;
     Accelerometer *acc_ptr_ = nullptr;
 
-    double gyro_[3] = {0, 0, 0};
-    double acc_[3] = {0, 0, 0};
-    double ginertial_[3] = {0, 0, 0};
-    double vehicle_yaw_ = {0};
+    std::vector<double> gyro_ = {std::vector<double>(0, 3)};
+    std::vector<double> acc_ = {std::vector<double>(0, 3)};
+    std::vector<double> ginertial_ = {std::vector<double>(0, 3)};
 };
 
 }  // namespace VNSim
