@@ -2,11 +2,11 @@
  * @Author: weijchen weijchen@visionnav.com
  * @Date: 2024-06-06 15:18:00
  * @LastEditors: weijchen weijchen@visionnav.com
- * @LastEditTime: 2024-06-07 12:21:46
+ * @LastEditTime: 2024-06-07 15:22:05
  * @FilePath: /webots_ctrl/app/ST/controller_ST/controller_ST.cpp
- * @Description: 
- * 
- * Copyright (c) 2024 by visionnav, All Rights Reserved. 
+ * @Description:
+ *
+ * Copyright (c) 2024 by visionnav, All Rights Reserved.
  */
 #include <ecal/msg/protobuf/publisher.h>
 #include "sim_data_flow/point_cloud.pb.h"
@@ -107,18 +107,31 @@ void NormalSTController::onRemoteSerialMsg(
 }
 
 void NormalSTController::sendSerialSpin() {
-    payload_Up.set_forkposez(fork_ptr_->getSenosorValue());
-    payload_Up.set_steerposition(stree_ptr_->getSenosorValue());
-    payload_imu.add_orientation_covariance(imu_ptr_->getVehicleYaw());  //
-    // z
-    for (int i = 0; i < 3; i++) {
-        payload_imu.add_angular_velocity_covariance(imu_ptr_->getGyroValue(i));
-        payload_imu.add_linear_acceleration_covariance(
-            imu_ptr_->getAccValue(i));
-    }
+    // payload_Up.set_forkposez(fork_ptr_->getSenosorValue());
+    // payload_Up.set_steerposition(stree_ptr_->getSenosorValue());
+    // payload_imu.add_orientation_covariance(imu_ptr_->getVehicleYaw());  //
+    // // z
+    // for (int i = 0; i < 3; i++) {
+    //     payload_imu.add_angular_velocity_covariance(imu_ptr_->getGyroValue(i));
+    //     payload_imu.add_linear_acceleration_covariance(
+    //         imu_ptr_->getAccValue(i));
+    // }
+    // payload.SerializePartialToArray(buf, payload.ByteSize());
+    // ecal_wrapper_.send("webot/ST_msg", buf, payload.ByteSize());
+    // payload_imu.Clear();
+
+    sim_data_flow::STUp payload;
+    // TODO: time stamp
+    payload.set_forkposez(fork_ptr_->getSenosorValue());
+    payload.set_steerposition(stree_ptr_->getSenosorValue());
+
+    foxglove::Imu *imu = payload.mutable_imu();
+    imu->mutable_orientation()->CopyFrom(imu_ptr_->getImuValue("Inertial"));
+    imu->mutable_angular_velocity()->CopyFrom(imu_ptr_->getImuValue("Gyro"));
+    imu->mutable_linear_acceleration()->CopyFrom(imu_ptr_->getImuValue("Acc"));
+
     payload.SerializePartialToArray(buf, payload.ByteSize());
     ecal_wrapper_.send("webot/ST_msg", buf, payload.ByteSize());
-    payload_imu.Clear();
 }
 
 void NormalSTController::Mid360ReportSpin() {
@@ -126,8 +139,8 @@ void NormalSTController::Mid360ReportSpin() {
     LOG_INFO("Mid360ReportSpin start\n");
     sim_data_flow::WBPointCloud payload;
 
-    // FIXME: 可以修改为信号量触发
     while (!webotsExited_) {
+        // FIXME: 可以修改为信号量触发
         if (!mid360_ptr_->checkDataReady()) {
             continue;
         }
@@ -150,8 +163,8 @@ void NormalSTController::BpReportSpin() {
     LOG_INFO("BpReportSpin start\n");
     sim_data_flow::WBPointCloud payload;
 
-    // FIXME: 可以修改为信号量触发
     while (!webotsExited_) {
+        // FIXME: 可以修改为信号量触发
         if (!BP_ptr_->checkDataReady()) {
             continue;
         }

@@ -1,16 +1,13 @@
 /*
- * 版权所有 (c) [年份]
- * [作者/公司名称]
- * 保留所有权利。
- *
- * SPDX-License-Identifier: [许可证]
- * @file .....
+ * @Author: weijchen weijchen@visionnav.com
+ * @Date: 2024-06-06 15:18:00
+ * @LastEditors: weijchen weijchen@visionnav.com
+ * @LastEditTime: 2024-06-07 14:55:50
+ * @FilePath: /webots_ctrl/include/time/time.h
+ * @Description: 
  * 
- * @brief .....
- *
- * @email ....
+ * Copyright (c) 2024 by visionnav, All Rights Reserved. 
  */
-
 
 #ifndef __TIME_H__
 #define __TIME_H__
@@ -21,10 +18,10 @@
 namespace VNSim {
 class Timer {
    public:
-    /*
-     * @brief  获取单利
-     *
-     * @return 单例指针
+    /**
+     * @brief Get the Instance object
+     * 
+     * @return std::shared_ptr<Timer> 
      */
     static std::shared_ptr<Timer> getInstance() {
         if (static_timer_ptr_ == nullptr) {
@@ -34,10 +31,10 @@ class Timer {
         return static_timer_ptr_;
     }
 
-    /*
+    /**
      * @brief  闹钟初始化
      *
-     * @param[duration]  每步休眠时间
+     * @param [duration]  每步休眠时间
      */
     void alarmTimerInit(int duration) {
         step_duration_ = duration;
@@ -46,7 +43,7 @@ class Timer {
             start_ + (std::chrono::microseconds(step_duration_ * 1000));
     }
 
-    /*
+    /**
      * @brief  等待闹钟唤醒
      *         使用前先初始化闹钟
      */
@@ -55,7 +52,7 @@ class Timer {
         next_wakeup_ += (std::chrono::microseconds(step_duration_ * 1000));
     }
 
-     /*
+     /**
      * @brief  获取时间戳
      *
      * @return 时间戳(微秒)，可以通过 setBaseTime设置起点
@@ -70,7 +67,7 @@ class Timer {
         return time_stamp.count();
     }
 
-    /*
+    /**
      * @brief  设置时间戳起点
      *
      * @param[base]  起点，默认起点 //beijing time : 2022.01.01 00:00:00; us

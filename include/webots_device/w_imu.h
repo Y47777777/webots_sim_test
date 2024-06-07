@@ -2,11 +2,11 @@
  * @Author: weijchen weijchen@visionnav.com
  * @Date: 2024-06-06 15:18:00
  * @LastEditors: weijchen weijchen@visionnav.com
- * @LastEditTime: 2024-06-07 11:35:46
+ * @LastEditTime: 2024-06-07 15:15:00
  * @FilePath: /webots_ctrl/include/webots_device/w_imu.h
  * @Description:   webots imu 接口
- * 
- * Copyright (c) 2024 by visionnav, All Rights Reserved. 
+ *
+ * Copyright (c) 2024 by visionnav, All Rights Reserved.
  */
 #pragma once
 
@@ -16,6 +16,8 @@
 #include <webots/Accelerometer.hpp>
 
 #include "webots_device/w_base.h"
+#include "foxglove-vn/Imu.pb.h"
+#include "foxglove-vn/Vector3.pb.h"
 #include "logvn/logvn.h"
 
 namespace VNSim {
@@ -58,22 +60,20 @@ class WImu : public WBase {
         return acc_[index];
     }
 
-    /**
-     * @brief Get the * value
-     *
-     * @param[out] result 需要拷贝的数据
-     */
-    void getInertialValue(std::vector<double> &result) {
+    foxglove::Vector3 getImuValue(std::string key = "") {
         std::shared_lock<std::shared_mutex> lock(rw_mutex_);
-        getData(result, ginertial_);
-    }
-    void getGyroValue(std::vector<double> &result) {
-        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
-        getData(result, gyro_);
-    }
-    void getAccValue(std::vector<double> &result) {
-        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
-        getData(result, acc_);
+        foxglove::Vector3 result;
+        if (key == "Inertial") {
+            getData(result, ginertial_);
+        }
+        else if (key == "Gyro") {
+            getData(result, ginertial_);
+        }
+        else if (key == "Acc") {
+            getData(result, ginertial_);
+        }
+
+        return result;
     }
 
     // TODO: 这段要改
@@ -100,10 +100,10 @@ class WImu : public WBase {
     }
 
    private:
-    void getData(std::vector<double> &result,
-                 const std::vector<double> &source) {
-        result.resize(source.size());
-        memcpy(result.data(), source.data(), source.size() * sizeof(source[0]));
+    void getData(foxglove::Vector3 &result, const std::vector<double> &source) {
+        result.set_x(source[0]);
+        result.set_y(source[1]);
+        result.set_z(source[2]);
     }
 
    private:

@@ -39,13 +39,18 @@ void SVCModelSerial::onWebotMsg(const char *topic_name,
         // This period should be locked
         report_msg_.webot_msg.imu.angle[2] =
             payload.up_msg().imu().orientation_covariance(0);  // vehicle_yaw
-        double forkZ = payload.up_msg().forkposez();           // forkZ Height
-        if (std::abs(forkZ - FORK_LIFTUP_HEIGHT) <= HEIGHT_DEVIATION) {
-            report_msg_.fork_state = int(FORK_STATE::ON_FORK_TOP);
-        } else if (std::abs(forkZ - FORK_LIFTDOWN_HEIGHT) <= HEIGHT_DEVIATION) {
-            report_msg_.fork_state = int(FORK_STATE::ON_FORK_BOTTOM);
-        } else {
-            report_msg_.fork_state = int(FORK_STATE::ON_FORK_MIDDLE);
+
+        // TODO:单独成函数
+        {
+            double forkZ = payload.up_msg().forkposez();  // forkZ Height
+            if (std::abs(forkZ - FORK_LIFTUP_HEIGHT) <= HEIGHT_DEVIATION) {
+                report_msg_.fork_state = int(FORK_STATE::ON_FORK_TOP);
+            } else if (std::abs(forkZ - FORK_LIFTDOWN_HEIGHT) <=
+                       HEIGHT_DEVIATION) {
+                report_msg_.fork_state = int(FORK_STATE::ON_FORK_BOTTOM);
+            } else {
+                report_msg_.fork_state = int(FORK_STATE::ON_FORK_MIDDLE);
+            }
         }
         for (int i = 0; i < 3; i++) {
             report_msg_.webot_msg.imu.velocity[i] =
@@ -84,12 +89,15 @@ void SVCModelSerial::onDownStreamProcess(uint8_t *msg, int len) {
     payload_Down.set_forkspeedz(ForkDeviceZ);
     payload_Down.set_steering_speed(MoveDevice);
     payload_Down.set_steering_theta(SteeringDevice);
+
+    // publish
     payload.SerializePartialToArray(buf, payload.ByteSize());
     ecal_wrapper_.send("svc_model_st/ST_msg", buf, payload.ByteSize());
     {
         // This period should be locked
         std::shared_lock<std::shared_mutex> lock(lock_mutex_);
         report_msg_.dataidx = data_idx;
+        // TODO: ？？发布数据直接写入回复？
         report_msg_.webot_msg.wheel_yaw = SteeringDevice;
     }
 }
