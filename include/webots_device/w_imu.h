@@ -46,32 +46,26 @@ class WImu : public WBase {
 
     ~WImu() {}
 
-    // TODO: why not return Vector3d?
-    double getInertialValue(int index) {
-        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
-        return ginertial_[index];
-    }
-    double getGyroValue(int index) {
-        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
-        return gyro_[index];
-    }
-    double getAccValue(int index) {
-        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
-        return acc_[index];
-    }
-
-    foxglove::Vector3 getImuValue(std::string key = "") {
+    foxglove::Vector3 getGyroValue() {
         std::shared_lock<std::shared_mutex> lock(rw_mutex_);
         foxglove::Vector3 result;
-        if (key == "Inertial") {
-            getData(result, ginertial_);
-        }
-        else if (key == "Gyro") {
-            getData(result, ginertial_);
-        }
-        else if (key == "Acc") {
-            getData(result, ginertial_);
-        }
+        getData(result, gyro_);
+
+        return result;
+    }
+
+    foxglove::Vector3 getAccValue() {
+        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+        foxglove::Vector3 result;
+        getData(result, acc_);
+
+        return result;
+    }
+
+    foxglove::Quaternion getInertialValue() {
+        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+        foxglove::Quaternion result;
+        getData(result, quaternion_);
 
         return result;
     }
@@ -95,8 +89,8 @@ class WImu : public WBase {
         std::unique_lock<std::shared_mutex> lock(rw_mutex_);
         memcpy(gyro_.data(), gyro_ptr_->getValues(), 3 * sizeof(gyro_[0]));
         memcpy(acc_.data(), acc_ptr_->getValues(), 3 * sizeof(acc_[0]));
-        memcpy(ginertial_.data(), inertial_unit_ptr_->getRollPitchYaw(),
-               3 * sizeof(ginertial_[0]));
+        memcpy(quaternion_.data(), inertial_unit_ptr_->getQuaternion(),
+               3 * sizeof(quaternion_[0]));
     }
 
    private:
@@ -106,6 +100,14 @@ class WImu : public WBase {
         result.set_z(source[2]);
     }
 
+    void getData(foxglove::Quaternion &result,
+                 const std::vector<double> &source) {
+        result.set_x(quaternion_[0]);
+        result.set_y(quaternion_[1]);
+        result.set_z(quaternion_[2]);
+        result.set_w(quaternion_[3]);
+    }
+
    private:
     Node *node_ = nullptr;
 
@@ -113,9 +115,9 @@ class WImu : public WBase {
     Gyro *gyro_ptr_ = nullptr;
     Accelerometer *acc_ptr_ = nullptr;
 
-    std::vector<double> gyro_ = {std::vector<double>(0, 3)};
-    std::vector<double> acc_ = {std::vector<double>(0, 3)};
-    std::vector<double> ginertial_ = {std::vector<double>(0, 3)};
+    std::vector<double> gyro_ = std::vector<double>(3);
+    std::vector<double> acc_ = std::vector<double>(3);
+    std::vector<double> quaternion_ = std::vector<double>(4);
 };
 
 }  // namespace VNSim

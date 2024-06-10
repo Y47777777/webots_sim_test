@@ -20,7 +20,7 @@ struct FBContain {
 };
 
 struct LidarInfo {
-    //TODO: is this struct necessary?
+    // TODO: is this struct necessary?
     //      if it`s necessary, please comply with the specifiance
     int scan_frequency_{100};
     int horizontalResolution;    // read
@@ -41,16 +41,15 @@ class NRLS {
 
     /**
      * @brief 读取非重复线扫模拟表
-     * 
+     *
      * @param[in] path   文件路径
      * @param[in] input  雷达参数
-     * @return int 
+     * @return int
      */
     int load(const char *path, const struct LidarInfo &input) {
         int ret = 0;
         std::vector<std::string> csv_data_;
         do {
-
             // TODO: is there need try{}catch(...)?
             if (this->readCSV(path, csv_data_) != 0) {
                 LOG_ERROR("unalble to load csv --> %s", path);
@@ -90,7 +89,7 @@ class NRLS {
 
     /**
      * @brief 模拟非重复线扫
-     * 
+     *
      * @param[in]  source           源点云
      * @param[out] point_cloud      输出点云
      *                              点云行数，列数放在result的size_of_*中

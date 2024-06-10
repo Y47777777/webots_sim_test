@@ -2,7 +2,7 @@
  * @Author: weijchen weijchen@visionnav.com
  * @Date: 2024-06-06 15:18:08
  * @LastEditors: weijchen weijchen@visionnav.com
- * @LastEditTime: 2024-06-07 11:30:21
+ * @LastEditTime: 2024-06-07 16:22:41
  * @FilePath: /webots_ctrl/include/controller/base_ctrl.h
  * @Description:  ctrler base 类
  * 
@@ -17,6 +17,7 @@
 #include <QThread>
 #include <thread>
 #include "time/time.h"
+#include "ecal_wrapper/ecal_wrapper.h"
 
 #include "webots_device/w_base.h"
 
@@ -34,6 +35,7 @@ class BaseController : public QThread {
 
         // 初始化timer
         timer_ptr_ = Timer::getInstance();
+        ecal_ptr_ = EcalWrapper::getInstance("webots_ctrl");
     }
 
     // 由base管理线程
@@ -97,6 +99,7 @@ class BaseController : public QThread {
     std::map<std::string, std::thread> m_thread_;
     std::vector<std::function<void(void)>> v_while_spin_;
     std::shared_ptr<Timer> timer_ptr_;
+    std::shared_ptr<EcalWrapper> ecal_ptr_;
     Timer alarm_;
 };
 

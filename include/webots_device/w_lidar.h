@@ -4,9 +4,9 @@
  * @LastEditors: weijchen weijchen@visionnav.com
  * @LastEditTime: 2024-06-07 11:26:16
  * @FilePath: /webots_ctrl/include/webots_device/w_lidar.h
- * @Description: 
+ * @Description:
  *               webots lidar接口
- * Copyright (c) 2024 by visionnav, All Rights Reserved. 
+ * Copyright (c) 2024 by visionnav, All Rights Reserved.
  */
 
 #pragma once
@@ -105,21 +105,32 @@ class WLidar : public WBase {
 
         const char *base_path = "../../plugins/lidar_scan_mode_config/";
         std::string file = std::string(base_path) + lidar_name_ + ".csv";
-        struct LidarInfo input = {
-            .horizontalResolution =
-                node_->getField("horizontalResolution")->getSFInt32(),  // read
-            .fieldOfView =
-                node_->getField("fieldOfView")->getSFFloat(),  // read
-            .verticalFieldOfView =
-                node_->getField("verticalFieldOfView")->getSFFloat(),  // read
-            .numberOfLayers =
-                node_->getField("numberOfLayers")->getSFInt32()  // read
+        LidarInfo input = {
+            // .horizontalResolution =
+            //     node_->getField("horizontalResolution")->getSFInt32(),  //
+            //     read
+            // .fieldOfView =
+            //     node_->getField("fieldOfView")->getSFFloat(),  // read
+            // .verticalFieldOfView =
+            //     node_->getField("verticalFieldOfView")->getSFFloat(),  //
+            //     read
+            // .numberOfLayers =
+            //     node_->getField("numberOfLayers")->getSFInt32()  // read
             // TODO: minZ
+            .horizontalResolution = lidar_->getHorizontalResolution(),
+            .fieldOfView = lidar_->getFov(),
+            .verticalFieldOfView = lidar_->getVerticalFov(),
+            .numberOfLayers = lidar_->getNumberOfLayers(),
         };
+
         if (NRLS_ == nullptr) {
             NRLS_ = std::make_shared<NRLS>();
         }
-        NRLS_->load(file.c_str(), input);
+
+        if (NRLS_->load(file.c_str(), input) != 0) {
+            is_sim_NRLS_ = false;
+            return;
+        }
     }
 
     /*

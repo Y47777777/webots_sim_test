@@ -2,11 +2,11 @@
  * @Author: weijchen weijchen@visionnav.com
  * @Date: 2024-06-06 15:18:00
  * @LastEditors: weijchen weijchen@visionnav.com
- * @LastEditTime: 2024-06-07 14:55:50
+ * @LastEditTime: 2024-06-07 16:12:38
  * @FilePath: /webots_ctrl/include/time/time.h
- * @Description: 
- * 
- * Copyright (c) 2024 by visionnav, All Rights Reserved. 
+ * @Description:
+ *
+ * Copyright (c) 2024 by visionnav, All Rights Reserved.
  */
 
 #ifndef __TIME_H__
@@ -16,19 +16,24 @@
 #include <qelapsedtimer.h>
 
 namespace VNSim {
+
+// 定义类型别名
+using seconds = std::chrono::seconds;
+using milliseconds = std::chrono::milliseconds;
+using microseconds = std::chrono::microseconds;
 class Timer {
    public:
     /**
      * @brief Get the Instance object
-     * 
-     * @return std::shared_ptr<Timer> 
+     *
+     * @return std::shared_ptr<Timer>
      */
     static std::shared_ptr<Timer> getInstance() {
-        if (static_timer_ptr_ == nullptr) {
-            static_timer_ptr_ = std::make_shared<Timer>();
-            static_timer_ptr_->setBaseTime();
+        if (instance_ptr_ == nullptr) {
+            instance_ptr_ = std::make_shared<Timer>();
+            instance_ptr_->setBaseTime();
         }
-        return static_timer_ptr_;
+        return instance_ptr_;
     }
 
     /**
@@ -39,8 +44,7 @@ class Timer {
     void alarmTimerInit(int duration) {
         step_duration_ = duration;
         start_ = std::chrono::high_resolution_clock::now();
-        next_wakeup_ =
-            start_ + (std::chrono::microseconds(step_duration_ * 1000));
+        next_wakeup_ = start_ + (microseconds(step_duration_ * 1000));
     }
 
     /**
@@ -49,10 +53,15 @@ class Timer {
      */
     void wait() {
         std::this_thread::sleep_until(next_wakeup_);
-        next_wakeup_ += (std::chrono::microseconds(step_duration_ * 1000));
+        next_wakeup_ += (microseconds(step_duration_ * 1000));
     }
 
-     /**
+    template <typename T>
+    void sleep(uint64_t time) {
+        std::this_thread::sleep_for(T(time));
+    }
+
+    /**
      * @brief  获取时间戳
      *
      * @return 时间戳(微秒)，可以通过 setBaseTime设置起点
@@ -61,8 +70,7 @@ class Timer {
         auto now = std::chrono::system_clock::now();
 
         auto time = (now - start_) + base_time;
-        auto time_stamp =
-            std::chrono::duration_cast<std::chrono::microseconds>(time);
+        auto time_stamp = std::chrono::duration_cast<microseconds>(time);
 
         return time_stamp.count();
     }
@@ -75,7 +83,7 @@ class Timer {
     void setBaseTime(uint64_t base = 1640966400000000 +
                                      (long long) 8 * 3600 * 1000000) {
         start_ = std::chrono::high_resolution_clock::now();
-        base_time = std::chrono::microseconds(base);
+        base_time = microseconds(base);
     }
 
     void restart() { start_ = std::chrono::high_resolution_clock::now(); }
@@ -98,12 +106,12 @@ class Timer {
 
    private:
     std::chrono::high_resolution_clock::time_point start_;
-    std::chrono::microseconds base_time;
+    microseconds base_time;
 
     std::chrono::system_clock::time_point next_wakeup_;
     int step_duration_ = 0;
 
-    static std::shared_ptr<Timer> static_timer_ptr_;
+    static std::shared_ptr<Timer> instance_ptr_;
 };
 }  // namespace VNSim
 

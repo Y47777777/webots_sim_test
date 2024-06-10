@@ -1,3 +1,13 @@
+/*
+ * @Author: weijchen weijchen@visionnav.com
+ * @Date: 2024-06-07 17:39:39
+ * @LastEditors: weijchen weijchen@visionnav.com
+ * @LastEditTime: 2024-06-07 20:05:13
+ * @FilePath: /webots_ctrl/include/svc/base_svc_serial.h
+ * @Description: 
+ * 
+ * Copyright (c) 2024 by visionnav, All Rights Reserved. 
+ */
 #ifndef __BASE_SERIAL_SVC_SERIAL_H__
 #define __BASE_SERIAL_SVC_SERIAL_H__
 #include <thread>
@@ -50,7 +60,7 @@ class BaseSerialSVCModel : public BaseSVCModel {
                 break;
             }
             // receive msg from general
-            ecal_wrapper_.addEcal(
+            ecal_ptr_->addEcal(
                 "Actuator/write",
                 std::bind(
                     [&](const char *topic_name,
