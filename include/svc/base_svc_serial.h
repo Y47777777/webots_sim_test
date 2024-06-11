@@ -1,3 +1,13 @@
+/*
+ * @Author: weijchen weijchen@visionnav.com
+ * @Date: 2024-06-07 17:39:39
+ * @LastEditors: weijchen weijchen@visionnav.com
+ * @LastEditTime: 2024-06-07 20:05:13
+ * @FilePath: /webots_ctrl/include/svc/base_svc_serial.h
+ * @Description: 
+ * 
+ * Copyright (c) 2024 by visionnav, All Rights Reserved. 
+ */
 #ifndef __BASE_SERIAL_SVC_SERIAL_H__
 #define __BASE_SERIAL_SVC_SERIAL_H__
 #include <thread>
@@ -27,6 +37,7 @@ class BaseSerialSVCModel : public BaseSVCModel {
     }
 
    protected:
+    // TODO: config 路径修改
     int initService() {
         const char *decoder_file =
             "../../../../../AGVServices/general/config/"
@@ -49,7 +60,7 @@ class BaseSerialSVCModel : public BaseSVCModel {
                 break;
             }
             // receive msg from general
-            ecal_wrapper_.addEcal(
+            ecal_ptr_->addEcal(
                 "Actuator/write",
                 std::bind(
                     [&](const char *topic_name,
@@ -66,11 +77,11 @@ class BaseSerialSVCModel : public BaseSVCModel {
             this->onInitService();
             // report thread
             std::thread sensor_msg_report_thread([&]() {
-                FixedTimeWakeUpTimer wakeup_timer;
-                wakeup_timer.ready(10);
+                Timer alarm;
+                alarm.alarmTimerInit(10);
                 while (!SVCExit_) {
                     this->onUpStreamProcess();
-                    wakeup_timer.wait();
+                    alarm.wait();
                 }
             });
             sensor_msg_report_thread_ = std::move(sensor_msg_report_thread);

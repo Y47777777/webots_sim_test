@@ -14,4 +14,4 @@ make -j4
 cp *.a* ../../../../../simulation_world/webots/libraries/
 cd ..
 cp -r foxglove-vn ../../include
-rm ../../include/foxglove-vn/*.cc ../../include/foxglove-vn/*.cs
+rm ./foxglove-vn/*.cc ./foxglove-vn/*.cs ./foxglove-vn/*.h

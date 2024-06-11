@@ -1,3 +1,13 @@
+/*
+ * @Author: weijchen weijchen@visionnav.com
+ * @Date: 2024-06-06 15:18:00
+ * @LastEditors: weijchen weijchen@visionnav.com
+ * @LastEditTime: 2024-06-07 10:45:19
+ * @FilePath: /webots_ctrl/include/webots_device/w_fork.h
+ * @Description: webots 车叉接口
+ *               由 pose + motor + possensor 组成
+ * Copyright (c) 2024 by visionnav, All Rights Reserved. 
+ */
 #pragma once
 
 #include <webots/Motor.hpp>
@@ -13,12 +23,12 @@ using namespace webots;
 
 class WFork : public WBase {
    public:
-    /*
-     * @brief  构建 fork对象
-     *
-     * @param[fork_name]  webots 下 fork名字
-     * @param[solid_name]   需要旋转 或 控制旋转轴 填入webots solid 名称
-     * @param[sensor_name] positionSensor
+    /**
+     * @brief Construct a new WFork object
+     * 
+     * @param[in] fork_motor_name   webots 下 fork名字
+     * @param[in] solid_name        需要旋转 或 控制旋转轴 填入webots solid 名称
+     * @param[in] sensor_name       positionSensor 如果有motor 可输入为空
      */
     WFork(std::string fork_motor_name = "", std::string solid_name = "",
           std::string sensor_name = "")
@@ -57,17 +67,32 @@ class WFork : public WBase {
         }
     }
 
-    ~WFork(){};
-
+    /**
+     * @brief Set the Velocity object
+     * 
+     * @param[in] v  Velocity
+     */
     void setVelocity(double v) {
         std::shared_lock<std::shared_mutex> lock(rw_mutex_);
         speed_ = v;
     }
 
+    /**
+     * @brief Get the Senosor Value object
+     * 
+     * @return double sensor value
+     */
     double getSenosorValue() {
         std::shared_lock<std::shared_mutex> lock(rw_mutex_);
         return pos_sensor_value_;
     }
+
+    /**
+     * @brief Get the Velocity Value object
+     * 
+     * @return double 
+     */
+    //TODO: is this necessary?
     double getVelocityValue() {
         std::shared_lock<std::shared_mutex> lock(rw_mutex_);
         return speed_;

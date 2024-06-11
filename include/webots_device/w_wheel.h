@@ -1,3 +1,13 @@
+/*
+ * @Author: weijchen weijchen@visionnav.com
+ * @Date: 2024-06-06 15:18:00
+ * @LastEditors: weijchen weijchen@visionnav.com
+ * @LastEditTime: 2024-06-07 11:24:20
+ * @FilePath: /webots_ctrl/include/webots_device/w_wheel.h
+ * @Description: webots wheel接口
+ * 
+ * Copyright (c) 2024 by visionnav, All Rights Reserved. 
+ */
 #pragma once
 
 #include <webots/Motor.hpp>
@@ -108,7 +118,7 @@ class WWheel : public WBase {
     }
 
     ~WWheel(){};
-
+ 
     void setVelocity(double v) {
         std::shared_lock<std::shared_mutex> lock(rw_mutex_);
         speed_ = v / radius_;
@@ -149,7 +159,7 @@ class WWheel : public WBase {
             pos_sensor_value_ = position_sensor_->getValue();
         }
 
-        // set wheel rotate center
+        // 保证轮子旋转中心不动
         if (solid_rotation_ptr_ != nullptr) {
             // set translation
             solid_translation_ptr_->setSFVec3f(solid_init_translation_);

@@ -1,3 +1,13 @@
+/*
+ * @Author: weijchen weijchen@visionnav.com
+ * @Date: 2024-06-06 15:18:00
+ * @LastEditors: weijchen weijchen@visionnav.com
+ * @LastEditTime: 2024-06-07 13:19:30
+ * @FilePath: /webots_ctrl/include/dataTransform.h
+ * @Description:
+ *
+ * Copyright (c) 2024 by visionnav, All Rights Reserved.
+ */
 #ifndef __DATA_TRANSFORM_H__
 #define __DATA_TRANSFORM_H__
 #include <vector>
@@ -5,6 +15,7 @@
 #include "sim_data_flow/point_cloud2.pb.h"
 #include "sim_data_flow/point_cloud.pb.h"
 
+// TODO: data width 可以用sizeof(获取？)
 #define PBPOINT_BANDWIDTH 4 * 6
 
 namespace VNSim {
@@ -15,6 +26,14 @@ struct PointFieldBw {
     uint32_t count;
 };
 
+/**
+ * @brief pointCloud -> pointCloud2
+ *
+ * @param payload
+ * @param payload_send
+ * @param total_lidar_point TODO:??
+ * @param seq
+ */
 void pbTopb2(const sim_data_flow::WBPointCloud &payload,
              pb::PointCloud2 &payload_send, uint32_t total_lidar_point,
              uint64_t seq) {
@@ -35,6 +54,7 @@ void pbTopb2(const sim_data_flow::WBPointCloud &payload,
     payload_send.set_is_dense(false);
     // field
     payload_send.clear_fields();
+
     uint32_t offset = 0;
     for (size_t i = 0; i < PointField.size(); i++) {
         auto field = payload_send.add_fields();
@@ -57,6 +77,7 @@ void pbTopb2(const sim_data_flow::WBPointCloud &payload,
         double time = payload.point_cloud().at(i).time();
         if (std::abs(x) != INFINITY && std::abs(y) != INFINITY &&
             std::abs(z) != INFINITY) {
+            // TODO: 指针移动 ，可以不用每次计算
             memcpy(pb_data_ptr + i * PBPOINT_BANDWIDTH, &(x), 4);
             memcpy(pb_data_ptr + 4 + i * PBPOINT_BANDWIDTH, &(y), 4);
             memcpy(pb_data_ptr + 8 + i * PBPOINT_BANDWIDTH, &(z), 4);

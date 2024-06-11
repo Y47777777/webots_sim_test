@@ -1,3 +1,13 @@
+/*
+ * @Author: weijchen weijchen@visionnav.com
+ * @Date: 2024-06-06 15:18:00
+ * @LastEditors: weijchen weijchen@visionnav.com
+ * @LastEditTime: 2024-06-07 12:21:35
+ * @FilePath: /webots_ctrl/app/ST/svc_model_ST/main.cpp
+ * @Description: 
+ * 
+ * Copyright (c) 2024 by visionnav, All Rights Reserved. 
+ */
 #include <stdlib.h>
 #include <unistd.h>
 #include <iostream>
@@ -9,6 +19,7 @@ using namespace VNSim;
 
 int main(int argc, char *argv[]) {
     // serial service
+    //TODO: 生成不同的log
     g_Logger.initLog("../../plugins/log_config/general_controller.ini");
     LOG_INFO("start svc_ST");
     std::shared_ptr<BaseSVCModel> serial_service =
