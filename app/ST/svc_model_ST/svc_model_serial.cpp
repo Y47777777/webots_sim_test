@@ -22,30 +22,35 @@ int SVCModelSerial::onInitService() {
     // send msg to general
     ecal_ptr_->addEcal("Sensor/read");
     // Receive
-    ecal_ptr_->addEcal("webot/ST_msg", std::bind(&SVCModelSerial::onWebotMsg,
-                                                    this, std::placeholders::_1,
-                                                    std::placeholders::_2));
+    ecal_ptr_->addEcal("webot/ST_msg",
+                       std::bind(&SVCModelSerial::onWebotMsg, this,
+                                 std::placeholders::_1, std::placeholders::_2));
     ecal_ptr_->addEcal("svc_model_st/ST_msg");
-    payload.set_allocated_down_msg(&payload_Down);
+    // payload.set_allocated_down_msg(&payload_Down);
 
     return 0;
 }
 
 void SVCModelSerial::onWebotMsg(const char *topic_name,
                                 const eCAL::SReceiveCallbackData *data) {
-    sim_data_flow::STMsg payload;
-    payload.ParseFromArray(data->buf, data->size);
+    sim_data_flow::STUp payload2;
+    std::cout << "payload2" << std::endl;
+    payload2.ParseFromArray(data->buf, data->size);
+    std::cout << "payload2 finish" << std::endl;
     // use a spin lock to manage data copy
     // if the time consumption is huge, use a real mutex instead
     {
         std::shared_lock<std::shared_mutex> lock(lock_mutex_);
+        std::cout << "load data" << std::endl;
         // This period should be locked
-        report_msg_.webot_msg.imu.angle[2] =
-            payload.up_msg().imu().orientation_covariance(0);  // vehicle_yaw
+        // report_msg_.webot_msg.imu.angle[2] =
+        //     payload2.imu().orientation_covariance(0);  // vehicle_yaw
+        std::cout << "load data1" << std::endl;
 
         // TODO:单独成函数
         {
-            double forkZ = payload.up_msg().forkposez();  // forkZ Height
+            std::cout << "load data2" << std::endl;
+            double forkZ = payload2.forkposez();  // forkZ Height
             if (std::abs(forkZ - FORK_LIFTUP_HEIGHT) <= HEIGHT_DEVIATION) {
                 report_msg_.fork_state = int(FORK_STATE::ON_FORK_TOP);
             } else if (std::abs(forkZ - FORK_LIFTDOWN_HEIGHT) <=
@@ -55,23 +60,28 @@ void SVCModelSerial::onWebotMsg(const char *topic_name,
                 report_msg_.fork_state = int(FORK_STATE::ON_FORK_MIDDLE);
             }
         }
+        std::cout << "load data3" << std::endl;
         for (int i = 0; i < 3; i++) {
-            report_msg_.webot_msg.imu.velocity[i] =
-                payload.up_msg().imu().angular_velocity_covariance(
-                    i);  // angular_velocity
-            report_msg_.webot_msg.imu.acceleration[i] =
-                payload.up_msg().imu().linear_acceleration_covariance(
-                    i);  // accelerator
+            // report_msg_.webot_msg.imu.velocity[i] =
+            //     payload2.imu().angular_velocity_covariance(
+            //         i);  // angular_velocity
+            // report_msg_.webot_msg.imu.acceleration[i] =
+            //     payload2.imu().linear_acceleration_covariance(
+            //         i);  // accelerator
         }
-        double wheel_position = payload.up_msg().steerposition();
+        std::cout << "load data4" << std::endl;
+        double wheel_position = payload2.steerposition();
         if (!rpm_init_) {
             report_msg_.webot_msg.last_wheel_position = wheel_position;
             rpm_init_ = true;
         }
+        std::cout << "load data5" << std::endl;
         report_msg_.rpm =
             (wheel_position - report_msg_.webot_msg.last_wheel_position) *
             SIM_FAC;
+        std::cout << "load data6" << std::endl;
         report_msg_.webot_msg.last_wheel_position = wheel_position;
+        std::cout << "load data7" << std::endl;
     }
 }
 

@@ -11,7 +11,7 @@
 #ifndef __SVC_MODEL_SERIAL_H__
 #define __SVC_MODEL_SERIAL_H__
 
-#include "foxglove-vn/Speed.pb.h"
+// #include "foxglove-vn/Speed.pb.h"
 #include "sim_data_flow/ST_msg.pb.h"
 #include "svc/base_svc_serial.h"
 
@@ -21,7 +21,7 @@ namespace VNSim {
 // TODO: 删除
 
 class SVCModelSerial : public BaseSerialSVCModel {
-    //TODO: 接口说明
+    // TODO: 接口说明
    public:
     SVCModelSerial();
     ~SVCModelSerial();

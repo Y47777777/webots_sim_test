@@ -36,36 +36,35 @@ NormalSTController::NormalSTController() : BaseController() {
         std::make_shared<WWheel>("FL", "SteerWheel", "SteerSolid", "S");
 
     BP_ptr_ = std::make_shared<WLidar>("BP");
-    mid360_ptr_ = std::make_shared<WLidar>("mid360", "MID360", 100);
-    mid360_ptr_->setSimulationNRLS(true);
+    // mid360_ptr_ = std::make_shared<WLidar>("mid360", "MID360", 100);
+    // mid360_ptr_->setSimulationNRLS(true);
 
     // TODO: creat task
     v_while_spin_.push_back(bind(&WBase::spin, stree_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, fork_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, imu_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, BP_ptr_));
-    v_while_spin_.push_back(bind(&WBase::spin, mid360_ptr_));
+    // v_while_spin_.push_back(bind(&WBase::spin, mid360_ptr_));
 
     ecal_ptr_->addEcal("webot/ST_msg");
     ecal_ptr_->addEcal("webot/pointCloud");
     ecal_ptr_->addEcal("webot/perception");
 
-    m_thread_.insert(std::pair<std::string, std::thread>(
-        "bp_report", std::bind(&NormalSTController::BpReportSpin, this)));
-    m_thread_.insert(std::pair<std::string, std::thread>(
-        "mid360_report", std::bind(&NormalSTController::Mid360ReportSpin, this)));
+    // m_thread_.insert(std::pair<std::string, std::thread>(
+    //     "bp_report", std::bind(&NormalSTController::BpReportSpin, this)));
+    // m_thread_.insert(std::pair<std::string, std::thread>(
+    // "mid360_report",
+    // std::bind(&NormalSTController::Mid360ReportSpin, this)));
 
     // std::thread local_thread(
     //     std::bind(&NormalSTController::BpReportSpin, this));
     // m_thread_["bp_report"] = std::move(local_thread);
 
-    // ecal_ptr_->addEcal("webot/pointCloud");
-    // ecal_ptr_->addEcal("webot/perception");
-    // ecal_ptr_->addEcal("svc_model_st/ST_msg",
-    //                    std::bind(&NormalSTController::onRemoteSerialMsg,
-    //                    this,
-    //                              std::placeholders::_1,
-    //                              std::placeholders::_2));
+    ecal_ptr_->addEcal("webot/pointCloud");
+    ecal_ptr_->addEcal("webot/perception");
+    ecal_ptr_->addEcal("svc_model_st/ST_msg",
+                       std::bind(&NormalSTController::onRemoteSerialMsg, this,
+                                 std::placeholders::_1, std::placeholders::_2));
 
     // payload_Up.set_allocated_imu(&payload_imu);
     // payload.set_allocated_up_msg(&payload_Up);
@@ -143,7 +142,6 @@ void NormalSTController::sendSerialSpin() {
 }
 
 void NormalSTController::Mid360ReportSpin() {
-    
     LOG_INFO("Mid360ReportSpin start\n");
     sim_data_flow::WBPointCloud payload;
 
@@ -153,11 +151,12 @@ void NormalSTController::Mid360ReportSpin() {
             timer_ptr_->sleep<microseconds>(5);
             continue;
         }
-        //TODO: size应该要确定
+        // TODO: size应该要确定
         mid360_ptr_->getLocalPointCloud(payload, MAXIMUM_MID360_UPLOAD);
         // if (payload.ByteSize() > BP_LIDAR_MSG_BUF) {
         //     LOG_WARN(
-        //         "%s --> payload bytes size is larger, current = %d, expect = ",
+        //         "%s --> payload bytes size is larger, current = %d, expect =
+        //         ",
         //         __FUNCTION__, payload.ByteSize(), BP_LIDAR_MSG_BUF);
         //     continue;
         // }
@@ -188,7 +187,7 @@ void NormalSTController::BpReportSpin() {
             continue;
         }
         payload.SerializePartialToArray(buf, payload.ByteSize());
-        ecal_ptr_->send("webot/pointCloud", buf, payload.ByteSize());
+        // ecal_ptr_->send("webot/pointCloud", buf, payload.ByteSize());
         timer_ptr_->sleep<milliseconds>(90);
     }
     return;

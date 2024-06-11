@@ -7,13 +7,10 @@ using namespace VNSim;
 KeyboardForm::KeyboardForm(std::shared_ptr<BaseController> ptr, QWidget *parent)
     : QWidget(parent), ui(new Ui::KeyboardForm) {
     ui->setupUi(this);
-
     model_ptr_ = ptr;
-
     timer_.setInterval(50);
     connect(&timer_, SIGNAL(timeout()), this, SLOT(setStatus()));
     timer_.start();
-
     if (model_ptr_ == nullptr) {
         LOG_ERROR("model_ptr_ is nullptr");
     }

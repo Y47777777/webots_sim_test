@@ -4,9 +4,9 @@
  * @LastEditors: weijchen weijchen@visionnav.com
  * @LastEditTime: 2024-06-07 20:03:33
  * @FilePath: /webots_ctrl/include/svc/base_svc_ctrl.h
- * @Description: 
- * 
- * Copyright (c) 2024 by visionnav, All Rights Reserved. 
+ * @Description:
+ *
+ * Copyright (c) 2024 by visionnav, All Rights Reserved.
  */
 #ifndef __BASE_SVC_CTRL_H__
 #define __BASE_SVC_CTRL_H__
@@ -25,7 +25,9 @@ class BaseSVCModel {
 
    public:
     int init(bool OnInit, const char *name) {
-        ecal_ptr_->EcalWrapper::getInstance(name);
+        std::cout << "ecal init" << std::endl;
+        ecal_ptr_ = EcalWrapper::getInstance(name);
+        std::cout << "ecal init 2" << std::endl;
         return this->initService();
     }
     void svcExit() { SVCExit_ = true; }
