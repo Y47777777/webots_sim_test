@@ -35,7 +35,7 @@ NormalSTController::NormalSTController() : BaseController() {
     stree_ptr_ =
         std::make_shared<WWheel>("FL", "SteerWheel", "SteerSolid", "S");
 
-    BP_ptr_ = std::make_shared<WLidar>("BP");
+    BP_ptr_ = std::make_shared<WLidar>("BP", "", 50);
     // mid360_ptr_ = std::make_shared<WLidar>("mid360", "MID360", 100);
     // mid360_ptr_->setSimulationNRLS(true);
 
@@ -56,9 +56,9 @@ NormalSTController::NormalSTController() : BaseController() {
     // "mid360_report",
     // std::bind(&NormalSTController::Mid360ReportSpin, this)));
 
-    // std::thread local_thread(
-    //     std::bind(&NormalSTController::BpReportSpin, this));
-    // m_thread_["bp_report"] = std::move(local_thread);
+    std::thread local_thread(
+        std::bind(&NormalSTController::BpReportSpin, this));
+    m_thread_["bp_report"] = std::move(local_thread);
 
     ecal_ptr_->addEcal("webot/pointCloud");
     ecal_ptr_->addEcal("webot/perception");
@@ -163,7 +163,7 @@ void NormalSTController::Mid360ReportSpin() {
         uint8_t buf[payload.ByteSize()];
         payload.SerializePartialToArray(buf, payload.ByteSize());
         ecal_ptr_->send("webot/perception", buf, payload.ByteSize());
-        timer_ptr_->sleep<milliseconds>(90);
+        timer_ptr_->sleep<milliseconds>(100);  // 100ms
     }
     return;
 }
@@ -172,7 +172,7 @@ void NormalSTController::BpReportSpin() {
     uint8_t buf[BP_LIDAR_MSG_BUF];
     LOG_INFO("BpReportSpin start\n");
     sim_data_flow::WBPointCloud payload;
-
+    timer_ptr_->alarmTimerInit(50);
     while (!webotsExited_) {
         // FIXME: 可以修改为信号量触发
         if (!BP_ptr_->checkDataReady()) {
@@ -187,8 +187,9 @@ void NormalSTController::BpReportSpin() {
             continue;
         }
         payload.SerializePartialToArray(buf, payload.ByteSize());
-        // ecal_ptr_->send("webot/pointCloud", buf, payload.ByteSize());
-        timer_ptr_->sleep<milliseconds>(90);
+        ecal_ptr_->send("webot/pointCloud", buf, payload.ByteSize());
+        // timer_ptr_->sleep<milliseconds>(90);  // 100 ms
+        timer_ptr_->wait();
     }
     return;
 }

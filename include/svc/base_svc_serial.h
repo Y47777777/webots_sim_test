@@ -47,22 +47,18 @@ class BaseSerialSVCModel : public BaseSVCModel {
             "Sencers.config";  // use General config files...
         int ret = 0;
         do { /*load config*/
-            std::cout << 1 << std::endl;
             int l_ret = decoder_.loadConfig(decoder_file);
             if (l_ret != 0) {
                 LOG_WARN("decoder loadConfig ret = %d", l_ret);
                 ret = -1;
                 break;
             }
-            std::cout << 2 << std::endl;
             l_ret = encoder_.loadConfig(encoder_file);
             if (l_ret != 0) {
                 LOG_WARN("encoder loadConfig ret = %d", l_ret);
                 ret = -2;
                 break;
             }
-            std::cout << 3 << std::endl;
-            ecal_ptr_->addEcal("test/ptr");
             // receive msg from general
             ecal_ptr_->addEcal(
                 "Actuator/write",
@@ -78,9 +74,7 @@ class BaseSerialSVCModel : public BaseSVCModel {
                                         // in the derive class
                     },
                     std::placeholders::_1, std::placeholders::_2));
-            std::cout << 4 << std::endl;
             this->onInitService();
-            std::cout << 5 << std::endl;
             // report thread
             std::thread sensor_msg_report_thread([&]() {
                 Timer alarm;
@@ -90,10 +84,8 @@ class BaseSerialSVCModel : public BaseSVCModel {
                     alarm.wait();
                 }
             });
-            std::cout << 6 << std::endl;
             sensor_msg_report_thread_ = std::move(sensor_msg_report_thread);
         } while (0);
-        std::cout << 7 << std::endl;
         return ret;
     }
 

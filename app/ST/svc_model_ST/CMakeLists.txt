@@ -32,9 +32,12 @@ set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/../../../../simulation_world/webots
 
 set(CONTROLLER_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/controller_${PROJECT_NAME})
 
+set(EIGEN_INCLUDE /usr/include/eigen3)
+
 add_executable(svc_${PROJECT_NAME}
   ${src_files}
   ${header_files}
+
 )
 # add_executable(svc_${PROJECT_NAME}
 #   main_tmp.cpp
@@ -46,9 +49,11 @@ include(GNUInstallDirs)
 
 include_directories(${VN_INCLUDE})
 include_directories(${VN_INCLUDE}/foxglove-vn)
+# include_directories(${CMAKE_SOURCE_DIR}/../../base)
 include_directories(${ECAL_INCLUDE_DIRS})
 include_directories(${PCL_INCLUDE_DIRS})
 include_directories(${KEYBOARD_INCLUDE})
+include_directories(${EIGEN_INCLUDE})
 include_directories(/usr/local/webots/include/controller/cpp)
 
 target_link_libraries(svc_${PROJECT_NAME}
@@ -57,6 +62,7 @@ target_link_libraries(svc_${PROJECT_NAME}
     ${LIBRARY_INSTALL_DIR}/libParser.so
     ${LIBRARY_INSTALL_DIR}/libfoxglove-vn.a
     ${LIBRARY_INSTALL_DIR}/libsim_data_flow.a
+    ${LIBRARY_INSTALL_DIR}/libgeometry.so 
     eCAL::core
     Qt${QT_VERSION_MAJOR}::Core 
     Qt${QT_VERSION_MAJOR}::Widgets

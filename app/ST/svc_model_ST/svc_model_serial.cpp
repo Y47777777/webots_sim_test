@@ -1,4 +1,4 @@
-
+#include "geometry/geometry.h"
 #include "svc_model_serial.h"
 
 // #define SERIAL_MSG_BUF 128
@@ -27,29 +27,26 @@ int SVCModelSerial::onInitService() {
                                  std::placeholders::_1, std::placeholders::_2));
     ecal_ptr_->addEcal("svc_model_st/ST_msg");
     // payload.set_allocated_down_msg(&payload_Down);
-
     return 0;
 }
 
 void SVCModelSerial::onWebotMsg(const char *topic_name,
                                 const eCAL::SReceiveCallbackData *data) {
     sim_data_flow::STUp payload2;
-    std::cout << "payload2" << std::endl;
     payload2.ParseFromArray(data->buf, data->size);
-    std::cout << "payload2 finish" << std::endl;
+    foxglove::Imu *imu = payload2.mutable_imu();
     // use a spin lock to manage data copy
     // if the time consumption is huge, use a real mutex instead
     {
         std::shared_lock<std::shared_mutex> lock(lock_mutex_);
-        std::cout << "load data" << std::endl;
         // This period should be locked
-        // report_msg_.webot_msg.imu.angle[2] =
-        //     payload2.imu().orientation_covariance(0);  // vehicle_yaw
-        std::cout << "load data1" << std::endl;
-
+        Eigen::Quaterniond t(
+            imu->mutable_orientation()->x(), imu->mutable_orientation()->y(),
+            imu->mutable_orientation()->z(), imu->mutable_orientation()->w());
+        report_msg_.webot_msg.imu.angle[2] =
+            VNSim::Quaternion2Euler(t)[2];  // vehicle_yaw
         // TODO:单独成函数
         {
-            std::cout << "load data2" << std::endl;
             double forkZ = payload2.forkposez();  // forkZ Height
             if (std::abs(forkZ - FORK_LIFTUP_HEIGHT) <= HEIGHT_DEVIATION) {
                 report_msg_.fork_state = int(FORK_STATE::ON_FORK_TOP);
@@ -60,28 +57,24 @@ void SVCModelSerial::onWebotMsg(const char *topic_name,
                 report_msg_.fork_state = int(FORK_STATE::ON_FORK_MIDDLE);
             }
         }
-        std::cout << "load data3" << std::endl;
-        for (int i = 0; i < 3; i++) {
-            // report_msg_.webot_msg.imu.velocity[i] =
-            //     payload2.imu().angular_velocity_covariance(
-            //         i);  // angular_velocity
-            // report_msg_.webot_msg.imu.acceleration[i] =
-            //     payload2.imu().linear_acceleration_covariance(
-            //         i);  // accelerator
-        }
-        std::cout << "load data4" << std::endl;
+        report_msg_.webot_msg.imu.velocity[0] = imu->angular_velocity().x();
+        report_msg_.webot_msg.imu.velocity[1] = imu->angular_velocity().y();
+        report_msg_.webot_msg.imu.velocity[2] = imu->angular_velocity().z();
+        report_msg_.webot_msg.imu.acceleration[0] =
+            imu->linear_acceleration().x();
+        report_msg_.webot_msg.imu.acceleration[1] =
+            imu->linear_acceleration().y();
+        report_msg_.webot_msg.imu.acceleration[2] =
+            imu->linear_acceleration().z();
         double wheel_position = payload2.steerposition();
         if (!rpm_init_) {
             report_msg_.webot_msg.last_wheel_position = wheel_position;
             rpm_init_ = true;
         }
-        std::cout << "load data5" << std::endl;
         report_msg_.rpm =
             (wheel_position - report_msg_.webot_msg.last_wheel_position) *
             SIM_FAC;
-        std::cout << "load data6" << std::endl;
         report_msg_.webot_msg.last_wheel_position = wheel_position;
-        std::cout << "load data7" << std::endl;
     }
 }
 
@@ -89,13 +82,13 @@ void SVCModelSerial::onDownStreamProcess(uint8_t *msg, int len) {
     struct Package pack {
         msg, len
     };
-    double data_idx;
+    uint32_t data_idx;
     double ForkDeviceZ;
     double SteeringDevice;
     double MoveDevice;
     decoder_.decodePackage(&pack);
     decoder_.getValue2("DataIndex", &data_idx, 4);         // store in local
-    decoder_.getValue("MoveDevice", &MoveDevice);          // steer wheel speed
+    decoder_.getValue("MoveDevice", &MoveDevice);          // steer wheel
     decoder_.getValue("SteeringDevice", &SteeringDevice);  // steer yaw
     decoder_.getValue("ForkDeviceZ", &ForkDeviceZ);        // fork Speed
     // type2 ST it will be useful.
@@ -112,6 +105,8 @@ void SVCModelSerial::onDownStreamProcess(uint8_t *msg, int len) {
         report_msg_.dataidx = data_idx;
         // TODO: ？？发布数据直接写入回复？
         report_msg_.webot_msg.wheel_yaw = SteeringDevice;
+        // std::cout << "dataidx_upload = " << dataidx_upload
+        //           << ", l_dataidx = " << l_dataidx << std::endl;
     }
 }
 
@@ -160,5 +155,9 @@ void SVCModelSerial::onUpStreamProcess() {
         encoder_.updateValue(Imu_Function.c_str(), 1, l_Imu.velocity[i]);
     }
     const struct Package *pack = encoder_.encodePackage();
+    // std::cout << "dataidx_upload = " << dataidx_upload
+    //           << ", l_dataidx = " << l_dataidx << std::endl;
+    // std::cout << "rpm = " << l_rpm << ", Gyroscope = " << l_Imu.angle[2]
+    //           << ", IncrementalSteeringCoder = " << l_steer_yaw << std::endl;
     ecal_ptr_->send("Sensor/read", pack->buf, pack->len);
 }

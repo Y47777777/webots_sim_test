@@ -22,7 +22,7 @@ int main(int argc, char *argv[]) {
     LOG_INFO("try start svc_ST");
     std::cout << "try svc_ST" << std::endl;
     // TODO: start svc_model_ST and close svc_model_ST....
-    // system("./svc_ST &");
+    system("./svc_ST &");
     // std::cout << "try svc_ST finish" << std::endl;
     QObject::connect(ctrl_ptr.get(), SIGNAL(finished()), &a, SLOT(quit()));
     LOG_INFO("4");
