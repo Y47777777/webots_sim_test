@@ -94,6 +94,7 @@ class NRLS {
         }
         point_cloud.set_size_of_each_layer(-1);
         point_cloud.set_size_of_layer(-1);
+        point_cloud.set_size_of_point_cloud(point_cloud.point_cloud().size());
     }
 
    private:

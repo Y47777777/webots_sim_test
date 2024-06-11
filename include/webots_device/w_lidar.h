@@ -142,6 +142,8 @@ class WLidar : public WBase {
             }
             point_cloud_.set_size_of_each_layer(lidar_->getNumberOfLayers());
             point_cloud_.set_size_of_layer(size / lidar_->getNumberOfLayers());
+            point_cloud_.set_size_of_point_cloud(
+                point_cloud_.point_cloud().size());
         }
     }
 
