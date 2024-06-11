@@ -204,16 +204,11 @@ class WLidar : public WBase {
                 }
             }
             point_cloud_.set_size_of_each_layer(lidar_->getNumberOfLayers());
-            point_cloud_.set_size_of_layer(size / lidar_->getNumberOfLayers());
+            point_cloud_.set_size_of_layer(size_of_point_cloud_ /
+                                           lidar_->getNumberOfLayers());
             point_cloud_.set_size_of_point_cloud(
                 point_cloud_.point_cloud().size());
         }
-    }
-
-    void getLocalPointCloud(sim_data_flow::WBPointCloud &t_lidar,
-                            int target_size = -1) {
-        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
-        t_lidar.CopyFrom(point_cloud_);
     }
 
    private:
