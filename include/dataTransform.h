@@ -5,7 +5,7 @@
 #include "sim_data_flow/point_cloud2.pb.h"
 #include "sim_data_flow/point_cloud.pb.h"
 
-#define PBPOINT_BANDWIDTH 4 * 5 + 8
+#define PBPOINT_BANDWIDTH 4 * 6
 
 namespace VNSim {
 struct PointFieldBw {
@@ -18,18 +18,19 @@ struct PointFieldBw {
 void pbTopb2(const sim_data_flow::WBPointCloud &payload,
              pb::PointCloud2 &payload_send, uint32_t total_lidar_point,
              uint64_t seq) {
+    uint64_t point_size = payload.point_cloud().size();
     std::vector<PointFieldBw> PointField{
         {"x", 4, 7, 1},         {"y", 4, 7, 1},     {"z", 4, 7, 1},
-        {"intensity", 4, 7, 1}, {"label", 4, 6, 1}, {"timestamp", 8, 8, 1}};
+        {"intensity", 4, 7, 1}, {"label", 4, 6, 1}, {"timestamp", 4, 8, 1}};
     // header
     payload_send.mutable_header()->set_frame_id("");
     payload_send.mutable_header()->set_seq(seq);
     payload_send.mutable_header()->set_timestamp(payload.timestamp());
     // body
     payload_send.set_height(1);
-    payload_send.set_width(total_lidar_point);
+    payload_send.set_width(point_size);
     payload_send.set_point_step(PBPOINT_BANDWIDTH);
-    payload_send.set_row_step(PBPOINT_BANDWIDTH * total_lidar_point);
+    payload_send.set_row_step(PBPOINT_BANDWIDTH * point_size);
     payload_send.set_is_bigendian(false);
     payload_send.set_is_dense(false);
     // field
@@ -45,34 +46,26 @@ void pbTopb2(const sim_data_flow::WBPointCloud &payload,
         field->set_count(PointField[i].count);
     }
     // data
-    payload_send.mutable_data()->resize(PBPOINT_BANDWIDTH * total_lidar_point);
-    uint64_t point_size = payload.size_of_point_cloud();
+    payload_send.mutable_data()->resize(PBPOINT_BANDWIDTH * (point_size + 10));
     char *pb_data_ptr = &((*payload_send.mutable_data())[0]);
     int intensity = 130;
     int label = 8;
     for (int i = 0; i < point_size; i++) {
-        double x = payload.point_cloud().at(i).x();
-        double y = payload.point_cloud().at(i).y();
-        double z = payload.point_cloud().at(i).z();
+        float x = payload.point_cloud().at(i).x();
+        float y = payload.point_cloud().at(i).y();
+        float z = payload.point_cloud().at(i).z();
         double time = payload.point_cloud().at(i).time();
         if (std::abs(x) != INFINITY && std::abs(y) != INFINITY &&
             std::abs(z) != INFINITY) {
-            if (i < total_lidar_point - 1) {
-                // 4 * 5 + 8
-                memcpy(pb_data_ptr + i * PBPOINT_BANDWIDTH, &(x), 4);
-                memcpy(pb_data_ptr + 4 + i * PBPOINT_BANDWIDTH, &(y), 4);
-                memcpy(pb_data_ptr + 8 + i * PBPOINT_BANDWIDTH, &(z), 4);
-                memcpy(pb_data_ptr + 12 + i * PBPOINT_BANDWIDTH, &(intensity),
-                       4);
-                memcpy(pb_data_ptr + 16 + i * PBPOINT_BANDWIDTH, &(label), 4);
-                memcpy(pb_data_ptr + 20 + i * PBPOINT_BANDWIDTH, &(time), 8);
-            } else {
-                // No more any points
-                break;
-            }
+            memcpy(pb_data_ptr + i * PBPOINT_BANDWIDTH, &(x), 4);
+            memcpy(pb_data_ptr + 4 + i * PBPOINT_BANDWIDTH, &(y), 4);
+            memcpy(pb_data_ptr + 8 + i * PBPOINT_BANDWIDTH, &(z), 4);
+            memcpy(pb_data_ptr + 12 + i * PBPOINT_BANDWIDTH, &(intensity), 4);
+            memcpy(pb_data_ptr + 16 + i * PBPOINT_BANDWIDTH, &(label), 4);
+            memcpy(pb_data_ptr + 20 + i * PBPOINT_BANDWIDTH, &(time), 4);
         }
     }
-}
+}  // namespace VNSim
 }  // namespace VNSim
 
 #endif
