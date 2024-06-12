@@ -72,7 +72,7 @@ class WImu : public WBase {
 
     // TODO: 这段要改
     double getVehicleYaw() {
-        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+        // std::shared_lock<std::shared_mutex> lock(rw_mutex_);
         static auto *robot_rot =
             super_->getFromDef("RobotNode_ST")->getField("rotation");
 
@@ -91,6 +91,8 @@ class WImu : public WBase {
         memcpy(acc_.data(), acc_ptr_->getValues(), 3 * sizeof(acc_[0]));
         memcpy(quaternion_.data(), inertial_unit_ptr_->getQuaternion(),
                3 * sizeof(quaternion_[0]));
+        // FIXME: current imu vehicle yaw is not correct, use old function
+        quaternion_.data()[3] = getVehicleYaw();
     }
 
    private:

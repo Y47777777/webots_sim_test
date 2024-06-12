@@ -25,9 +25,7 @@ class BaseSVCModel {
 
    public:
     int init(bool OnInit, const char *name) {
-        std::cout << "ecal init" << std::endl;
         ecal_ptr_ = EcalWrapper::getInstance(name);
-        std::cout << "ecal init 2" << std::endl;
         return this->initService();
     }
     void svcExit() { SVCExit_ = true; }

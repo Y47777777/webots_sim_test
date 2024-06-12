@@ -302,6 +302,9 @@ int main(void) {
     double AX = 0.00762565;
     double AY = 0.0344975;
     double AZ = 9.7804;
+    double gyro = 3.14;
+    uint32_t data_idx = 100;
+    uint32_t ll_data_idx = 100;
     // VelocityControl.val = &controlLevel;
     // VelocityControl.len = 1;
     // VelocityControlLevelInput.push_back(&VelocityControl);
@@ -322,6 +325,10 @@ int main(void) {
     // switchValueList[4] |= 0x00;
     encoder_st.loadConfig(path_st_encode.c_str());
     encoder_st.updateValue2("VelocityControlLevel", &controlLevel, 1);
+    encoder_st.updateValue("Gyroscope", 1, gyro);
+    encoder_st.updateValue("RPMSensor", 1, RMPValue);
+    encoder_st.updateValue2("DataIndex", &ll_data_idx, 1);
+    encoder_st.updateValue2("DataIndexReturn", &data_idx, 1);
     encoder_st.updateValue("RPMSensor", 1, RMPValue);
     for (int i = 0; i < 12 * 8; i++) {
         if (i < 32 || i > 33)

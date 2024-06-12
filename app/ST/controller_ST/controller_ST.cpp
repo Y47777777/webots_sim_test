@@ -36,29 +36,29 @@ NormalSTController::NormalSTController() : BaseController() {
         std::make_shared<WWheel>("FL", "SteerWheel", "SteerSolid", "S");
 
     BP_ptr_ = std::make_shared<WLidar>("BP", "", 50);
-    // mid360_ptr_ = std::make_shared<WLidar>("mid360", "MID360", 100);
-    // mid360_ptr_->setSimulationNRLS(true);
+    mid360_ptr_ = std::make_shared<WLidar>("mid360", "MID360", 100);
+    mid360_ptr_->setSimulationNRLS(true);
 
     // TODO: creat task
     v_while_spin_.push_back(bind(&WBase::spin, stree_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, fork_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, imu_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, BP_ptr_));
-    // v_while_spin_.push_back(bind(&WBase::spin, mid360_ptr_));
+    v_while_spin_.push_back(bind(&WBase::spin, mid360_ptr_));
 
     ecal_ptr_->addEcal("webot/ST_msg");
     ecal_ptr_->addEcal("webot/pointCloud");
     ecal_ptr_->addEcal("webot/perception");
 
-    // m_thread_.insert(std::pair<std::string, std::thread>(
-    //     "bp_report", std::bind(&NormalSTController::BpReportSpin, this)));
-    // m_thread_.insert(std::pair<std::string, std::thread>(
-    // "mid360_report",
-    // std::bind(&NormalSTController::Mid360ReportSpin, this)));
+    m_thread_.insert(std::pair<std::string, std::thread>(
+        "bp_report", std::bind(&NormalSTController::BpReportSpin, this)));
+    m_thread_.insert(std::pair<std::string, std::thread>(
+        "mid360_report",
+        std::bind(&NormalSTController::Mid360ReportSpin, this)));
 
-    std::thread local_thread(
-        std::bind(&NormalSTController::BpReportSpin, this));
-    m_thread_["bp_report"] = std::move(local_thread);
+    // std::thread local_thread(
+    //     std::bind(&NormalSTController::BpReportSpin, this));
+    // m_thread_["bp_report"] = std::move(local_thread);
 
     ecal_ptr_->addEcal("webot/pointCloud");
     ecal_ptr_->addEcal("webot/perception");
@@ -106,6 +106,10 @@ void NormalSTController::onRemoteSerialMsg(
     if (!isManual_) {
         sim_data_flow::STMsg payload;
         payload.ParseFromArray(data->buf, data->size);
+        // std::cout << "onMsg speed = " << payload.down_msg().steering_speed()
+        //           << ", theta = " << payload.down_msg().steering_theta()
+        //           << ", forkZ = " << payload.down_msg().forkspeedz()
+        //           << std::endl;
         stree_ptr_->setSpeed(payload.down_msg().steering_speed(),
                              payload.down_msg().steering_theta());
         fork_ptr_->setVelocity(payload.down_msg().forkspeedz());
@@ -134,6 +138,7 @@ void NormalSTController::sendSerialSpin() {
 
     foxglove::Imu *imu = payload.mutable_imu();
     imu->mutable_orientation()->CopyFrom(imu_ptr_->getInertialValue());
+
     imu->mutable_angular_velocity()->CopyFrom(imu_ptr_->getGyroValue());
     imu->mutable_linear_acceleration()->CopyFrom(imu_ptr_->getAccValue());
 
@@ -163,7 +168,7 @@ void NormalSTController::Mid360ReportSpin() {
         uint8_t buf[payload.ByteSize()];
         payload.SerializePartialToArray(buf, payload.ByteSize());
         ecal_ptr_->send("webot/perception", buf, payload.ByteSize());
-        timer_ptr_->sleep<milliseconds>(100);  // 100ms
+        timer_ptr_->sleep<milliseconds>(90);
     }
     return;
 }
@@ -188,8 +193,7 @@ void NormalSTController::BpReportSpin() {
         }
         payload.SerializePartialToArray(buf, payload.ByteSize());
         ecal_ptr_->send("webot/pointCloud", buf, payload.ByteSize());
-        // timer_ptr_->sleep<milliseconds>(90);  // 100 ms
-        timer_ptr_->wait();
+        timer_ptr_->sleep<milliseconds>(45);
     }
     return;
 }

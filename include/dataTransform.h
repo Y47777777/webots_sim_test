@@ -40,7 +40,7 @@ void pbTopb2(const sim_data_flow::WBPointCloud &payload,
     uint64_t point_size = payload.point_cloud().size();
     std::vector<PointFieldBw> PointField{
         {"x", 4, 7, 1},         {"y", 4, 7, 1},     {"z", 4, 7, 1},
-        {"intensity", 4, 7, 1}, {"label", 4, 6, 1}, {"timestamp", 8, 8, 1}};
+        {"intensity", 4, 7, 1}, {"label", 4, 6, 1}, {"timestamp", 4, 7, 1}};
     // header
     payload_send.mutable_header()->set_frame_id("");
     payload_send.mutable_header()->set_seq(seq);
