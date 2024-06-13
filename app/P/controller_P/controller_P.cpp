@@ -36,8 +36,8 @@ NormalSTController::NormalSTController() : BaseController() {
     std::cout << 2 << std::endl;
     stree_ptr_ =
         std::make_shared<WWheel>("FL", "SteerWheel", "SteerSolid", "FLWheel");
-    l_ptr_ = std::make_shared<WWheel>("", "", "L_D_SteerSolid", "", "BRPS");
-    r_ptr_ = std::make_shared<WWheel>("", "", "R_D_SteerSolid", "", "BLPS");
+    l_ptr_ = std::make_shared<WWheel>("", "", "R_D_SteerSolid", "", "BRPS");
+    r_ptr_ = std::make_shared<WWheel>("", "", "L_D_SteerSolid", "", "BLPS");
     std::cout << 3 << std::endl;
 
     BP_ptr_ = std::make_shared<WLidar>("BP", "", 50);

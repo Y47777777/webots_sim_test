@@ -38,6 +38,7 @@ class WWheel : public WBase {
            std::string solid_name = "", std::string radius_name = "",
            std::string sensor_name = "")
         : WBase() {
+        motor_name_ = motor_name;
         LOG_INFO("init wheel: %s,%s,%s,%s,%s", motor_name.c_str(),
                  yaw_node_name.c_str(), solid_name.c_str(), radius_name.c_str(),
                  sensor_name.c_str());
@@ -91,6 +92,10 @@ class WWheel : public WBase {
             LOG_INFO("soild translation %.3f, %.3f, %.3f",
                      solid_init_translation_[0], solid_init_translation_[1],
                      solid_init_translation_[2]);
+            // solid_init_rotation_[0] = 0;
+            // solid_init_rotation_[1] = 0;
+            // solid_init_rotation_[2] = 1;
+            last_rotation_angle = solid_init_rotation_[3];
         }
 
         // creat pose sensor
@@ -165,7 +170,15 @@ class WWheel : public WBase {
             solid_translation_ptr_->setSFVec3f(solid_init_translation_);
             // set rotation axis
             const double *angle = solid_rotation_ptr_->getSFRotation();
-            solid_init_rotation_[3] = angle[3];
+
+            // 防止轮子自己动
+            if (fabs(Normalize2(angle[3] - last_rotation_angle)) > 0.005) {
+                solid_init_rotation_[3] = angle[3];
+                // LOG_INFO("%s, is stay  angle %f", motor_name_.c_str(),
+                //          solid_init_rotation_[3]);
+            }
+
+            last_rotation_angle = solid_init_rotation_[3];
             solid_rotation_ptr_->setSFRotation(solid_init_rotation_);
         }
 
@@ -187,6 +200,7 @@ class WWheel : public WBase {
 
    private:
     // motor
+    std::string motor_name_;
     Motor *motor_ = nullptr;
     double speed_ = 0;
     double radius_ = 1;
@@ -203,6 +217,8 @@ class WWheel : public WBase {
     // circle solid
     Field *solid_rotation_ptr_ = nullptr;
     Field *solid_translation_ptr_ = nullptr;
+    double last_rotation_angle = 0;
+
     Field *steer_solid_ptr_ = nullptr;
     double solid_init_rotation_[4] = {0};
     double solid_init_translation_[3] = {0};
