@@ -5,8 +5,8 @@
  * @LastEditTime: 2024-06-07 11:24:20
  * @FilePath: /webots_ctrl/include/webots_device/w_wheel.h
  * @Description: webots wheel接口
- * 
- * Copyright (c) 2024 by visionnav, All Rights Reserved. 
+ *
+ * Copyright (c) 2024 by visionnav, All Rights Reserved.
  */
 #pragma once
 
@@ -51,9 +51,9 @@ class WWheel : public WBase {
             LOG_INFO("creat motor: %s", motor_name.c_str());
         }
 
-        Node *mid360Node = super_->getFromDef(yaw_node_name);
-        Field *mid360_tf = mid360Node->getField("rotation");
-        const double *mid360_pose = mid360_tf->getSFRotation();
+        // Node *mid360Node = super_->getFromDef(yaw_node_name);
+        // Field *mid360_tf = mid360Node->getField("rotation");
+        // const double *mid360_pose = mid360_tf->getSFRotation();
 
         // creat yaw node
         Node *yaw_node = super_->getFromDef(yaw_node_name);
@@ -118,7 +118,7 @@ class WWheel : public WBase {
     }
 
     ~WWheel(){};
- 
+
     void setVelocity(double v) {
         std::shared_lock<std::shared_mutex> lock(rw_mutex_);
         speed_ = v / radius_;

@@ -74,7 +74,7 @@ class WImu : public WBase {
     double getVehicleYaw() {
         // std::shared_lock<std::shared_mutex> lock(rw_mutex_);
         static auto *robot_rot =
-            super_->getFromDef("RobotNode_ST")->getField("rotation");
+            super_->getFromDef("RobotNode")->getField("rotation");
 
         auto tmp_r = robot_rot->getSFRotation();
 
