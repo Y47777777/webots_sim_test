@@ -70,21 +70,6 @@ class WImu : public WBase {
         return result;
     }
 
-    // TODO: 这段要改
-    double getVehicleYaw() {
-        // std::shared_lock<std::shared_mutex> lock(rw_mutex_);
-        static auto *robot_rot =
-            super_->getFromDef("RobotNode")->getField("rotation");
-
-        auto tmp_r = robot_rot->getSFRotation();
-
-        Eigen::AngleAxisd tmp_angleaxis(
-            tmp_r[3], Eigen::Vector3d(tmp_r[0], tmp_r[1], tmp_r[2]));
-        Eigen::Vector3d r_eulerangle3 =
-            tmp_angleaxis.matrix().eulerAngles(2, 1, 0);
-        return r_eulerangle3[0];
-    }
-
     void spin() {
         std::unique_lock<std::shared_mutex> lock(rw_mutex_);
         memcpy(gyro_.data(), gyro_ptr_->getValues(), 3 * sizeof(gyro_[0]));
@@ -92,7 +77,6 @@ class WImu : public WBase {
         memcpy(quaternion_.data(), inertial_unit_ptr_->getQuaternion(),
                3 * sizeof(quaternion_[0]));
         // FIXME: current imu vehicle yaw is not correct, use old function
-        quaternion_.data()[3] = getVehicleYaw();
     }
 
    private:

@@ -47,6 +47,8 @@ NormalSTController::NormalSTController() : BaseController() {
     mid360_ptr_->setSimulationNRLS(true);
     std::cout << 6 << std::endl;
 
+    pose_ptr_ = std::make_shared<WPose>("RobotNode");
+
     // TODO: creat task
     v_while_spin_.push_back(bind(&WBase::spin, stree_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, l_ptr_));
@@ -60,6 +62,7 @@ NormalSTController::NormalSTController() : BaseController() {
     std::cout << 10 << std::endl;
     v_while_spin_.push_back(bind(&WBase::spin, mid360_ptr_));
     std::cout << 11 << std::endl;
+    v_while_spin_.push_back(bind(&WBase::spin, pose_ptr_));
 
     ecal_ptr_->addEcal("webot/P_msg");
     ecal_ptr_->addEcal("webot/pointCloud");
@@ -160,6 +163,8 @@ void NormalSTController::sendSerialSpin() {
 
     foxglove::Imu *imu = payload.mutable_imu();
     imu->mutable_orientation()->CopyFrom(imu_ptr_->getInertialValue());
+    // TODO: 临时使用pose位置，后续要排查imu问题
+    imu->mutable_orientation()->set_w(pose_ptr_->getVehicleYaw());
 
     imu->mutable_angular_velocity()->CopyFrom(imu_ptr_->getGyroValue());
     imu->mutable_linear_acceleration()->CopyFrom(imu_ptr_->getAccValue());
