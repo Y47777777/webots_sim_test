@@ -40,6 +40,7 @@ NormalSTController::NormalSTController() : BaseController() {
     BP_ptr_ = std::make_shared<WLidar>("BP", "", 50);
     mid360_ptr_ = std::make_shared<WLidar>("mid360", "MID360", 100);
     mid360_ptr_->setSimulationNRLS(true);
+    pose_ptr_ = std::make_shared<WPose>("RobotNode");
 
     // TODO: creat task
     v_while_spin_.push_back(bind(&WBase::spin, stree_ptr_));
@@ -49,6 +50,7 @@ NormalSTController::NormalSTController() : BaseController() {
     v_while_spin_.push_back(bind(&WBase::spin, imu_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, BP_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, mid360_ptr_));
+    v_while_spin_.push_back(bind(&WBase::spin, pose_ptr_));
 
     ecal_ptr_->addEcal("webot/P_msg");
     ecal_ptr_->addEcal("webot/pointCloud");
