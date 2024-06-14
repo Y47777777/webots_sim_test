@@ -66,7 +66,7 @@ void pbTopb2(const sim_data_flow::WBPointCloud &payload,
         field->set_count(PointField[i].count);
     }
     // data
-    payload_send.mutable_data()->resize(PBPOINT_BANDWIDTH * (point_size + 10));
+    payload_send.mutable_data()->resize(PBPOINT_BANDWIDTH * (point_size));
     char *pb_data_ptr = &((*payload_send.mutable_data())[0]);
     int intensity = 130;
     int label = 8;
@@ -74,7 +74,7 @@ void pbTopb2(const sim_data_flow::WBPointCloud &payload,
         float x = payload.point_cloud().at(i).x();
         float y = payload.point_cloud().at(i).y();
         float z = payload.point_cloud().at(i).z();
-        double time = payload.point_cloud().at(i).time();
+        float time = payload.point_cloud().at(i).time();
         if (std::abs(x) != INFINITY && std::abs(y) != INFINITY &&
             std::abs(z) != INFINITY) {
             // TODO: 指针移动 ，可以不用每次计算

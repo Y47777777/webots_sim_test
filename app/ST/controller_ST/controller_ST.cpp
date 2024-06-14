@@ -34,12 +34,11 @@ NormalSTController::NormalSTController() : BaseController() {
     fork_ptr_ = std::make_shared<WFork>("fork height motor");
     stree_ptr_ =
         std::make_shared<WWheel>("FL", "SteerWheel", "SteerSolid", "S");
-
     BP_ptr_ = std::make_shared<WLidar>("BP", "", 50);
     mid360_ptr_ = std::make_shared<WLidar>("mid360", "MID360", 100);
     mid360_ptr_->setSimulationNRLS(true);
 
-    // TODO: creat task
+    // // TODO: creat task
     v_while_spin_.push_back(bind(&WBase::spin, stree_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, fork_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, imu_ptr_));
@@ -56,12 +55,6 @@ NormalSTController::NormalSTController() : BaseController() {
         "mid360_report",
         std::bind(&NormalSTController::Mid360ReportSpin, this)));
 
-    // std::thread local_thread(
-    //     std::bind(&NormalSTController::BpReportSpin, this));
-    // m_thread_["bp_report"] = std::move(local_thread);
-
-    ecal_ptr_->addEcal("webot/pointCloud");
-    ecal_ptr_->addEcal("webot/perception");
     ecal_ptr_->addEcal("svc_model_st/ST_msg",
                        std::bind(&NormalSTController::onRemoteSerialMsg, this,
                                  std::placeholders::_1, std::placeholders::_2));
@@ -148,7 +141,7 @@ void NormalSTController::sendSerialSpin() {
 
 void NormalSTController::Mid360ReportSpin() {
     LOG_INFO("Mid360ReportSpin start\n");
-    sim_data_flow::WBPointCloud payload;
+    // sim_data_flow::WBPointCloud payload;
 
     while (!webotsExited_) {
         // FIXME: 可以修改为信号量触发
@@ -156,8 +149,10 @@ void NormalSTController::Mid360ReportSpin() {
             timer_ptr_->sleep<microseconds>(5);
             continue;
         }
+        sim_data_flow::WBPointCloud payload;
         // TODO: size应该要确定
-        mid360_ptr_->getLocalPointCloud(payload, MAXIMUM_MID360_UPLOAD);
+        // mid360_ptr_->getLocalPointCloud(payload, MAXIMUM_MID360_UPLOAD);
+        mid360_ptr_->getLocalPointCloud(payload);
         // if (payload.ByteSize() > BP_LIDAR_MSG_BUF) {
         //     LOG_WARN(
         //         "%s --> payload bytes size is larger, current = %d, expect =
@@ -184,7 +179,7 @@ void NormalSTController::BpReportSpin() {
             timer_ptr_->sleep<microseconds>(5);
             continue;
         }
-        BP_ptr_->getLocalPointCloud(payload, MAXIMUM_BP_UPLOAD);
+        BP_ptr_->getLocalPointCloud(payload);
         if (payload.ByteSize() > BP_LIDAR_MSG_BUF) {
             LOG_WARN(
                 "%s --> payload bytes size is larger, current = %d, expect =",

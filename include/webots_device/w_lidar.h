@@ -165,7 +165,64 @@ class WLidar : public WBase {
     void getLocalPointCloud(sim_data_flow::WBPointCloud &result,
                             int target_size = -1) {
         std::shared_lock<std::shared_mutex> lock(rw_mutex_);
-        result.CopyFrom(point_cloud_);
+        if (target_size == -1)
+            result.CopyFrom(point_cloud_);
+        else {
+            result.clear_point_cloud();
+            int total_points = point_cloud_.point_cloud().size();
+            bool out = false;
+            int local_counter = 0;
+            int start_point = last_point_ + 1;
+            int repeat_point = 0;
+            int current_start_point = 0;
+            if (total_points <= 0) {
+                // no points
+                return;
+            }
+            if (last_point_ > (total_points - 1) || (last_point_ < 0)) {
+                // search from start
+                start_point = 0;
+            }
+            current_start_point = start_point;
+            repeat_point = start_point;
+            while (!out) {
+                // get Point
+                if ((current_start_point + local_counter) >
+                    (total_points - 1)) {
+                    // search from start
+                    current_start_point = (0 - local_counter);
+                }
+                // if ((start_point + local_counter) == repeat_point) {
+                //     out = true;
+                //     continue;
+                // }
+                sim_data_flow::LidarPoint *point = result.add_point_cloud();
+                point->set_x(point_cloud_.point_cloud()
+                                 .at(current_start_point + local_counter)
+                                 .x());
+                point->set_y(point_cloud_.point_cloud()
+                                 .at(current_start_point + local_counter)
+                                 .y());
+                point->set_z(point_cloud_.point_cloud()
+                                 .at(current_start_point + local_counter)
+                                 .z());
+                point->set_time(point_cloud_.point_cloud()
+                                    .at(current_start_point + local_counter)
+                                    .time());
+                point->set_layer_id(point_cloud_.point_cloud()
+                                        .at(current_start_point + local_counter)
+                                        .layer_id());
+                last_point_ = (current_start_point + local_counter);
+                local_counter++;
+                // Reach target size
+                if (local_counter == target_size) {
+                    // std::cout << "add from " << (start_point) << " to "
+                    //           << current_start_point + local_counter - 1
+                    //           << " total = " << target_size << std::endl;
+                    out = true;
+                }
+            }
+        }
         data_is_ready_ = false;
     }
 
@@ -233,6 +290,7 @@ class WLidar : public WBase {
     std::shared_ptr<NRLS> NRLS_{nullptr};
     bool is_sim_NRLS_ = false;
     bool data_is_ready_ = false;
-};
+    int last_point_ = {-1};
+};  // namespace VNSim
 
 }  // namespace VNSim
