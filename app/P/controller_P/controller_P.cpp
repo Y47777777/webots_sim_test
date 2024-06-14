@@ -30,48 +30,35 @@ std::shared_ptr<EcalWrapper> EcalWrapper::instance_ptr_ = nullptr;
 
 NormalSTController::NormalSTController() : BaseController() {
     // sensor init
-    std::cout << 1 << std::endl;
     imu_ptr_ = std::make_shared<WImu>("inertial unit", "gyro", "accelerometer");
     fork_ptr_ = std::make_shared<WFork>("fork height motor");
-    std::cout << 2 << std::endl;
     stree_ptr_ =
         std::make_shared<WWheel>("FL", "SteerWheel", "SteerSolid", "FLWheel");
     l_ptr_ = std::make_shared<WWheel>("", "", "L_D_SteerSolid", "", "BRPS");
     r_ptr_ = std::make_shared<WWheel>("", "", "R_D_SteerSolid", "", "BLPS");
-    std::cout << 3 << std::endl;
 
     BP_ptr_ = std::make_shared<WLidar>("BP", "", 50);
-    std::cout << 4 << std::endl;
     mid360_ptr_ = std::make_shared<WLidar>("mid360", "MID360", 100);
-    std::cout << 5 << std::endl;
     mid360_ptr_->setSimulationNRLS(true);
-    std::cout << 6 << std::endl;
 
     // TODO: creat task
     v_while_spin_.push_back(bind(&WBase::spin, stree_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, l_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, r_ptr_));
-    // std::cout << 7 << std::endl;
     v_while_spin_.push_back(bind(&WBase::spin, fork_ptr_));
-    // std::cout << 8 << std::endl;
     v_while_spin_.push_back(bind(&WBase::spin, imu_ptr_));
-    std::cout << 9 << std::endl;
     v_while_spin_.push_back(bind(&WBase::spin, BP_ptr_));
-    std::cout << 10 << std::endl;
     v_while_spin_.push_back(bind(&WBase::spin, mid360_ptr_));
-    std::cout << 11 << std::endl;
 
     ecal_ptr_->addEcal("webot/P_msg");
     ecal_ptr_->addEcal("webot/pointCloud");
     ecal_ptr_->addEcal("webot/perception");
-    std::cout << 12 << std::endl;
 
     m_thread_.insert(std::pair<std::string, std::thread>(
         "bp_report", std::bind(&NormalSTController::BpReportSpin, this)));
     m_thread_.insert(std::pair<std::string, std::thread>(
         "mid360_report",
         std::bind(&NormalSTController::Mid360ReportSpin, this)));
-    std::cout << 13 << std::endl;
 
     // std::thread local_thread(
     //     std::bind(&NormalSTController::BpReportSpin, this));
@@ -82,8 +69,6 @@ NormalSTController::NormalSTController() : BaseController() {
     ecal_ptr_->addEcal("svc_model_st/P_msg",
                        std::bind(&NormalSTController::onRemoteSerialMsg, this,
                                  std::placeholders::_1, std::placeholders::_2));
-    std::cout << 14 << std::endl;
-
     // payload_Up.set_allocated_imu(&payload_imu);
     // payload.set_allocated_up_msg(&payload_Up);
 }
@@ -99,9 +84,6 @@ void NormalSTController::manualSetState(
         steer_speed = msg.at("steer_speed");
         steer_yaw = msg.at("steer_yaw");
         fork_speed = msg.at("fork_speed");
-        std::cout << "manualSetState speed = " << steer_speed
-                  << ", theta = " << steer_yaw << ", forkZ = " << fork_speed
-                  << std::endl;
         stree_ptr_->setSpeed(steer_speed, steer_yaw);
         fork_ptr_->setVelocity(fork_speed);
     }
