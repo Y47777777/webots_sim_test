@@ -34,8 +34,8 @@ NormalSTController::NormalSTController() : BaseController() {
     fork_ptr_ = std::make_shared<WFork>("fork height motor");
     stree_ptr_ =
         std::make_shared<WWheel>("FL", "SteerWheel", "SteerSolid", "FLWheel");
-    l_ptr_ = std::make_shared<WWheel>("", "", "L_D_SteerSolid", "", "BRPS");
-    r_ptr_ = std::make_shared<WWheel>("", "", "R_D_SteerSolid", "", "BLPS");
+    l_ptr_ = std::make_shared<WWheel>("", "", "R_D_SteerSolid", "", "BRPS");
+    r_ptr_ = std::make_shared<WWheel>("", "", "L_D_SteerSolid", "", "BLPS");
 
     BP_ptr_ = std::make_shared<WLidar>("BP", "", 50);
     mid360_ptr_ = std::make_shared<WLidar>("mid360", "MID360", 100);
@@ -142,6 +142,8 @@ void NormalSTController::sendSerialSpin() {
 
     foxglove::Imu *imu = payload.mutable_imu();
     imu->mutable_orientation()->CopyFrom(imu_ptr_->getInertialValue());
+    // TODO: 临时使用pose位置，后续要排查imu问题
+    imu->mutable_orientation()->set_w(pose_ptr_->getVehicleYaw());
 
     imu->mutable_angular_velocity()->CopyFrom(imu_ptr_->getGyroValue());
     imu->mutable_linear_acceleration()->CopyFrom(imu_ptr_->getAccValue());

@@ -28,6 +28,7 @@
 #include "webots_device/w_wheel.h"
 #include "webots_device/w_lidar.h"
 #include "webots_device/w_imu.h"
+#include "webots_device/w_pose.h"
 
 
 // TODO: 统一该定义
@@ -57,6 +58,8 @@ class NormalSTController : public BaseController {
     std::shared_ptr<WImu> imu_ptr_;
     std::shared_ptr<WWheel> stree_ptr_;
     std::shared_ptr<WFork> fork_ptr_;
+    std::shared_ptr<WPose> pose_ptr_;
+
 
     sim_data_flow::STMsg payload;
     sim_data_flow::STUp payload_Up;

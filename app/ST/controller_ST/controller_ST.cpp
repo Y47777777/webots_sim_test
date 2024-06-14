@@ -38,12 +38,15 @@ NormalSTController::NormalSTController() : BaseController() {
     mid360_ptr_ = std::make_shared<WLidar>("mid360", "MID360", 100);
     mid360_ptr_->setSimulationNRLS(true);
 
-    // // TODO: creat task
+    pose_ptr_ = std::make_shared<WPose>("RobotNode_ST");
+
+    // TODO: creat task
     v_while_spin_.push_back(bind(&WBase::spin, stree_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, fork_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, imu_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, BP_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, mid360_ptr_));
+    v_while_spin_.push_back(bind(&WBase::spin, pose_ptr_));
 
     ecal_ptr_->addEcal("webot/ST_msg");
     ecal_ptr_->addEcal("webot/pointCloud");
@@ -132,10 +135,14 @@ void NormalSTController::sendSerialSpin() {
     foxglove::Imu *imu = payload.mutable_imu();
     imu->mutable_orientation()->CopyFrom(imu_ptr_->getInertialValue());
 
+    // TODO: 临时使用pose位置，后续要排查imu问题
+    imu->mutable_orientation()->set_w(pose_ptr_->getVehicleYaw());
+
     imu->mutable_angular_velocity()->CopyFrom(imu_ptr_->getGyroValue());
     imu->mutable_linear_acceleration()->CopyFrom(imu_ptr_->getAccValue());
 
     payload.SerializePartialToArray(buf, payload.ByteSize());
+
     ecal_ptr_->send("webot/ST_msg", buf, payload.ByteSize());
 }
 
