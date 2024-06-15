@@ -110,13 +110,13 @@ class WLidar : public WBase {
             double end_angle = PI / 2 - ver_fov.begin;
             end_layer_ = std::round(end_angle * resolution);
 
-            if (end_layer_ < 0) {
-                end_layer_ = 0;
-                LOG_ERROR("end_layer error :%d", end_layer_);
-            }
-            if (start_layer_ > size_of_layer_) {
+            if (start_layer_ < 0) {
+                LOG_ERROR("end_layer error :%d", start_layer_);
                 start_layer_ = 0;
-                LOG_INFO("start_layer_:%d", start_layer_);
+            }
+            if (end_layer_ > size_of_layer_) {
+                LOG_INFO("start_layer_:%d", end_layer_);
+                end_layer_ = size_of_layer_;
             }
             LOG_INFO("start_layer = %d, end_layer = %d", start_layer_,
                      end_layer_);
@@ -205,64 +205,7 @@ class WLidar : public WBase {
     void getLocalPointCloud(sim_data_flow::WBPointCloud &result,
                             int target_size = -1) {
         std::shared_lock<std::shared_mutex> lock(rw_mutex_);
-        if (target_size == -1)
-            result.CopyFrom(point_cloud_);
-        else {
-            result.clear_point_cloud();
-            int total_points = point_cloud_.point_cloud().size();
-            bool out = false;
-            int local_counter = 0;
-            int start_point = last_point_ + 1;
-            int repeat_point = 0;
-            int current_start_point = 0;
-            if (total_points <= 0) {
-                // no points
-                return;
-            }
-            if (last_point_ > (total_points - 1) || (last_point_ < 0)) {
-                // search from start
-                start_point = 0;
-            }
-            current_start_point = start_point;
-            repeat_point = start_point;
-            while (!out) {
-                // get Point
-                if ((current_start_point + local_counter) >
-                    (total_points - 1)) {
-                    // search from start
-                    current_start_point = (0 - local_counter);
-                }
-                // if ((start_point + local_counter) == repeat_point) {
-                //     out = true;
-                //     continue;
-                // }
-                sim_data_flow::LidarPoint *point = result.add_point_cloud();
-                point->set_x(point_cloud_.point_cloud()
-                                 .at(current_start_point + local_counter)
-                                 .x());
-                point->set_y(point_cloud_.point_cloud()
-                                 .at(current_start_point + local_counter)
-                                 .y());
-                point->set_z(point_cloud_.point_cloud()
-                                 .at(current_start_point + local_counter)
-                                 .z());
-                point->set_time(point_cloud_.point_cloud()
-                                    .at(current_start_point + local_counter)
-                                    .time());
-                point->set_layer_id(point_cloud_.point_cloud()
-                                        .at(current_start_point + local_counter)
-                                        .layer_id());
-                last_point_ = (current_start_point + local_counter);
-                local_counter++;
-                // Reach target size
-                if (local_counter == target_size) {
-                    // std::cout << "add from " << (start_point) << " to "
-                    //           << current_start_point + local_counter - 1
-                    //           << " total = " << target_size << std::endl;
-                    out = true;
-                }
-            }
-        }
+        result.CopyFrom(point_cloud_);
         data_is_ready_ = false;
     }
 
@@ -357,7 +300,7 @@ class WLidar : public WBase {
     bool data_is_ready_ = false;
 
     int last_point_ = {-1};
-    
+
     // z轴fov
     bool fov_vertical_enable_ = false;
     int start_layer_ = 0;  // 开始拷贝数据的 层

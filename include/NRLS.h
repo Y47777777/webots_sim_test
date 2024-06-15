@@ -9,7 +9,7 @@
 #include "logvn/logvn.h"
 
 #define M_PI 3.14
-
+#define MAXIMUM_MID360_UPLOAD 20722
 namespace VNSim {
 
 struct FBContain {
@@ -27,14 +27,13 @@ struct LidarInfo {
     double fieldOfView;          // read
     double verticalFieldOfView;  // read
     int numberOfLayers;          // read
-    float min_Z1{37000};
-    float min_Z2{3500};
 };
 
 class NRLS {
    private:
     std::vector<struct FBContain> fb_list_;
     int last_point_{-1};
+    std::vector<struct FBContain>::iterator list_iter_;
 
    public:
     NRLS() {}
@@ -58,43 +57,55 @@ class NRLS {
                 break;
             }
             bool first_flag = true;
-            double minZ = input.min_Z1;
-            // 计算查找表
+            double origin_angle = 0;
+
+            // 转存
             for (auto &t : csv_data_) {
                 int index;
                 FBContain tmp;
                 std::sscanf(t.c_str(), "%d,%lf,%lf", &index, &tmp.horizon_angle,
                             &tmp.vertical_angle);
+
+                // 去除第一行
                 if (first_flag) {
                     first_flag = !first_flag;
                     continue;
                 }
-                // 计算稠密点云index
-                tmp.horizon_angle = tmp.horizon_angle * 100.f;
-                tmp.vertical_angle = tmp.vertical_angle * 100.f;
-                if (tmp.vertical_angle < minZ)
-                    minZ = tmp.vertical_angle;
+
+                // 找最高角度 作为原点角度
+                // FIXME:最高角度为90???
+                if (tmp.vertical_angle > origin_angle)
+                    origin_angle = tmp.vertical_angle;
+
                 fb_list_.push_back(tmp);
             }
 
-            float sim_h_res = input.fieldOfView * 180 / M_PI * 100 /
-                              input.horizontalResolution;
-            float sim_v_res = input.verticalFieldOfView * 180 / M_PI * 100 /
-                              input.numberOfLayers;
-            float sim_h_res_t = 1. / sim_h_res;
-            float sim_v_res_t = 1. / sim_v_res;
+            // 计算分辨率
+            double sim_ver_res = double(input.numberOfLayers) /
+                                 (input.verticalFieldOfView * 180 / M_PI);
 
-            // 行号，列号
-            // TODO: what is minZ2? check
+            double sim_hor_res = double(input.horizontalResolution) / 360.0;
+            double veritcal_origin =
+                (input.verticalFieldOfView * 180 / M_PI) / 2;
+
+            LOG_INFO("origin_angle %f, ver_res:%f, sim_hor_res: %.f",
+                     origin_angle, sim_ver_res, sim_hor_res);
+
+            // 建立查找表
             for (auto &t : fb_list_) {
-                t.layer_count = (t.vertical_angle - minZ) * sim_v_res_t;
-                t.pc_idx = t.horizon_angle * sim_h_res_t;
+                t.layer_count = std::round(
+                    (veritcal_origin - (origin_angle - t.vertical_angle)) *
+                    sim_ver_res);
+                t.pc_idx = std::round(t.horizon_angle * sim_hor_res);
+
+                // 防止溢出
+                if (t.pc_idx == input.horizontalResolution) {
+                    t.pc_idx--;
+                }
             }
-            // tmp.layer_count = (tmp.vertical_angle - input.min_Z2) *
-            // sim_v_res_t; tmp.pc_idx = tmp.horizon_angle * sim_h_res_t;
-            // fb_list_.push_back(tmp);
-            // counter++;
-            // }
+
+            list_iter_ = fb_list_.begin();
+            LOG_INFO("fb_list_  size %d", fb_list_.size());
         } while (0);
         return ret;
     }
@@ -109,86 +120,38 @@ class NRLS {
     void simulation(const LidarPoint *source,
                     sim_data_flow::WBPointCloud &point_cloud) {
         int layers = point_cloud.size_of_layer();
-        int npl = point_cloud.size_of_point_cloud();
+        int size_of_each_layer = point_cloud.size_of_each_layer();
 
         point_cloud.clear_point_cloud();
-        // uint64_t find = 0;
+        uint64_t find = 0;
+        static uint64_t cnt = 0;
+        cnt++;
         // 遍历查找表
         // std::cout << "size of fb_list = " << fb_list_.size() << std::endl;
-        // for (const auto &unit : fb_list_) {
-        //     if (unit.layer_count < 0 || unit.pc_idx < 0)
-        //         continue;
-        //     if (unit.layer_count >= layers || unit.pc_idx >= npl)
-        //         continue;
-        //     //
-        //     const LidarPoint *cur_ptr =
-        //         (source + (unit.layer_count * layers + unit.pc_idx));
-
-        //     if (checkPointIsFine(cur_ptr)) {
-        //         sim_data_flow::LidarPoint *point =
-        //         point_cloud.add_point_cloud(); point->set_x(cur_ptr->x);
-        //         point->set_y(cur_ptr->y);
-        //         point->set_z(cur_ptr->z);
-        //         point->set_time(cur_ptr->time);
-        //         point->set_layer_id(cur_ptr->layer_id);
-        //         // find++;
-        //     }
-        // }
-        // // std::cout << "total find = " << find << std::endl;
-        // // point_cloud.set_size_of_each_layer(-1);
-        // // point_cloud.set_size_of_layer(-1);
-        // point_cloud.set_size_of_point_cloud(point_cloud.point_cloud().size());
-        int total_points = fb_list_.size();
-        bool out = false;
-        int local_counter = 0;
-        int start_point = last_point_ + 1;
-        int repeat_point = 0;
-        int current_start_point = 0;
-        if (total_points <= 0) {
-            // no points
-            return;
-        }
-        if (last_point_ > (total_points - 1) || (last_point_ < 0)) {
-            // search from start
-            start_point = 0;
-        }
-        current_start_point = start_point;
-        repeat_point = start_point;
-        // std::cout << "total point = " << total_points << std::endl;
-        while (!out) {
-            // get Point
-            if ((current_start_point + local_counter) > (total_points - 1)) {
-                // search from start
-                current_start_point = (0 - local_counter);
+        for (int i = 0; i < MAXIMUM_MID360_UPLOAD; i++, list_iter_++) {
+            if (list_iter_ == fb_list_.end()) {
+                LOG_INFO("cnt %d", cnt);
+                list_iter_ = fb_list_.begin();
             }
-            // if ((start_point + local_counter) == repeat_point) {
-            //     out = true;
-            //     continue;
-            // }
-            // if (!checkPointIsFine(cur_ptr)) {
-            //     continue;
-            // }
-            do {
-                if (fb_list_[current_start_point + local_counter].layer_count <
-                        0 ||
-                    fb_list_[current_start_point + local_counter].pc_idx < 0) {
-                    break;
-                }
-                if (fb_list_[current_start_point + local_counter].layer_count >=
-                        layers ||
-                    fb_list_[current_start_point + local_counter].pc_idx >=
-                        npl) {
-                    break;
-                }
-                const LidarPoint *cur_ptr =
-                    (source +
-                     (fb_list_[current_start_point + local_counter]
-                              .layer_count *
-                          layers +
-                      fb_list_[current_start_point + local_counter].pc_idx));
-                if (!checkPointIsFine(cur_ptr)) {
-                    break;
-                }
+            if (list_iter_->layer_count < 0 || list_iter_->pc_idx < 0) {
+                continue;
+            }
+
+            if (list_iter_->layer_count >= layers ||
+                list_iter_->pc_idx >= size_of_each_layer) {
+                LOG_INFO("layers %d, size_of_each_layer, %d", layers,
+                         size_of_each_layer);
+                LOG_INFO("list_iter_->pc_idx %d, list_iter_->layer_count, %d",
+                         list_iter_->pc_idx, list_iter_->layer_count);
+                continue;
+            }
+
+            //
+            const LidarPoint *cur_ptr =
+                (source + (list_iter_->layer_count * size_of_each_layer) +
+                 list_iter_->pc_idx);
+
+            if (checkPointIsFine(cur_ptr)) {
                 sim_data_flow::LidarPoint *point =
                     point_cloud.add_point_cloud();
                 point->set_x(cur_ptr->x);
@@ -196,17 +159,6 @@ class NRLS {
                 point->set_z(cur_ptr->z);
                 point->set_time(cur_ptr->time);
                 point->set_layer_id(cur_ptr->layer_id);
-            } while (0);
-            last_point_ = (current_start_point + local_counter);
-            local_counter++;
-            // Reach target size
-            if (local_counter == 20722) {
-                // std::cout << "add from " << (start_point) << " to "
-                //           << current_start_point + local_counter - 1
-                //           << " total = " << 20722 << std::endl;
-                point_cloud.set_size_of_point_cloud(
-                    point_cloud.point_cloud().size());
-                out = true;
             }
         }
     }
@@ -226,7 +178,7 @@ class NRLS {
         return (std::abs(ptr->x) != INFINITY && std::abs(ptr->y) != INFINITY &&
                 std::abs(ptr->z) != INFINITY);
     }
-};  // namespace VNSim
+};
 }  // namespace VNSim
 
 #endif
