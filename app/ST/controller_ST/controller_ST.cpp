@@ -34,7 +34,9 @@ NormalSTController::NormalSTController() : BaseController() {
     fork_ptr_ = std::make_shared<WFork>("fork height motor");
     stree_ptr_ =
         std::make_shared<WWheel>("FL", "SteerWheel", "SteerSolid", "S");
-    BP_ptr_ = std::make_shared<WLidar>("BP", "", 50);
+
+    VertivalFov fov = {.begin = 0, .end = PI / 2};
+    BP_ptr_ = std::make_shared<WLidar>("BP", "", 50, fov);
     mid360_ptr_ = std::make_shared<WLidar>("mid360", "MID360", 100);
     mid360_ptr_->setSimulationNRLS(true);
 
@@ -176,7 +178,6 @@ void NormalSTController::Mid360ReportSpin() {
 }
 
 void NormalSTController::BpReportSpin() {
-    uint8_t buf[BP_LIDAR_MSG_BUF];
     LOG_INFO("BpReportSpin start\n");
     sim_data_flow::WBPointCloud payload;
     timer_ptr_->alarmTimerInit(50);
@@ -187,12 +188,14 @@ void NormalSTController::BpReportSpin() {
             continue;
         }
         BP_ptr_->getLocalPointCloud(payload);
-        if (payload.ByteSize() > BP_LIDAR_MSG_BUF) {
-            LOG_WARN(
-                "%s --> payload bytes size is larger, current = %d, expect =",
-                __FUNCTION__, payload.ByteSize(), BP_LIDAR_MSG_BUF);
-            continue;
-        }
+        // if (payload.ByteSize() > BP_LIDAR_MSG_BUF) {
+        //     LOG_WARN(
+        //         "%s --> payload bytes size is larger, current = %d, expect
+        //         =",
+        //         __FUNCTION__, payload.ByteSize(), BP_LIDAR_MSG_BUF);
+        //     continue;
+        // }
+        uint8_t buf[payload.ByteSize()];
         payload.SerializePartialToArray(buf, payload.ByteSize());
         ecal_ptr_->send("webot/pointCloud", buf, payload.ByteSize());
         timer_ptr_->sleep<milliseconds>(45);

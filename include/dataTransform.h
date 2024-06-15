@@ -77,7 +77,6 @@ void pbTopb2(const sim_data_flow::WBPointCloud &payload,
         float time = payload.point_cloud().at(i).time();
         if (std::abs(x) != INFINITY && std::abs(y) != INFINITY &&
             std::abs(z) != INFINITY) {
-            // TODO: 指针移动 ，可以不用每次计算
             memcpy(pb_data_ptr + i * PBPOINT_BANDWIDTH, &(x), 4);
             memcpy(pb_data_ptr + 4 + i * PBPOINT_BANDWIDTH, &(y), 4);
             memcpy(pb_data_ptr + 8 + i * PBPOINT_BANDWIDTH, &(z), 4);
@@ -86,7 +85,7 @@ void pbTopb2(const sim_data_flow::WBPointCloud &payload,
             memcpy(pb_data_ptr + 20 + i * PBPOINT_BANDWIDTH, &(time), 4);
         }
     }
-}  // namespace VNSim
+}
 }  // namespace VNSim
 
 #endif
