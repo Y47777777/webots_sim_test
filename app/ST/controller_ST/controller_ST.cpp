@@ -115,20 +115,6 @@ void NormalSTController::onRemoteSerialMsg(
 }
 
 void NormalSTController::sendSerialSpin() {
-    // TODO: delete
-    // payload_Up.set_forkposez(fork_ptr_->getSenosorValue());
-    // payload_Up.set_steerposition(stree_ptr_->getSenosorValue());
-    // payload_imu.add_orientation_covariance(imu_ptr_->getVehicleYaw());  //
-    // // z
-    // for (int i = 0; i < 3; i++) {
-    //     payload_imu.add_angular_velocity_covariance(imu_ptr_->getGyroValue(i));
-    //     payload_imu.add_linear_acceleration_covariance(
-    //         imu_ptr_->getAccValue(i));
-    // }
-    // payload.SerializePartialToArray(buf, payload.ByteSize());
-    // ecal_ptr_->send("webot/ST_msg", buf, payload.ByteSize());
-    // payload_imu.Clear();
-
     sim_data_flow::STUp payload;
     payload.set_timestamp(timer_ptr_->getTimeStamp());
     payload.set_forkposez(fork_ptr_->getSenosorValue());

@@ -92,9 +92,10 @@ class WWheel : public WBase {
             LOG_INFO("soild translation %.3f, %.3f, %.3f",
                      solid_init_translation_[0], solid_init_translation_[1],
                      solid_init_translation_[2]);
-            // solid_init_rotation_[0] = 0;
-            // solid_init_rotation_[1] = 0;
-            // solid_init_rotation_[2] = 1;
+            // 直接固定旋转轴
+            solid_init_rotation_[0] = 0;
+            solid_init_rotation_[1] = 0;
+            solid_init_rotation_[2] = 1;
             last_rotation_angle = solid_init_rotation_[3];
         }
 
@@ -107,7 +108,8 @@ class WWheel : public WBase {
             }
 
             if (position_sensor_ != nullptr) {
-                position_sensor_->enable(5);
+                position_sensor_->enable(step_duration_);
+                last_pos_sensor_value_ = position_sensor_->getValue();
                 LOG_INFO("creat motor:%s  motor sensor :%s", motor_name.c_str(),
                          sensor_name.c_str());
             }
@@ -161,7 +163,13 @@ class WWheel : public WBase {
 
         // get wheel pos value
         if (position_sensor_ != nullptr) {
-            pos_sensor_value_ = position_sensor_->getValue();
+            // 增量式编码器，只计算增量
+            double now_value = position_sensor_->getValue();
+            double diff = now_value - last_pos_sensor_value_;
+            if (Normalize2(diff) > 0.001) {
+                pos_sensor_value_ = diff;
+            }
+            last_pos_sensor_value_ = now_value;
         }
 
         // 保证轮子旋转中心不动
@@ -212,6 +220,7 @@ class WWheel : public WBase {
 
     // pos_sensor
     double pos_sensor_value_ = 0;
+    double last_pos_sensor_value_ = 0;
     PositionSensor *position_sensor_ = nullptr;
 
     // circle solid

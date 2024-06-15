@@ -46,21 +46,10 @@ void SVCModelSerial::onWebotMsg(const char *topic_name,
             imu->mutable_orientation()->z(), imu->mutable_orientation()->w());
         report_msg_.webot_msg.imu.angle[2] = imu->mutable_orientation()->w();
         // FIXME: current imu vehicle yaw is not correct, use old function
-        // VNSim::Quaternion2Euler(t)[2];  // vehicle_yaw
-        // TODO:单独成函数
-        // {
-        //     double forkZ = payload2.forkposez();  // forkZ Height
-        //     if (std::abs(forkZ - FORK_LIFTUP_HEIGHT) <= HEIGHT_DEVIATION) {
-        //         report_msg_.fork_state = int(FORK_STATE::ON_FORK_TOP);
-        //     } else if (std::abs(forkZ - FORK_LIFTDOWN_HEIGHT) <=
-        //                HEIGHT_DEVIATION) {
-        //         report_msg_.fork_state = int(FORK_STATE::ON_FORK_BOTTOM);
-        //     } else {
-        //         report_msg_.fork_state = int(FORK_STATE::ON_FORK_MIDDLE);
-        //     }
-        // }
-        report_msg_.webot_msg.l_wheel = payload2.l_wheel() / 6.28 * 1024;
-        report_msg_.webot_msg.r_wheel = payload2.r_wheel() / 6.28 * 1024;
+
+        // P车编码器为绝对式
+        report_msg_.webot_msg.l_wheel += payload2.l_wheel() / 6.28 * 1000;
+        report_msg_.webot_msg.r_wheel += payload2.r_wheel() / 6.28 * 1000;
         // report_msg_.webot_msg.l_wheel = payload2.l_wheel() * 0.47167859;
         // report_msg_.webot_msg.r_wheel = payload2.r_wheel() * 0.47167859;
         report_msg_.webot_msg.l_wheel = payload2.l_wheel();

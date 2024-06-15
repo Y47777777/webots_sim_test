@@ -68,13 +68,14 @@ void SVCModelSerial::onWebotMsg(const char *topic_name,
         report_msg_.webot_msg.imu.acceleration[2] =
             imu->linear_acceleration().z();
         double wheel_position = payload2.steerposition();
-        if (!rpm_init_) {
-            report_msg_.webot_msg.last_wheel_position = wheel_position;
-            rpm_init_ = true;
-        }
-        report_msg_.rpm =
-            (wheel_position - report_msg_.webot_msg.last_wheel_position) *
-            SIM_FAC;
+        // if (!rpm_init_) {
+        //     report_msg_.webot_msg.last_wheel_position = wheel_position;
+        //     rpm_init_ = true;
+        // }
+        // TODO: 1024线编码器，应该写成define
+        report_msg_.rpm = 1024 * (wheel_position / 2 * PI);
+        // (wheel_position -
+        // report_msg_.webot_msg.last_wheel_position) * SIM_FAC;
         report_msg_.webot_msg.last_wheel_position = wheel_position;
     }
 }

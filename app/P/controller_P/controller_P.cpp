@@ -34,10 +34,13 @@ NormalSTController::NormalSTController() : BaseController() {
     fork_ptr_ = std::make_shared<WFork>("fork height motor");
     stree_ptr_ =
         std::make_shared<WWheel>("FL", "SteerWheel", "SteerSolid", "FLWheel");
-    l_ptr_ = std::make_shared<WWheel>("", "", "R_D_SteerSolid", "", "BRPS");
-    r_ptr_ = std::make_shared<WWheel>("", "", "L_D_SteerSolid", "", "BLPS");
+    // l_ptr_ = std::make_shared<WWheel>("", "", "R_D_SteerSolid", "", "BRPS");
+    // r_ptr_ = std::make_shared<WWheel>("", "", "L_D_SteerSolid", "", "BLPS");
+    l_ptr_ = std::make_shared<WWheel>("", "", "", "", "BRPS");
+    r_ptr_ = std::make_shared<WWheel>("", "", "", "", "BLPS");
 
-    BP_ptr_ = std::make_shared<WLidar>("BP", "", 50);
+    VertivalFov fov = {.begin = 0, .end = PI / 2};
+    BP_ptr_ = std::make_shared<WLidar>("BP", "", 50, fov);
     mid360_ptr_ = std::make_shared<WLidar>("mid360", "MID360", 100);
     mid360_ptr_->setSimulationNRLS(true);
     pose_ptr_ = std::make_shared<WPose>("RobotNode");
@@ -121,20 +124,6 @@ void NormalSTController::onRemoteSerialMsg(
 }
 
 void NormalSTController::sendSerialSpin() {
-    // TODO: delete
-    // payload_Up.set_forkposez(fork_ptr_->getSenosorValue());
-    // payload_Up.set_steerposition(stree_ptr_->getSenosorValue());
-    // payload_imu.add_orientation_covariance(imu_ptr_->getVehicleYaw());  //
-    // // z
-    // for (int i = 0; i < 3; i++) {
-    //     payload_imu.add_angular_velocity_covariance(imu_ptr_->getGyroValue(i));
-    //     payload_imu.add_linear_acceleration_covariance(
-    //         imu_ptr_->getAccValue(i));
-    // }
-    // payload.SerializePartialToArray(buf, payload.ByteSize());
-    // ecal_ptr_->send("webot/ST_msg", buf, payload.ByteSize());
-    // payload_imu.Clear();
-
     sim_data_flow::PUp payload;
     payload.set_timestamp(timer_ptr_->getTimeStamp());
     payload.set_forkposez(fork_ptr_->getSenosorValue());
@@ -156,7 +145,7 @@ void NormalSTController::sendSerialSpin() {
 
 void NormalSTController::Mid360ReportSpin() {
     LOG_INFO("Mid360ReportSpin start\n");
-    // sim_data_flow::WBPointCloud payload;
+    sim_data_flow::WBPointCloud payload;
 
     while (!webotsExited_) {
         // FIXME: 可以修改为信号量触发
@@ -164,9 +153,6 @@ void NormalSTController::Mid360ReportSpin() {
             timer_ptr_->sleep<microseconds>(5);
             continue;
         }
-        sim_data_flow::WBPointCloud payload;
-        // TODO: size应该要确定
-        // mid360_ptr_->getLocalPointCloud(payload, MAXIMUM_MID360_UPLOAD);
         mid360_ptr_->getLocalPointCloud(payload);
         // if (payload.ByteSize() > BP_LIDAR_MSG_BUF) {
         //     LOG_WARN(
@@ -184,7 +170,6 @@ void NormalSTController::Mid360ReportSpin() {
 }
 
 void NormalSTController::BpReportSpin() {
-    uint8_t buf[BP_LIDAR_MSG_BUF];
     LOG_INFO("BpReportSpin start\n");
     sim_data_flow::WBPointCloud payload;
     timer_ptr_->alarmTimerInit(50);
@@ -195,12 +180,14 @@ void NormalSTController::BpReportSpin() {
             continue;
         }
         BP_ptr_->getLocalPointCloud(payload, MAXIMUM_BP_UPLOAD);
-        if (payload.ByteSize() > BP_LIDAR_MSG_BUF) {
-            LOG_WARN(
-                "%s --> payload bytes size is larger, current = %d, expect =",
-                __FUNCTION__, payload.ByteSize(), BP_LIDAR_MSG_BUF);
-            continue;
-        }
+        // if (payload.ByteSize() > BP_LIDAR_MSG_BUF) {
+        //     LOG_WARN(
+        //         "%s --> payload bytes size is larger, current = %d, expect
+        //         =",
+        //         __FUNCTION__, payload.ByteSize(), BP_LIDAR_MSG_BUF);
+        //     continue;
+        // }
+        uint8_t buf[payload.ByteSize()];
         payload.SerializePartialToArray(buf, payload.ByteSize());
         ecal_ptr_->send("webot/pointCloud", buf, payload.ByteSize());
         timer_ptr_->sleep<milliseconds>(45);
