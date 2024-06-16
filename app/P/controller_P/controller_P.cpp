@@ -39,10 +39,13 @@ NormalSTController::NormalSTController() : BaseController() {
     l_ptr_ = std::make_shared<WWheel>("", "", "", "", "BRPS");
     r_ptr_ = std::make_shared<WWheel>("", "", "", "", "BLPS");
 
+    BP_ptr_ = std::make_shared<WLidar>("BP", "", 50);
     VertivalFov fov = {.begin = 0, .end = PI / 2};
-    BP_ptr_ = std::make_shared<WLidar>("BP", "", 50, fov);
+    BP_ptr_->setFov(fov);
+
     mid360_ptr_ = std::make_shared<WLidar>("mid360", "MID360", 100);
-    mid360_ptr_->setSimulationNRLS(true);
+    mid360_ptr_->setSimulationNRLS("mid360.csv");
+
     pose_ptr_ = std::make_shared<WPose>("RobotNode");
 
     // TODO: creat task

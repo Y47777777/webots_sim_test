@@ -56,6 +56,7 @@ class NRLS {
                 ret = -1;
                 break;
             }
+
             bool first_flag = true;
             double origin_angle = 0;
 
@@ -91,6 +92,8 @@ class NRLS {
             LOG_INFO("origin_angle %f, ver_res:%f, sim_hor_res: %.f",
                      origin_angle, sim_ver_res, sim_hor_res);
 
+            // int min_layer = MAXFLOAT;
+            // int max_layer = 0;
             // 建立查找表
             for (auto &t : fb_list_) {
                 t.layer_count = std::round(
@@ -102,10 +105,18 @@ class NRLS {
                 if (t.pc_idx == input.horizontalResolution) {
                     t.pc_idx--;
                 }
+
+                // if (min_layer > t.layer_count) {
+                //     min_layer = t.layer_count;
+                // }
+                // if (max_layer < t.layer_count) {
+                //     max_layer = t.layer_count;
+                // }
             }
 
             list_iter_ = fb_list_.begin();
             LOG_INFO("fb_list_  size %d", fb_list_.size());
+            // LOG_INFO("min layer %d,max %d", min_layer, max_layer);
         } while (0);
         return ret;
     }
@@ -124,15 +135,15 @@ class NRLS {
 
         point_cloud.clear_point_cloud();
         uint64_t find = 0;
-        static uint64_t cnt = 0;
-        cnt++;
+
+        // TODO: define 改为输入
+        // 每次只取20722 个点
         // 遍历查找表
-        // std::cout << "size of fb_list = " << fb_list_.size() << std::endl;
         for (int i = 0; i < MAXIMUM_MID360_UPLOAD; i++, list_iter_++) {
             if (list_iter_ == fb_list_.end()) {
-                LOG_INFO("cnt %d", cnt);
                 list_iter_ = fb_list_.begin();
             }
+
             if (list_iter_->layer_count < 0 || list_iter_->pc_idx < 0) {
                 continue;
             }
@@ -146,7 +157,7 @@ class NRLS {
                 continue;
             }
 
-            //
+            // 取点
             const LidarPoint *cur_ptr =
                 (source + (list_iter_->layer_count * size_of_each_layer) +
                  list_iter_->pc_idx);

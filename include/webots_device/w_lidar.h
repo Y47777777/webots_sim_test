@@ -39,7 +39,7 @@ class WLidar : public WBase {
      * @param[in] frequency   ladir 频率 (ms)
      */
     WLidar(std::string lidar_name, std::string pose_name = "",
-           int frequency = 100, VertivalFov ver_fov = VertivalFov())
+           int frequency = 100)
         : WBase() {
         // creat lidar
         {
@@ -95,6 +95,43 @@ class WLidar : public WBase {
             }
         }
 
+        // 设置雷达数据生成其实步数，间隔雷达数据
+        start_step_ = super_->getStepCnt();
+        super_->step(step_duration_);
+        data_is_ready_ = false;
+    }
+
+    /**
+     * @brief Set the Simulation N R L S object
+     *
+     * @param[in] path  查找表 （base 路径已写死）
+     */
+    void setSimulationNRLS(std::string path) {
+        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+
+        is_sim_NRLS_ = true;
+        const char *base_path = "../../plugins/lidar_scan_mode_config/";
+        std::string file = std::string(base_path) + path;
+        LOG_INFO(file.c_str());
+        point_cloud_.clear_point_cloud();
+        LidarInfo input = {
+            .horizontalResolution = lidar_->getHorizontalResolution(),
+            .fieldOfView = lidar_->getFov(),
+            .verticalFieldOfView = lidar_->getVerticalFov(),
+            .numberOfLayers = lidar_->getNumberOfLayers(),
+        };
+
+        if (NRLS_ == nullptr) {
+            NRLS_ = std::make_shared<NRLS>();
+        }
+
+        if (NRLS_->load(file.c_str(), input) != 0) {
+            is_sim_NRLS_ = false;
+            return;
+        }
+    }
+
+    void setFov(const VertivalFov ver_fov) {
         start_layer_ = 0;
         end_layer_ = size_of_layer_;
         if (fabs(ver_fov.begin - ver_fov.end) > 0.01) {
@@ -120,56 +157,6 @@ class WLidar : public WBase {
             }
             LOG_INFO("start_layer = %d, end_layer = %d", start_layer_,
                      end_layer_);
-        }
-
-        // 设置雷达数据生成其实步数，间隔雷达数据
-        start_step_ = super_->getStepCnt();
-        super_->step(step_duration_);
-        data_is_ready_ = false;
-    }
-
-    /**
-     * @brief 使能非重复线扫模拟 Non-repetitive Line Scan LIDAR
-     *
-     * @param[in] flag true->使能    ，false->失能
-     */
-    void setSimulationNRLS(bool flag) {
-        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
-        is_sim_NRLS_ = flag;
-
-        point_cloud_.clear_point_cloud();
-
-        if (is_sim_NRLS_ == false) {
-            return;
-        }
-
-        const char *base_path = "../../plugins/lidar_scan_mode_config/";
-        std::string file = std::string(base_path) + lidar_name_ + ".csv";
-        LidarInfo input = {
-            // .horizontalResolution =
-            //     node_->getField("horizontalResolution")->getSFInt32(),  //
-            //     read
-            // .fieldOfView =
-            //     node_->getField("fieldOfView")->getSFFloat(),  // read
-            // .verticalFieldOfView =
-            //     node_->getField("verticalFieldOfView")->getSFFloat(),  //
-            //     read
-            // .numberOfLayers =
-            //     node_->getField("numberOfLayers")->getSFInt32()  // read
-            // TODO: minZ
-            .horizontalResolution = lidar_->getHorizontalResolution(),
-            .fieldOfView = lidar_->getFov(),
-            .verticalFieldOfView = lidar_->getVerticalFov(),
-            .numberOfLayers = lidar_->getNumberOfLayers(),
-        };
-
-        if (NRLS_ == nullptr) {
-            NRLS_ = std::make_shared<NRLS>();
-        }
-
-        if (NRLS_->load(file.c_str(), input) != 0) {
-            is_sim_NRLS_ = false;
-            return;
         }
     }
 

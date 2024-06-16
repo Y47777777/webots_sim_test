@@ -73,7 +73,7 @@ void SVCModelSerial::onWebotMsg(const char *topic_name,
         //     rpm_init_ = true;
         // }
         // TODO: 1024线编码器，应该写成define
-        report_msg_.rpm = 1024 * (wheel_position / 2 * PI);
+        report_msg_.rpm += 1024 * (wheel_position / 2 * PI);
         // (wheel_position -
         // report_msg_.webot_msg.last_wheel_position) * SIM_FAC;
         report_msg_.webot_msg.last_wheel_position = wheel_position;
@@ -125,6 +125,7 @@ void SVCModelSerial::onUpStreamProcess() {
         l_dataidx = report_msg_.dataidx;
         l_steer_yaw = report_msg_.webot_msg.wheel_yaw;
         l_rpm = report_msg_.rpm;
+        report_msg_.rpm = 0;
         // 38 is down, 39 is up
         if (report_msg_.fork_state == int(FORK_STATE::ON_FORK_TOP)) {
             fork[1] = true;
