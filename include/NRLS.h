@@ -172,6 +172,7 @@ class NRLS {
                 point->set_z(cur_ptr->z);
                 point->set_time(cur_ptr->time);
                 point->set_layer_id(cur_ptr->layer_id);
+                // TODO:要修改位置
                 if (ReflectorChecker::getInstance()->checkInReflector("mid360",
                                                                       point)) {
                     point->set_intensity(200);

@@ -242,6 +242,13 @@ class WLidar : public WBase {
                     point->set_z(z);
                     point->set_time(address[i].time);
                     point->set_layer_id(address[i].layer_id);
+                    //TODO: 要修改位置
+                    if (ReflectorChecker::getInstance()->checkInReflector(
+                            lidar_name_, point)) {
+                        point->set_intensity(200);
+                    } else {
+                        point->set_intensity(150);
+                    }
                 }
             }
         }

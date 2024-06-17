@@ -37,7 +37,7 @@ NormalSTController::NormalSTController() : BaseController() {
     stree_ptr_ =
         std::make_shared<WWheel>("FL", "SteerWheel", "SteerSolid", "S");
 
-    BP_ptr_ = std::make_shared<WLidar>("BP", "", 50);
+    BP_ptr_ = std::make_shared<WLidar>("BP", "BP", 50);
     VertivalFov fov = {.begin = 0, .end = PI / 2};
     BP_ptr_->setFov(fov);
 
@@ -51,6 +51,8 @@ NormalSTController::NormalSTController() : BaseController() {
     reflector_check_ptr_->copyFrom(reflector_ptr_->getReflectors());
     reflector_check_ptr_->setSensorMatrix4d("mid360",
                                             mid360_ptr_->getMatrixFromLidar());
+    reflector_check_ptr_->setSensorMatrix4d("BP",
+                                            BP_ptr_->getMatrixFromLidar());
 
     // TODO: creat task
     v_while_spin_.push_back(bind(&WBase::spin, stree_ptr_));

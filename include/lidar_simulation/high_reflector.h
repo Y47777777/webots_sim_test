@@ -130,7 +130,7 @@ class ReflectorChecker {
             if (point.z() > reflector.max_z)
                 continue;
 
-            // 通过中心位置排除 > 3m
+            // 通过中心位置排除 > 1m
             if (fabs(point.x() - reflector.center.x()) > 1)
                 continue;
             if (fabs(point.y() - reflector.center.y()) > 1)
