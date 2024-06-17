@@ -147,7 +147,9 @@ class WWheel : public WBase {
 
     double getSenosorValue() {
         std::shared_lock<std::shared_mutex> lock(rw_mutex_);
-        return pos_sensor_value_;
+        double result = pos_sensor_value_;
+        pos_sensor_value_ = 0;
+        return result;
     }
     double getMotorYaw() {
         std::shared_lock<std::shared_mutex> lock(rw_mutex_);
@@ -167,7 +169,7 @@ class WWheel : public WBase {
             double now_value = position_sensor_->getValue();
             double diff = now_value - last_pos_sensor_value_;
             if (Normalize2(diff) > 0.001) {
-                pos_sensor_value_ = diff;
+                pos_sensor_value_ += diff;
             }
             last_pos_sensor_value_ = now_value;
         }
