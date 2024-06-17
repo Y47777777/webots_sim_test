@@ -14,6 +14,7 @@
 #include <math.h>
 #include "sim_data_flow/point_cloud2.pb.h"
 #include "sim_data_flow/point_cloud.pb.h"
+#include "lidar_simulation/high_reflector.h"
 
 // TODO: data width 可以用sizeof(获取？)
 #define PBPOINT_BANDWIDTH 4 * 6
@@ -68,9 +69,19 @@ void pbTopb2(const sim_data_flow::WBPointCloud &payload,
     // data
     payload_send.mutable_data()->resize(PBPOINT_BANDWIDTH * (point_size));
     char *pb_data_ptr = &((*payload_send.mutable_data())[0]);
-    int intensity = 130;
     int label = 8;
+    int intensity = 1;
     for (int i = 0; i < point_size; i++) {
+        if (i > 10000) {
+            intensity = 255;
+        } else {
+            intensity = 10;
+        }
+        if (ReflectorChecker::getInstance()->checkInReflector(
+                payload.name(), &payload.point_cloud().at(i))) {
+            intensity = 100;
+        }
+
         float x = payload.point_cloud().at(i).x();
         float y = payload.point_cloud().at(i).y();
         float z = payload.point_cloud().at(i).z();

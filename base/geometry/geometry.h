@@ -56,4 +56,9 @@ inline Eigen::Quaterniond eulerToQua(double roll, double pitch, double yaw);
 
 inline Eigen::Quaterniond eulerToQua(const Eigen::Vector3d &euler_angle);
 
+Eigen::Matrix4d createTransformMatrix(const double rotation[4],
+                                      const double translation[3]);
+
+Eigen::Matrix4d poseToMatrix4d(Eigen::Quaterniond rotation,
+                               Eigen::Vector3d translation);
 }  // namespace VNSim

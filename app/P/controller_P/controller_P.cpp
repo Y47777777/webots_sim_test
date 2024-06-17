@@ -182,7 +182,7 @@ void NormalSTController::BpReportSpin() {
             timer_ptr_->sleep<microseconds>(5);
             continue;
         }
-        BP_ptr_->getLocalPointCloud(payload, MAXIMUM_BP_UPLOAD);
+        BP_ptr_->getLocalPointCloud(payload);
         // if (payload.ByteSize() > BP_LIDAR_MSG_BUF) {
         //     LOG_WARN(
         //         "%s --> payload bytes size is larger, current = %d, expect

@@ -64,6 +64,7 @@ class WLidar : public WBase {
             point_cloud_.set_size_of_layer(size_of_layer_);
             point_cloud_.set_size_of_each_layer(size_of_each_layer_);
             point_cloud_.set_size_of_point_cloud(size_of_point_cloud_);
+            point_cloud_.set_name(lidar_name);
 
             // 获取每层的地址
             v_webots_address_.clear();

@@ -44,6 +44,8 @@ NormalSTController::NormalSTController() : BaseController() {
 
     pose_ptr_ = std::make_shared<WPose>("RobotNode_ST");
 
+    reflector_ptr_ = std::make_shared<WReflector>("HighReflector");
+
     // TODO: creat task
     v_while_spin_.push_back(bind(&WBase::spin, stree_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, fork_ptr_));
@@ -55,6 +57,7 @@ NormalSTController::NormalSTController() : BaseController() {
     ecal_ptr_->addEcal("webot/ST_msg");
     ecal_ptr_->addEcal("webot/pointCloud");
     ecal_ptr_->addEcal("webot/perception");
+    ecal_ptr_->addEcal("webot/highreflector");
 
     m_thread_.insert(std::pair<std::string, std::thread>(
         "bp_report", std::bind(&NormalSTController::BpReportSpin, this)));
@@ -99,6 +102,14 @@ void NormalSTController::manualGetState(std::map<std::string, double> &msg) {
 void NormalSTController::whileSpin() {
     // 主循环 在super_->step()后
     this->sendSerialSpin();
+
+    // TODO:delete
+    static bool first_send = true;
+    if (first_send) {
+        first_send = false;
+
+        // TODO send reflector
+    }
 }
 
 void NormalSTController::onRemoteSerialMsg(
@@ -189,4 +200,8 @@ void NormalSTController::BpReportSpin() {
         timer_ptr_->sleep<milliseconds>(45);
     }
     return;
+}
+
+void NormalSTController::highReflectorPublsh() {
+    
 }

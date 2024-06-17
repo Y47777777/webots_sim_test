@@ -1,6 +1,7 @@
 #include <vector>
 #include "geometry.h"
 
+
 namespace VNSim {
 
 double Deg2Rad(double x) {
@@ -176,6 +177,42 @@ inline Eigen::Quaterniond eulerToQua(const Eigen::Vector3d &euler_angle) {
     Quaterniond ret;
     ret = yawlAngle * pitchAngle * rollAngle;
     return ret;
+}
+
+Eigen::Matrix4d createTransformMatrix(const double rotation[4],
+                                      const double translation[3]) {
+    Eigen::Matrix4d transform = Eigen::Matrix4d::Identity();
+
+    // 创建一个轴角表示
+    Eigen::AngleAxisd angleAxis(
+        rotation[0], Eigen::Vector3d(rotation[1], rotation[2], rotation[3]));
+
+    // 将轴角转换为四元数
+    Eigen::Quaterniond q = Eigen::Quaterniond(angleAxis);
+
+    // 通过四元数创建旋转矩阵
+    Eigen::Matrix3d rotationMatrix = q.normalized().toRotationMatrix();
+
+    // 将旋转矩阵和平移向量填充到4x4变换矩阵中
+    transform.block<3, 3>(0, 0) = rotationMatrix;
+    transform.block<3, 1>(0, 3) =
+        Eigen::Vector3d(translation[0], translation[1], translation[2]);
+
+    return transform;
+}
+
+Eigen::Matrix4d poseToMatrix4d(Eigen::Quaterniond rotation,
+                               Eigen::Vector3d translation) {
+    Eigen::Matrix4d transform = Eigen::Matrix4d::Identity();
+
+    // 通过四元数创建旋转矩阵
+    Eigen::Matrix3d rotationMatrix = rotation.normalized().toRotationMatrix();
+
+    // 将旋转矩阵和平移向量填充到4x4变换矩阵中
+    transform.block<3, 3>(0, 0) = rotationMatrix;
+    transform.block<3, 1>(0, 3) = translation;
+
+    return transform;
 }
 
 }  // namespace VNSim
