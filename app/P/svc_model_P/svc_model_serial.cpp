@@ -74,6 +74,7 @@ void SVCModelSerial::onWebotMsg(const char *topic_name,
             (wheel_position - report_msg_.webot_msg.last_wheel_position) *
             SIM_FAC;
         report_msg_.webot_msg.last_wheel_position = wheel_position;
+        report_msg_.webot_msg.wheel_yaw = payload2.steering_theta();
     }
 }
 
@@ -104,7 +105,7 @@ void SVCModelSerial::onDownStreamProcess(uint8_t *msg, int len) {
         std::shared_lock<std::shared_mutex> lock(lock_mutex_);
         report_msg_.dataidx = data_idx;
         // TODO: ？？发布数据直接写入回复？
-        report_msg_.webot_msg.wheel_yaw = SteeringDevice;
+        // report_msg_.webot_msg.wheel_yaw = SteeringDevice;
     }
 }
 

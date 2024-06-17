@@ -12,6 +12,7 @@ message PUp{
   double steerPosition = 4;
   double l_wheel = 5;
   double r_wheel = 6;
+  double steering_theta = 7;
 }
 
 message PDown{

@@ -133,6 +133,7 @@ void NormalSTController::sendSerialSpin() {
     payload.set_steerposition(stree_ptr_->getSenosorValue());
     payload.set_l_wheel(l_ptr_->getSenosorValue());
     payload.set_r_wheel(r_ptr_->getSenosorValue());
+    payload.set_steering_theta(stree_ptr_->getMotorYaw());
 
     foxglove::Imu *imu = payload.mutable_imu();
     imu->mutable_orientation()->CopyFrom(imu_ptr_->getInertialValue());
