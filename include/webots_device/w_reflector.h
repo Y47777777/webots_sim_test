@@ -19,11 +19,13 @@
 
 #include "geometry/geometry.h"
 #include "lidar_simulation/high_reflector.h"
+// #include "sim_data_flow/high_reflector.pb.h"
 
 namespace VNSim {
 using namespace webots;
 
 class WReflector : public WBase {
+   
    public:
     WReflector(std::string groud_name = "") : WBase() {
         node_ = super_->getFromDef(groud_name);
@@ -42,23 +44,29 @@ class WReflector : public WBase {
             const double *size = box->getField("size")->getSFVec3f();
 
             // 加2cm防止点在外侧
-            double size_x = size[0] + 0.04;
-            double size_y = size[1] + 0.04;
-            double size_z = size[2] + 0.04;
+            double size_x = size[0] + 0.06;
+            double size_y = size[1] + 0.06;
+            double size_z = size[2] + 0.06;
 
             // 八个顶点 !顶点需要按照顺序
             std::vector<Eigen::Vector4d> p_list;
-            p_list.push_back(Eigen::Vector4d( size_x / 2,  size_y / 2, size_z / 2, 1));
-            p_list.push_back(Eigen::Vector4d(-size_x / 2,  size_y / 2, size_z / 2, 1));
-            p_list.push_back(Eigen::Vector4d(-size_x / 2, -size_y / 2, size_z / 2, 1));
-            p_list.push_back(Eigen::Vector4d( size_x / 2, -size_y / 2, size_z / 2, 1));
-            
+            p_list.push_back(
+                Eigen::Vector4d(size_x / 2, size_y / 2, size_z / 2, 1));
+            p_list.push_back(
+                Eigen::Vector4d(-size_x / 2, size_y / 2, size_z / 2, 1));
+            p_list.push_back(
+                Eigen::Vector4d(-size_x / 2, -size_y / 2, size_z / 2, 1));
+            p_list.push_back(
+                Eigen::Vector4d(size_x / 2, -size_y / 2, size_z / 2, 1));
 
-            p_list.push_back(Eigen::Vector4d( size_x / 2,  size_y / 2, -size_z / 2, 1));
-            p_list.push_back(Eigen::Vector4d(-size_x / 2,  size_y / 2, -size_z / 2, 1));
-            p_list.push_back(Eigen::Vector4d(-size_x / 2, -size_y / 2, -size_z / 2, 1));
-            p_list.push_back(Eigen::Vector4d( size_x / 2, -size_y / 2, -size_z / 2, 1));
-            
+            p_list.push_back(
+                Eigen::Vector4d(size_x / 2, -size_y / 2, -size_z / 2, 1));
+            p_list.push_back(
+                Eigen::Vector4d(-size_x / 2, -size_y / 2, -size_z / 2, 1));
+            p_list.push_back(
+                Eigen::Vector4d(-size_x / 2, size_y / 2, -size_z / 2, 1));
+            p_list.push_back(
+                Eigen::Vector4d(size_x / 2, size_y / 2, -size_z / 2, 1));
 
             // 变换顶点至 world_link
             Eigen::Matrix4d tran_matrix =
@@ -68,6 +76,18 @@ class WReflector : public WBase {
                 LOG_INFO("i = %d,  %f,  %f,  %f", i, p_list[i].x(),
                          p_list[i].y(), p_list[i].z());
             }
+            LOG_INFO("rotation %.2f, %.2f, %.2f, %.2f", rotation[0],
+                     rotation[1], rotation[2], rotation[3]);
+
+            LOG_INFO("matrix ");
+            LOG_INFO("%.2f, %.2f, %.2f, %.2f", tran_matrix(0, 0),
+                     tran_matrix(0, 1), tran_matrix(0, 2), tran_matrix(0, 3));
+            LOG_INFO("%.2f, % .2f, % .2f, % .2f", tran_matrix(1, 0),
+                     tran_matrix(1, 1), tran_matrix(1, 2), tran_matrix(1, 3));
+            LOG_INFO("%.2f, % .2f, % .2f, % .2f", tran_matrix(2, 0),
+                     tran_matrix(2, 1), tran_matrix(2, 2), tran_matrix(2, 3));
+            LOG_INFO("%.2f, % .2f, % .2f, % .2f", tran_matrix(3, 0),
+                     tran_matrix(3, 1), tran_matrix(3, 2), tran_matrix(3, 3));
 
             // 当前reflector获取完毕
             Eigen::Vector4d center(translation[0], translation[1],
@@ -76,6 +96,20 @@ class WReflector : public WBase {
         }
     }
 
+    // sim_data_flow::ReflectorMsg getReflectors() {
+    //     sim_data_flow::ReflectorMsg result;
+    //     for (auto reflector : reflector_list_) {
+    //         sim_data_flow::Reflector *v_ptr = result.add_v_reflector();
+    //         for (auto point_read : reflector.point_list) {
+    //             sim_data_flow::Vector4 *point_set = v_ptr->add_reflector();
+    //             point_set->set_x(point_read.x());
+    //             point_set->set_y(point_read.y());
+    //             point_set->set_z(point_read.z());
+    //             point_set->set_w(point_read.w());
+    //         }
+    //     }
+    //     return result;
+    // }
     std::vector<Reflector> getReflectors() { return reflector_list_; }
 
     void spin() {}

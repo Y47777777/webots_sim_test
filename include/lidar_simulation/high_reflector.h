@@ -46,9 +46,14 @@ class ReflectorChecker {
     }
 
     // TODO: 改为从protobuf 中拷贝
-    void copyFrom(std::vector<Reflector> list) { reflector_list_ = list; }
+    void copyFrom(std::vector<Reflector> list) {
+        reflector_list_ = list;
+        LOG_INFO("reflector size: %d", reflector_list_.size());
+        LOG_INFO("reflector point size: %d",
+                 reflector_list_[0].point_list.size());
+    }
 
-    void setSensorMatrix4d(std::string name, foxglove::Pose pose) {
+    void setSensorPose(std::string name, foxglove::Pose pose) {
         Eigen::Quaterniond rotation(
             pose.orientation().x(), pose.orientation().y(),
             pose.orientation().z(), pose.orientation().w());
@@ -60,6 +65,20 @@ class ReflectorChecker {
             std::pair(name, poseToMatrix4d(rotation, translation)));
     }
 
+    void setSensorMatrix4d(std::string name, Eigen::Matrix4d matrix) {
+        m_sensor_matrix_.insert(std::pair(name, matrix));
+        LOG_INFO("matrix : %s", name.c_str());
+
+        LOG_INFO("%.2f, %.2f, %.2f, %.2f", matrix(0, 0), matrix(0, 1),
+                 matrix(0, 2), matrix(0, 3));
+        LOG_INFO("%.2f, % .2f, % .2f, % .2f", matrix(1, 0), matrix(1, 1),
+                 matrix(1, 2), matrix(1, 3));
+        LOG_INFO("%.2f, % .2f, % .2f, % .2f", matrix(2, 0), matrix(2, 1),
+                 matrix(2, 2), matrix(2, 3));
+        LOG_INFO("%.2f, % .2f, % .2f, % .2f", matrix(3, 0), matrix(3, 1),
+                 matrix(3, 2), matrix(3, 3));
+    }
+
     void setCurPose(foxglove::Pose pose) {
         Eigen::Quaterniond rotation(
             pose.orientation().x(), pose.orientation().y(),
@@ -69,6 +88,20 @@ class ReflectorChecker {
                                     pose.position().z());
 
         cur_pose_matrix_ = poseToMatrix4d(rotation, translation);
+    }
+
+    void setCurPose(Eigen::Matrix4d matrix) {
+        cur_pose_matrix_ = matrix;
+
+        // LOG_INFO("matrix : pose");
+        // LOG_INFO("%.2f, %.2f, %.2f, %.2f", matrix(0, 0), matrix(0, 1),
+        //          matrix(0, 2), matrix(0, 3));
+        // LOG_INFO("%.2f, % .2f, % .2f, % .2f", matrix(1, 0), matrix(1, 1),
+        //          matrix(1, 2), matrix(1, 3));
+        // LOG_INFO("%.2f, % .2f, % .2f, % .2f", matrix(2, 0), matrix(2, 1),
+        //          matrix(2, 2), matrix(2, 3));
+        // LOG_INFO("%.2f, % .2f, % .2f, % .2f", matrix(3, 0), matrix(3, 1),
+        //          matrix(3, 2), matrix(3, 3));
     }
 
     bool checkInReflector(std::string name,
@@ -89,25 +122,16 @@ class ReflectorChecker {
             if (point.z() > reflector.max_z)
                 continue;
 
-            // 通过中心位置排除 >3m
-            if (fabs(point.x() - reflector.center.x()) > 2)
-                continue;
-            if (fabs(point.y() - reflector.center.y()) > 2)
-                continue;
+            // // 通过中心位置排除 >3m
+            // if (fabs(point.x() - reflector.center.x()) > 2)
+            //     continue;
+            // if (fabs(point.y() - reflector.center.y()) > 2)
+            //     continue
 
-            // return true;
             // 检查是否在当前包围盒中
-            Eigen::Vector2d point_xy(point.x(), point.y());
-            Eigen::Vector2d a(reflector.point_list[0].x(),
-                              reflector.point_list[0].y());
-            Eigen::Vector2d b(reflector.point_list[1].x(),
-                              reflector.point_list[1].y());
-            Eigen::Vector2d c(reflector.point_list[2].x(),
-                              reflector.point_list[2].y());
-            Eigen::Vector2d d(reflector.point_list[3].x(),
-                              reflector.point_list[3].y());
-
-            return isPointInBox(point_xy, a, b, c, d);
+            if (isPointInCube(point, reflector.point_list)) {
+                return true;
+            }
         }
 
         return false;
@@ -115,26 +139,43 @@ class ReflectorChecker {
 
    private:
     // 计算交叉乘积
-    double crossProduct(const Eigen::Vector2d &a, const Eigen::Vector2d &b) {
-        return a.x() * b.y() - a.y() * b.x();
+
+    double dotProduct(const Eigen::Vector4d &a, const Eigen::Vector4d &b) {
+        return a.x() * b.x() + a.y() * b.y() + a.z() * b.z();
     }
 
-    // 判断点是否在矩形内
-    bool isPointInBox(const Eigen::Vector2d &p, const Eigen::Vector2d &a,
-                      const Eigen::Vector2d &b, const Eigen::Vector2d &c,
-                      const Eigen::Vector2d &d) {
-        Eigen::Vector2d ap = p - a;
-        Eigen::Vector2d bp = p - b;
-        Eigen::Vector2d cp = p - c;
-        Eigen::Vector2d dp = p - d;
+    bool isPointInCube(const Eigen::Vector4d &p,
+                       const std::vector<Eigen::Vector4d> &cubeVertices) {
+        // 对于每个轴（立方体的每个边）
+        for (int i = 0; i < 12; i++) {
+            Eigen::Vector4d axis;
+            // 计算轴（立方体的边）
+            if (i < 4) {
+                axis = cubeVertices[i + 1] - cubeVertices[i];
+            } else if (i < 8) {
+                axis = cubeVertices[i - 3] - cubeVertices[i - 4];
+            } else {
+                axis = cubeVertices[i - 8] - cubeVertices[i - 7];
+            }
 
-        double ab = crossProduct(ap, bp);
-        double bc = crossProduct(bp, cp);
-        double cd = crossProduct(cp, dp);
-        double da = crossProduct(dp, ap);
+            // 计算点和立方体在轴上的投影
+            double dotP = dotProduct(p, axis);
+            double minDotCube = dotProduct(cubeVertices[0], axis);
+            double maxDotCube = minDotCube;
+            for (int j = 1; j < 8; j++) {
+                double dotCube = dotProduct(cubeVertices[j], axis);
+                minDotCube = std::min(minDotCube, dotCube);
+                maxDotCube = std::max(maxDotCube, dotCube);
+            }
 
-        return (ab >= 0 && bc >= 0 && cd >= 0 && da >= 0) ||
-               (ab <= 0 && bc <= 0 && cd <= 0 && da <= 0);
+            // 如果点的投影不在立方体的投影范围内，那么这个点就不在立方体内
+            if (dotP < minDotCube || dotP > maxDotCube) {
+                return false;
+            }
+        }
+
+        // 点在所有轴上的投影都在立方体的投影范围内，所以这个点在立方体内
+        return true;
     }
 
     std::vector<Reflector> reflector_list_;
@@ -144,4 +185,45 @@ class ReflectorChecker {
     std::map<std::string, Eigen::Matrix4d> m_sensor_matrix_;  // 外参
     static std::shared_ptr<ReflectorChecker> instance_ptr_;
 };
+
 }  // namespace VNSim
+
+// double crossProduct(const Eigen::Vector2d &a, const Eigen::Vector2d &b) {
+//         return a.x() * b.y() - a.y() * b.x();
+//     }
+// return true;
+// 检查是否在当前包围盒中
+// Eigen::Vector2d point_xy(point.x(), point.y());
+// Eigen::Vector2d a(reflector.point_list[0].x(),
+//                   reflector.point_list[0].y());
+// Eigen::Vector2d b(reflector.point_list[1].x(),
+//                   reflector.point_list[1].y());
+// Eigen::Vector2d c(reflector.point_list[2].x(),
+//                   reflector.point_list[2].y());
+// Eigen::Vector2d d(reflector.point_list[3].x(),
+//                   reflector.point_list[3].y());
+
+// return isPointInBox(point_xy, a, b, c, d);
+// // }
+
+//   double crossProduct(const Eigen::Vector2d &a, const Eigen::Vector2d &b) {
+//         return a.x() * b.y() - a.y() * b.x();
+//     }
+
+//     // 判断点是否在矩形内
+//     bool isPointInBox(const Eigen::Vector2d &p, const Eigen::Vector2d &a,
+//                       const Eigen::Vector2d &b, const Eigen::Vector2d &c,
+//                       const Eigen::Vector2d &d) {
+//         Eigen::Vector2d ap = p - a;
+//         Eigen::Vector2d bp = p - b;
+//         Eigen::Vector2d cp = p - c;
+//         Eigen::Vector2d dp = p - d;
+
+//         double ab = crossProduct(ap, bp);
+//         double bc = crossProduct(bp, cp);
+//         double cd = crossProduct(cp, dp);
+//         double da = crossProduct(dp, ap);
+
+//         return (ab >= 0 && bc >= 0 && cd >= 0 && da >= 0) ||
+//                (ab <= 0 && bc <= 0 && cd <= 0 && da <= 0);
+//     }

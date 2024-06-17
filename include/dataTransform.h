@@ -70,22 +70,13 @@ void pbTopb2(const sim_data_flow::WBPointCloud &payload,
     payload_send.mutable_data()->resize(PBPOINT_BANDWIDTH * (point_size));
     char *pb_data_ptr = &((*payload_send.mutable_data())[0]);
     int label = 8;
-    int intensity = 1;
+    
     for (int i = 0; i < point_size; i++) {
-        if (i > 10000) {
-            intensity = 255;
-        } else {
-            intensity = 10;
-        }
-        if (ReflectorChecker::getInstance()->checkInReflector(
-                payload.name(), &payload.point_cloud().at(i))) {
-            intensity = 100;
-        }
-
         float x = payload.point_cloud().at(i).x();
         float y = payload.point_cloud().at(i).y();
         float z = payload.point_cloud().at(i).z();
         float time = payload.point_cloud().at(i).time();
+        uint32_t intensity = payload.point_cloud().at(i).intensity();
         if (std::abs(x) != INFINITY && std::abs(y) != INFINITY &&
             std::abs(z) != INFINITY) {
             memcpy(pb_data_ptr + i * PBPOINT_BANDWIDTH, &(x), 4);

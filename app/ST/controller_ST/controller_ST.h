@@ -30,6 +30,7 @@
 #include "webots_device/w_imu.h"
 #include "webots_device/w_pose.h"
 #include "webots_device/w_reflector.h"
+#include "lidar_simulation/high_reflector.h"
 
 // TODO: 统一该定义
 #define SERIAL_MSG_BUF 256
@@ -61,6 +62,8 @@ class NormalSTController : public BaseController {
     std::shared_ptr<WFork> fork_ptr_;
     std::shared_ptr<WPose> pose_ptr_;
     std::shared_ptr<WReflector> reflector_ptr_;
+    std::shared_ptr<ReflectorChecker> reflector_check_ptr_;
+    
 
     sim_data_flow::STMsg payload;
     sim_data_flow::STUp payload_Up;

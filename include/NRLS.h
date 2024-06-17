@@ -6,6 +6,7 @@
 #include <sstream>
 #include <fstream>
 #include "sim_data_flow/point_cloud.pb.h"
+#include "lidar_simulation/high_reflector.h"
 #include "logvn/logvn.h"
 
 #define M_PI 3.14
@@ -86,8 +87,10 @@ class NRLS {
                                  (input.verticalFieldOfView * 180 / M_PI);
 
             double sim_hor_res = double(input.horizontalResolution) / 360.0;
+
+            // webots point start point layer angle
             double veritcal_origin =
-                (input.verticalFieldOfView * 180 / M_PI) / 2;
+                90.0 - ((input.verticalFieldOfView * 180 / M_PI) / 2);
 
             LOG_INFO("origin_angle %f, ver_res:%f, sim_hor_res: %.f",
                      origin_angle, sim_ver_res, sim_hor_res);
@@ -97,8 +100,7 @@ class NRLS {
             // 建立查找表
             for (auto &t : fb_list_) {
                 t.layer_count = std::round(
-                    (veritcal_origin - (origin_angle - t.vertical_angle)) *
-                    sim_ver_res);
+                    (t.vertical_angle - veritcal_origin) * sim_ver_res);
                 t.pc_idx = std::round(t.horizon_angle * sim_hor_res);
 
                 // 防止溢出
@@ -170,6 +172,12 @@ class NRLS {
                 point->set_z(cur_ptr->z);
                 point->set_time(cur_ptr->time);
                 point->set_layer_id(cur_ptr->layer_id);
+                if (ReflectorChecker::getInstance()->checkInReflector("mid360",
+                                                                      point)) {
+                    point->set_intensity(200);
+                } else {
+                    point->set_intensity(150);
+                }
             }
         }
     }
