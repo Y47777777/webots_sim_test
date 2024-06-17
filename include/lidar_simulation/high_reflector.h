@@ -7,9 +7,14 @@
 
 namespace VNSim {
 typedef struct Reflector {
-    Reflector(Eigen::Vector4d cen, std::vector<Eigen::Vector4d> list) {
+    Reflector(Eigen::Vector4d cen, std::vector<Eigen::Vector4d> p_list,
+              std::vector<Eigen::Vector4d> a_list, std::vector<double> min_list,
+              std::vector<double> max_list) {
         center = cen;
-        point_list = list;
+        point_list = p_list;
+        axis_list = a_list;
+        min_dot_prduct_list = min_list;
+        max_dot_prduct_list = max_list;
 
         // 获取z范围加速
         for (auto &point : point_list) {
@@ -23,6 +28,9 @@ typedef struct Reflector {
     }
 
     std::vector<Eigen::Vector4d> point_list;
+    std::vector<Eigen::Vector4d> axis_list;
+    std::vector<double> min_dot_prduct_list;
+    std::vector<double> max_dot_prduct_list;
 
     // 用这三个
     Eigen::Vector4d center;
@@ -122,14 +130,13 @@ class ReflectorChecker {
             if (point.z() > reflector.max_z)
                 continue;
 
-            // // 通过中心位置排除 >3m
-            // if (fabs(point.x() - reflector.center.x()) > 2)
-            //     continue;
-            // if (fabs(point.y() - reflector.center.y()) > 2)
-            //     continue
+            // 通过中心位置排除 > 3m
+            if (fabs(point.x() - reflector.center.x()) > 1)
+                continue;
+            if (fabs(point.y() - reflector.center.y()) > 1)
+                continue;
 
-            // 检查是否在当前包围盒中
-            if (isPointInCube(point, reflector.point_list)) {
+            if (isPonitInCube(point, reflector)) {
                 return true;
             }
         }
@@ -138,43 +145,16 @@ class ReflectorChecker {
     }
 
    private:
-    // 计算交叉乘积
-
-    double dotProduct(const Eigen::Vector4d &a, const Eigen::Vector4d &b) {
-        return a.x() * b.x() + a.y() * b.y() + a.z() * b.z();
-    }
-
-    bool isPointInCube(const Eigen::Vector4d &p,
-                       const std::vector<Eigen::Vector4d> &cubeVertices) {
-        // 对于每个轴（立方体的每个边）
-        for (int i = 0; i < 12; i++) {
-            Eigen::Vector4d axis;
-            // 计算轴（立方体的边）
-            if (i < 4) {
-                axis = cubeVertices[i + 1] - cubeVertices[i];
-            } else if (i < 8) {
-                axis = cubeVertices[i - 3] - cubeVertices[i - 4];
-            } else {
-                axis = cubeVertices[i - 8] - cubeVertices[i - 7];
-            }
-
-            // 计算点和立方体在轴上的投影
-            double dotP = dotProduct(p, axis);
-            double minDotCube = dotProduct(cubeVertices[0], axis);
-            double maxDotCube = minDotCube;
-            for (int j = 1; j < 8; j++) {
-                double dotCube = dotProduct(cubeVertices[j], axis);
-                minDotCube = std::min(minDotCube, dotCube);
-                maxDotCube = std::max(maxDotCube, dotCube);
-            }
-
-            // 如果点的投影不在立方体的投影范围内，那么这个点就不在立方体内
-            if (dotP < minDotCube || dotP > maxDotCube) {
+   
+    bool isPonitInCube(const Eigen::Vector4d &point,
+                       const Reflector &reflector) {
+        for (int i = 0; i < reflector.axis_list.size(); i++) {
+            double dotP = dotProduct(point, reflector.axis_list[i]);
+            if (dotP < reflector.min_dot_prduct_list[i] ||
+                dotP > reflector.max_dot_prduct_list[i]) {
                 return false;
             }
         }
-
-        // 点在所有轴上的投影都在立方体的投影范围内，所以这个点在立方体内
         return true;
     }
 
@@ -187,6 +167,46 @@ class ReflectorChecker {
 };
 
 }  // namespace VNSim
+
+// 计算交叉乘积
+// bool isPointInCube(const Eigen::Vector4d &p,
+//                    const std::vector<Eigen::Vector4d> &cubeVertices) {
+//     static bool first = true;
+//     // 对于每个轴（立方体的每个边）
+//     for (int i = 0; i < 12; i++) {
+//         Eigen::Vector4d axis;
+//         // 计算轴（立方体的边）
+//         if (i < 4) {
+//             axis = cubeVertices[i + 1] - cubeVertices[i];
+//         } else if (i < 8) {
+//             axis = cubeVertices[i - 3] - cubeVertices[i - 4];
+//         } else {
+//             axis = cubeVertices[i - 8] - cubeVertices[i - 7];
+//         }
+
+//         // 计算点和立方体在轴上的投影
+//         double dotP = dotProduct(p, axis);
+//         double minDotCube = dotProduct(cubeVertices[0], axis);
+//         double maxDotCube = minDotCube;
+//         for (int j = 1; j < 8; j++) {
+//             double dotCube = dotProduct(cubeVertices[j], axis);
+//             minDotCube = std::min(minDotCube, dotCube);
+//             maxDotCube = std::max(maxDotCube, dotCube);
+//         }
+//         if (first) {
+//             LOG_INFO("min : %.2f", minDotCube);
+//             LOG_INFO("max : %.2f", maxDotCube);
+//         }
+//         // 如果点的投影不在立方体的投影范围内，那么这个点就不在立方体内
+//         if (dotP < minDotCube || dotP > maxDotCube) {
+//             return false;
+//         }
+//     }
+//     first = false;
+
+//     // 点在所有轴上的投影都在立方体的投影范围内，所以这个点在立方体内
+//     return true;
+// }
 
 // double crossProduct(const Eigen::Vector2d &a, const Eigen::Vector2d &b) {
 //         return a.x() * b.y() - a.y() * b.x();

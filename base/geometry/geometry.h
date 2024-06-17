@@ -61,4 +61,6 @@ Eigen::Matrix4d createTransformMatrix(const double rotation[4],
 
 Eigen::Matrix4d poseToMatrix4d(Eigen::Quaterniond rotation,
                                Eigen::Vector3d translation);
+
+double dotProduct(const Eigen::Vector4d &a, const Eigen::Vector4d &b);
 }  // namespace VNSim

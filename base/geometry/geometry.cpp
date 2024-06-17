@@ -1,7 +1,6 @@
 #include <vector>
 #include "geometry.h"
 
-
 namespace VNSim {
 
 double Deg2Rad(double x) {
@@ -215,6 +214,9 @@ Eigen::Matrix4d poseToMatrix4d(Eigen::Quaterniond rotation,
     return transform;
 }
 
+double dotProduct(const Eigen::Vector4d &a, const Eigen::Vector4d &b) {
+    return a.x() * b.x() + a.y() * b.y() + a.z() * b.z();
+}
 //  Eigen::Matrix4d createTransformMatrix111(const double rotation[4],
 //                                              const double translation[3]) {
 //         Eigen::Matrix4d transform = Eigen::Matrix4d::Identity();
@@ -250,15 +252,17 @@ Eigen::Matrix4d poseToMatrix4d(Eigen::Quaterniond rotation,
 //         LOG_INFO("transform ");
 //         LOG_INFO("%.2f, %.2f, %.2f, %.2f", transform(0, 0), transform(0, 1),
 //                  transform(0, 2), transform(0, 3));
-//         LOG_INFO("%.2f, % .2f, % .2f, % .2f", transform(1, 0), transform(1, 1),
+//         LOG_INFO("%.2f, % .2f, % .2f, % .2f", transform(1, 0), transform(1,
+//         1),
 //                  transform(1, 2), transform(1, 3));
-//         LOG_INFO("%.2f, % .2f, % .2f, % .2f", transform(2, 0), transform(2, 1),
+//         LOG_INFO("%.2f, % .2f, % .2f, % .2f", transform(2, 0), transform(2,
+//         1),
 //                  transform(2, 2), transform(2, 3));
-//         LOG_INFO("%.2f, % .2f, % .2f, % .2f", transform(3, 0), transform(3, 1),
+//         LOG_INFO("%.2f, % .2f, % .2f, % .2f", transform(3, 0), transform(3,
+//         1),
 //                  transform(3, 2), transform(3, 3));
 
 //         return transform;
 //     }
-
 
 }  // namespace VNSim
