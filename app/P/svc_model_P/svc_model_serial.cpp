@@ -50,9 +50,11 @@ void SVCModelSerial::onWebotMsg(const char *topic_name,
         // report_msg_.webot_msg.l_wheel += payload2.l_wheel() / 6.28 * 1000;
         // report_msg_.webot_msg.r_wheel += payload2.r_wheel() / 6.28 * 1000;
         report_msg_.webot_msg.l_wheel +=
-            (payload2.l_wheel() * 0.105);  // give arc length
+            (payload2.l_wheel() * 0.105 * 0.5);  // give arc length
         report_msg_.webot_msg.r_wheel +=
-            (payload2.r_wheel() * 0.105);  // give arc length
+            (payload2.r_wheel() * 0.105 * 0.5);  // give arc length
+        // report_msg_.webot_msg.l_wheel = payload2.l_wheel() * 0.105;
+        // report_msg_.webot_msg.r_wheel = payload2.r_wheel() * 0.105;
         report_msg_.webot_msg.forkPose.z = payload2.forkposez();
         report_msg_.webot_msg.imu.velocity[0] = imu->angular_velocity().x();
         report_msg_.webot_msg.imu.velocity[1] = imu->angular_velocity().y();
@@ -91,7 +93,7 @@ void SVCModelSerial::onDownStreamProcess(uint8_t *msg, int len) {
     // type2 ST it will be useful.
     payload_Down.set_forkspeedz(ForkDeviceZ);
     // payload_Down.set_steering_speed(MoveDevice * 2.53807107);
-    payload_Down.set_steering_speed(MoveDevice / 0.4);
+    payload_Down.set_steering_speed(MoveDevice);  // quicker speed
     payload_Down.set_steering_theta(SteeringDevice);
 
     // publish
@@ -165,7 +167,7 @@ void SVCModelSerial::onUpStreamProcess() {
     //           << ", Gyroscope = " << l_Imu.angle[2] << ", WheelCoder = [" <<
     //           l_l
     //           << "," << l_r << "] , forkZ = " << l_forkZ << std::endl;
-    std::cout << "report yaw = " << l_Imu.angle[2] << std::endl;
+    // std::cout << "report yaw = " << l_Imu.angle[2] << std::endl;
     const struct Package *pack = encoder_.encodePackage();
     ecal_ptr_->send("Sensor/read", pack->buf, pack->len);
 }

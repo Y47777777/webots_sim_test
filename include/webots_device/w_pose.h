@@ -70,23 +70,17 @@ class WPose : public WBase {
     // TODO: 这段要改
     double getVehicleYaw() {
         std::shared_lock<std::shared_mutex> lock(rw_mutex_);
-        // static auto *robot_rot =
-        //     super_->getFromDef("RobotNode_ST")->getField("rotation");
-
-        // auto tmp_r = robot_rot->getSFRotation();
-
-        // Eigen::AngleAxisd tmp_angleaxis(
-        //     tmp_r[3], Eigen::Vector3d(tmp_r[0], tmp_r[1], tmp_r[2]));
         Eigen::Vector3d r_eulerangle3 = rotation_.matrix().eulerAngles(2, 1, 0);
         return r_eulerangle3[0];
     }
 
     void spin() {
         std::unique_lock<std::shared_mutex> lock(rw_mutex_);
+        translation_address_ = translation_ptr_->getSFVec3f();
         translation_[0] = translation_address_[0];
         translation_[1] = translation_address_[1];
         translation_[2] = translation_address_[2];
-
+        rotation_address_ = rotation_ptr_->getSFRotation();
         rotation_.axis()[0] = rotation_address_[0];
         rotation_.axis()[1] = rotation_address_[1];
         rotation_.axis()[2] = rotation_address_[2];

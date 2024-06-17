@@ -150,6 +150,7 @@ class WWheel : public WBase {
         double result = pos_sensor_value_;
         pos_sensor_value_ = 0;
         return result;
+        // return pos_sensor_value_;
     }
     double getMotorYaw() {
         std::shared_lock<std::shared_mutex> lock(rw_mutex_);
@@ -159,7 +160,6 @@ class WWheel : public WBase {
         std::shared_lock<std::shared_mutex> lock(rw_mutex_);
         return speed_ * radius_;
     }
-
     void spin() {
         std::unique_lock<std::shared_mutex> lock(rw_mutex_);
 
@@ -168,11 +168,12 @@ class WWheel : public WBase {
             // 增量式编码器，只计算增量
             double now_value = position_sensor_->getValue();
             double diff = now_value - last_pos_sensor_value_;
-            if (Normalize2(diff) > 0.001) {
+            if (fabs(diff) > 0) {  // 0.000005
                 pos_sensor_value_ += diff;
             }
             last_pos_sensor_value_ = now_value;
         }
+        // pos_sensor_value_ = position_sensor_->getValue();
 
         // 保证轮子旋转中心不动
         if (solid_rotation_ptr_ != nullptr) {

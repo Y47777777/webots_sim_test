@@ -56,8 +56,8 @@ class SVCModelSerial : public BaseSerialSVCModel {
         struct Serial_ForkPose forkPose;
         double last_wheel_position = 0;
         double wheel_yaw = 0;
-        double l_wheel;
-        double r_wheel;
+        double l_wheel{0};
+        double r_wheel{0};
     };
 
     struct ReportMsg {
