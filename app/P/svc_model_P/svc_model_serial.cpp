@@ -46,14 +46,13 @@ void SVCModelSerial::onWebotMsg(const char *topic_name,
             imu->mutable_orientation()->z(), imu->mutable_orientation()->w());
         report_msg_.webot_msg.imu.angle[2] = imu->mutable_orientation()->w();
         // FIXME: current imu vehicle yaw is not correct, use old function
-
         // P车编码器为绝对式
-        report_msg_.webot_msg.l_wheel += payload2.l_wheel() / 6.28 * 1000;
-        report_msg_.webot_msg.r_wheel += payload2.r_wheel() / 6.28 * 1000;
-        // report_msg_.webot_msg.l_wheel = payload2.l_wheel() * 0.47167859;
-        // report_msg_.webot_msg.r_wheel = payload2.r_wheel() * 0.47167859;
-        report_msg_.webot_msg.l_wheel = payload2.l_wheel();
-        report_msg_.webot_msg.r_wheel = payload2.r_wheel();
+        // report_msg_.webot_msg.l_wheel += payload2.l_wheel() / 6.28 * 1000;
+        // report_msg_.webot_msg.r_wheel += payload2.r_wheel() / 6.28 * 1000;
+        report_msg_.webot_msg.l_wheel +=
+            (payload2.l_wheel() * 0.105);  // give arc length
+        report_msg_.webot_msg.r_wheel +=
+            (payload2.r_wheel() * 0.105);  // give arc length
         report_msg_.webot_msg.forkPose.z = payload2.forkposez();
         report_msg_.webot_msg.imu.velocity[0] = imu->angular_velocity().x();
         report_msg_.webot_msg.imu.velocity[1] = imu->angular_velocity().y();
@@ -166,6 +165,7 @@ void SVCModelSerial::onUpStreamProcess() {
     //           << ", Gyroscope = " << l_Imu.angle[2] << ", WheelCoder = [" <<
     //           l_l
     //           << "," << l_r << "] , forkZ = " << l_forkZ << std::endl;
+    std::cout << "report yaw = " << l_Imu.angle[2] << std::endl;
     const struct Package *pack = encoder_.encodePackage();
     ecal_ptr_->send("Sensor/read", pack->buf, pack->len);
 }
