@@ -49,6 +49,14 @@ NormalSTController::NormalSTController() : BaseController() {
 
     pose_ptr_ = std::make_shared<WPose>("RobotNode");
 
+    reflector_ptr_ = std::make_shared<WReflector>("HighReflector");
+    reflector_check_ptr_ = ReflectorChecker::getInstance();
+    reflector_check_ptr_->copyFrom(reflector_ptr_->getReflectors());
+    reflector_check_ptr_->setSensorMatrix4d("mid360",
+                                            mid360_ptr_->getMatrixFromLidar());
+    reflector_check_ptr_->setSensorMatrix4d("BP",
+                                            BP_ptr_->getMatrixFromLidar());
+
     // TODO: creat task
     v_while_spin_.push_back(bind(&WBase::spin, stree_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, l_ptr_));
