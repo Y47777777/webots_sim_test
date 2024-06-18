@@ -27,6 +27,7 @@ using namespace webots;
 // TODO: 构造的位置要想想
 std::shared_ptr<Timer> Timer::instance_ptr_ = nullptr;
 std::shared_ptr<EcalWrapper> EcalWrapper::instance_ptr_ = nullptr;
+std::shared_ptr<ReflectorChecker> ReflectorChecker::instance_ptr_ = nullptr;
 
 NormalSTController::NormalSTController() : BaseController() {
     // sensor init
