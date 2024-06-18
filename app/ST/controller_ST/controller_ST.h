@@ -4,9 +4,9 @@
  * @LastEditors: weijchen weijchen@visionnav.com
  * @LastEditTime: 2024-06-07 16:22:54
  * @FilePath: /webots_ctrl/app/ST/controller_ST/controller_ST.h
- * @Description: 
- * 
- * Copyright (c) 2024 by visionnav, All Rights Reserved. 
+ * @Description:
+ *
+ * Copyright (c) 2024 by visionnav, All Rights Reserved.
  */
 /*
  * @Author: weijchen weijchen@visionnav.com
@@ -29,7 +29,8 @@
 #include "webots_device/w_lidar.h"
 #include "webots_device/w_imu.h"
 #include "webots_device/w_pose.h"
-
+#include "webots_device/w_reflector.h"
+#include "lidar_simulation/high_reflector.h"
 
 // TODO: 统一该定义
 #define SERIAL_MSG_BUF 256
@@ -51,6 +52,7 @@ class NormalSTController : public BaseController {
     void BpReportSpin();
     void Mid360ReportSpin();
     void sendSerialSpin();
+    void highReflectorPublsh();
 
    private:
     std::shared_ptr<WLidar> BP_ptr_;
@@ -59,7 +61,9 @@ class NormalSTController : public BaseController {
     std::shared_ptr<WWheel> stree_ptr_;
     std::shared_ptr<WFork> fork_ptr_;
     std::shared_ptr<WPose> pose_ptr_;
-
+    std::shared_ptr<WReflector> reflector_ptr_;
+    std::shared_ptr<ReflectorChecker> reflector_check_ptr_;
+    
 
     sim_data_flow::STMsg payload;
     sim_data_flow::STUp payload_Up;

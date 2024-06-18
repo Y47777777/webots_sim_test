@@ -10,6 +10,7 @@
  */
 #include <ecal/msg/protobuf/publisher.h>
 #include "sim_data_flow/point_cloud.pb.h"
+// #include "sim_data_flow/high_reflector.pb.h"
 #include "time/time.h"
 #include "geometry/geometry.h"
 #include <qelapsedtimer.h>
@@ -27,6 +28,7 @@ using namespace webots;
 // TODO: 构造的位置要想想
 std::shared_ptr<Timer> Timer::instance_ptr_ = nullptr;
 std::shared_ptr<EcalWrapper> EcalWrapper::instance_ptr_ = nullptr;
+std::shared_ptr<ReflectorChecker> ReflectorChecker::instance_ptr_ = nullptr;
 
 NormalSTController::NormalSTController() : BaseController() {
     // sensor init
@@ -35,7 +37,7 @@ NormalSTController::NormalSTController() : BaseController() {
     stree_ptr_ =
         std::make_shared<WWheel>("FL", "SteerWheel", "SteerSolid", "S");
 
-    BP_ptr_ = std::make_shared<WLidar>("BP", "", 50);
+    BP_ptr_ = std::make_shared<WLidar>("BP", "BP", 50);
     VertivalFov fov = {.begin = 0, .end = PI / 2};
     BP_ptr_->setFov(fov);
 
@@ -43,6 +45,14 @@ NormalSTController::NormalSTController() : BaseController() {
     mid360_ptr_->setSimulationNRLS("mid360.csv");
 
     pose_ptr_ = std::make_shared<WPose>("RobotNode_ST");
+
+    reflector_ptr_ = std::make_shared<WReflector>("HighReflector");
+    reflector_check_ptr_ = ReflectorChecker::getInstance();
+    reflector_check_ptr_->copyFrom(reflector_ptr_->getReflectors());
+    reflector_check_ptr_->setSensorMatrix4d("mid360",
+                                            mid360_ptr_->getMatrixFromLidar());
+    reflector_check_ptr_->setSensorMatrix4d("BP",
+                                            BP_ptr_->getMatrixFromLidar());
 
     // TODO: creat task
     v_while_spin_.push_back(bind(&WBase::spin, stree_ptr_));
@@ -55,6 +65,7 @@ NormalSTController::NormalSTController() : BaseController() {
     ecal_ptr_->addEcal("webot/ST_msg");
     ecal_ptr_->addEcal("webot/pointCloud");
     ecal_ptr_->addEcal("webot/perception");
+    ecal_ptr_->addEcal("webot/highreflector");
 
     m_thread_.insert(std::pair<std::string, std::thread>(
         "bp_report", std::bind(&NormalSTController::BpReportSpin, this)));
@@ -99,6 +110,18 @@ void NormalSTController::manualGetState(std::map<std::string, double> &msg) {
 void NormalSTController::whileSpin() {
     // 主循环 在super_->step()后
     this->sendSerialSpin();
+
+    // TODO:delete
+    // static bool first_send = true;
+    // if (first_send) {
+    //     first_send = false;
+
+    //     // send reflector
+    //     sim_data_flow::ReflectorMsg payload =
+    //     reflector_ptr_->getReflectors(); uint8_t buf[payload.ByteSize()];
+    //     payload.SerializePartialToArray(buf, payload.ByteSize());
+    //     ecal_ptr_->send("webot/highreflector", buf, payload.ByteSize());
+    // }
 }
 
 void NormalSTController::onRemoteSerialMsg(
@@ -190,3 +213,5 @@ void NormalSTController::BpReportSpin() {
     }
     return;
 }
+
+void NormalSTController::highReflectorPublsh() {}

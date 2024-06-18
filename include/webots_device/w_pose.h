@@ -16,6 +16,7 @@
 #include "geometry/geometry.h"
 #include "webots_device/w_base.h"
 #include "logvn/logvn.h"
+#include "lidar_simulation/high_reflector.h"
 
 namespace VNSim {
 using namespace webots;
@@ -38,53 +39,59 @@ class WPose : public WBase {
         node_name_ = pose_node_name_;
         translation_ptr_ = node_->getField("translation");
         rotation_ptr_ = node_->getField("rotation");
-        translation_address_ = translation_ptr_->getSFVec3f();
-        rotation_address_ = rotation_ptr_->getSFRotation();
     }
 
     Eigen::Matrix4d getTransferMatrix() {
-        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
-
-        // TODO:change to geometry
-        Eigen::Affine3d transform = Eigen::Affine3d::Identity();
-        transform.rotate(rotation_);
-        transform.translation() = translation_.head<3>();
-
-        return transform.matrix();
+        return createTransformMatrix(tf_rotation_, tf_translation_);
     }
 
     Eigen::Vector3d getTransfer() {
         std::shared_lock<std::shared_mutex> lock(rw_mutex_);
         Eigen::Vector3d result;
-        result[0] = translation_[0];
-        result[1] = translation_[1];
-        result[2] = translation_[2];
+        result[0] = tf_rotation_[0];
+        result[1] = tf_rotation_[1];
+        result[2] = tf_rotation_[2];
         return result;
     }
 
-    Eigen::AngleAxisd getAngleAxisd() {
-        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
-        return rotation_;
-    }
+    // Eigen::AngleAxisd getAngleAxisd() {
+    //     std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+    //     return rotation_;
+    // }
 
     // TODO: 这段要改
     double getVehicleYaw() {
         std::shared_lock<std::shared_mutex> lock(rw_mutex_);
-        Eigen::Vector3d r_eulerangle3 = rotation_.matrix().eulerAngles(2, 1, 0);
+        // static auto *robot_rot =
+        //     super_->getFromDef("RobotNode_ST")->getField("rotation");
+
+        // auto tmp_r = robot_rot->getSFRotation();
+
+        // Eigen::AngleAxisd tmp_angleaxis(
+        //     tmp_r[3], Eigen::Vector3d(tmp_r[0], tmp_r[1], tmp_r[2]));
+
+        Eigen::AngleAxisd rotation = {
+            tf_rotation_[3],
+            Eigen::Vector3d(tf_rotation_[0], tf_rotation_[1], tf_rotation_[2])};
+
+        Eigen::Vector3d r_eulerangle3 = rotation.matrix().eulerAngles(2, 1, 0);
         return r_eulerangle3[0];
     }
 
     void spin() {
         std::unique_lock<std::shared_mutex> lock(rw_mutex_);
-        translation_address_ = translation_ptr_->getSFVec3f();
-        translation_[0] = translation_address_[0];
-        translation_[1] = translation_address_[1];
-        translation_[2] = translation_address_[2];
-        rotation_address_ = rotation_ptr_->getSFRotation();
-        rotation_.axis()[0] = rotation_address_[0];
-        rotation_.axis()[1] = rotation_address_[1];
-        rotation_.axis()[2] = rotation_address_[2];
-        rotation_.angle() = rotation_address_[3];
+        const double *translation_address = translation_ptr_->getSFVec3f();
+        const double *rotation_address = rotation_ptr_->getSFRotation();
+        tf_translation_[0] = translation_address[0];
+        tf_translation_[1] = translation_address[1];
+        tf_translation_[2] = translation_address[2];
+
+        tf_rotation_[0] = rotation_address[0];
+        tf_rotation_[1] = rotation_address[1];
+        tf_rotation_[2] = rotation_address[2];
+        tf_rotation_[3] = rotation_address[3];
+
+        ReflectorChecker::getInstance()->setCurPose(this->getTransferMatrix());
     }
 
    private:
@@ -93,11 +100,8 @@ class WPose : public WBase {
     Field *rotation_ptr_ = nullptr;
     Field *translation_ptr_ = nullptr;
 
-    const double *translation_address_ = nullptr;
-    const double *rotation_address_ = nullptr;
-
-    Eigen::Vector4d translation_ = {0, 0, 0, 1};
-    Eigen::AngleAxisd rotation_ = {0, Eigen::Vector3d(0, 1, 0)};
+    double tf_translation_[3] = {0, 0, 0};
+    double tf_rotation_[4] = {0, 0, 1, 0};
 };
 
 }  // namespace VNSim

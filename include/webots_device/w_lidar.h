@@ -64,6 +64,7 @@ class WLidar : public WBase {
             point_cloud_.set_size_of_layer(size_of_layer_);
             point_cloud_.set_size_of_each_layer(size_of_each_layer_);
             point_cloud_.set_size_of_point_cloud(size_of_point_cloud_);
+            point_cloud_.set_name(lidar_name);
 
             // 获取每层的地址
             v_webots_address_.clear();
@@ -96,7 +97,8 @@ class WLidar : public WBase {
         }
 
         // 设置雷达数据生成其实步数，间隔雷达数据
-        start_step_ = super_->getStepCnt();
+        // TODO: +1 为错步发送
+        start_step_ = super_->getStepCnt() + 1;
         super_->step(step_duration_);
         data_is_ready_ = false;
     }
@@ -132,8 +134,8 @@ class WLidar : public WBase {
     }
 
     void setFov(const VertivalFov ver_fov) {
-        start_layer_ = 0;
-        end_layer_ = size_of_layer_;
+        int start_layer = 0;
+        int end_layer = size_of_layer_;
         if (fabs(ver_fov.begin - ver_fov.end) > 0.01) {
             fov_vertical_enable_ = true;
 
@@ -141,22 +143,26 @@ class WLidar : public WBase {
             double vertical_fov = lidar_->getVerticalFov();
             double resolution = size_of_layer_ / vertical_fov;
             double start_angle = PI / 2 - ver_fov.end;
-            start_layer_ = std::round(start_angle * resolution);
+            start_layer = std::round(start_angle * resolution);
 
             // 计算终点
             double end_angle = PI / 2 - ver_fov.begin;
-            end_layer_ = std::round(end_angle * resolution);
+            end_layer = std::round(end_angle * resolution);
 
-            if (start_layer_ < 0) {
-                LOG_ERROR("end_layer error :%d", start_layer_);
-                start_layer_ = 0;
+            if (start_layer < 0) {
+                LOG_ERROR("end_layer error :%d", start_layer);
+                start_layer = 0;
             }
-            if (end_layer_ > size_of_layer_) {
-                LOG_INFO("start_layer_:%d", end_layer_);
-                end_layer_ = size_of_layer_;
+            if (end_layer > size_of_layer_) {
+                LOG_INFO("start_layer:%d", end_layer);
+                end_layer = size_of_layer_;
             }
-            LOG_INFO("start_layer = %d, end_layer = %d", start_layer_,
-                     end_layer_);
+
+            start_point_ = start_layer * size_of_each_layer_;
+            end_point_ = end_layer * size_of_each_layer_;
+
+            LOG_INFO("start_point_ = %d, end_point_ = %d", start_point_,
+                     end_point_);
         }
     }
 
@@ -175,6 +181,9 @@ class WLidar : public WBase {
         translation_ptr_->setSFVec3f(values);
     }
 
+    Eigen::Matrix4d getMatrixFromLidar() {
+        return createTransformMatrix(tf_rotation_, tf_translation_);
+    }
     /**
      * @brief 检查雷达数据更新状态
      *
@@ -205,7 +214,7 @@ class WLidar : public WBase {
             return;
         }
         data_is_ready_ = true;
-
+        webots_points_address_ = lidar_->getPointCloud();
         if (is_sim_NRLS_) {
             // 模拟非重复线扫
             NRLS_->simulation(webots_points_address_, point_cloud_);
@@ -219,46 +228,29 @@ class WLidar : public WBase {
             double y = 0;
             double z = 0;
 
-            // 按层转存 只取fov内
-            for (int i = start_layer_; i < end_layer_; i++) {
-                if (i > v_webots_address_.size()) {
-                    LOG_ERROR("%s, i > v_webots_address_.size()",
-                              lidar_name_.c_str());
-                    return;
-                }
-
-                const LidarPoint *iter = v_webots_address_[i];
-                for (int j = 0; j < size_of_each_layer_; j++) {
-                    x = iter[j].x;
-                    y = iter[j].y;
-                    z = iter[j].z;
-                    if (std::abs(x) != INFINITY && std::abs(y) != INFINITY &&
-                        std::abs(z) != INFINITY) {
-                        sim_data_flow::LidarPoint *point =
-                            point_cloud_.add_point_cloud();
-                        point->set_x(x);
-                        point->set_y(y);
-                        point->set_z(z);
-                        point->set_time(i);
-                        point->set_layer_id(iter[i].layer_id);
+            // 转存 只取fov内
+            for (int i = start_point_; i < end_point_; i++) {
+                double x = address[i].x;
+                double y = address[i].y;
+                double z = address[i].z;
+                if (std::abs(x) != INFINITY && std::abs(y) != INFINITY &&
+                    std::abs(z) != INFINITY) {
+                    sim_data_flow::LidarPoint *point =
+                        point_cloud_.add_point_cloud();
+                    point->set_x(x);
+                    point->set_y(y);
+                    point->set_z(z);
+                    point->set_time(address[i].time);
+                    point->set_layer_id(address[i].layer_id);
+                    //TODO: 要修改位置
+                    if (ReflectorChecker::getInstance()->checkInReflector(
+                            lidar_name_, point)) {
+                        point->set_intensity(200);
+                    } else {
+                        point->set_intensity(150);
                     }
                 }
             }
-            // for (int i = 0; i < size_of_point_cloud_; i++) {
-            //     double x = address[i].x;
-            //     double y = address[i].y;
-            //     double z = address[i].z;
-            //     if (std::abs(x) != INFINITY && std::abs(y) != INFINITY &&
-            //         std::abs(z) != INFINITY) {
-            //         sim_data_flow::LidarPoint *point =
-            //             point_cloud_.add_point_cloud();
-            //         point->set_x(x);
-            //         point->set_y(y);
-            //         point->set_z(z);
-            //         point->set_time(address[i].time);
-            //         point->set_layer_id(address[i].layer_id);
-            //     }
-            // }
         }
     }
 
@@ -290,8 +282,39 @@ class WLidar : public WBase {
 
     // z轴fov
     bool fov_vertical_enable_ = false;
-    int start_layer_ = 0;  // 开始拷贝数据的 层
-    int end_layer_ = 0;    //
+
+    int start_point_ = 0;  // 开始拷贝数据的 层
+    int end_point_ = 0;    //
 };
 
+// for (int i = start_layer; i < end_layer; i++) {
+//     if (i > v_webots_address_.size()) {
+//         LOG_ERROR("%s, i > v_webots_address_.size()",
+//                   lidar_name_.c_str());
+//         return;
+//     }
+
+//     const LidarPoint *iter = v_webots_address_[i];
+//     for (int j = 0; j < size_of_each_layer_; j++) {
+//         x = iter[j].x;
+//         y = iter[j].y;
+//         z = iter[j].z;
+//         if (std::abs(x) != INFINITY && std::abs(y) != INFINITY &&
+//             std::abs(z) != INFINITY) {
+//             sim_data_flow::LidarPoint *point =
+//                 point_cloud_.add_point_cloud();
+//             point->set_x(x);
+//             point->set_y(y);
+//             point->set_z(z);
+//             point->set_time(i);
+//             // point->set_layer_id(iter[i].layer_id);
+//             //
+//             if(ReflectorChecker::getInstance()->checkInReflector(lidar_name_,point)){
+//             //     point->set_intensity(200);
+//             // }else{
+//             //     point->set_intensity(100);
+//             // }
+//         }
+//     }
+// }
 }  // namespace VNSim
