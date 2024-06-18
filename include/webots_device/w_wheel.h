@@ -168,7 +168,7 @@ class WWheel : public WBase {
             // 增量式编码器，只计算增量
             double now_value = position_sensor_->getValue();
             double diff = now_value - last_pos_sensor_value_;
-            if (fabs(diff) > 0) {  // 0.000005
+            if (fabs(diff) > 0.000005) {  // 0.000005
                 pos_sensor_value_ += diff;
             }
             last_pos_sensor_value_ = now_value;
