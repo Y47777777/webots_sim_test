@@ -76,26 +76,23 @@ class WLidar : public WBase {
         }
 
         // creat pose
-        {
-            node_ = super_->getFromDef(pose_name);
-            if (node_ != nullptr) {
-                translation_ptr_ = node_->getField("translation");
-                rotation_ptr_ = node_->getField("rotation");
 
-                memcpy(tf_rotation_, rotation_ptr_->getSFRotation(),
-                       4 * sizeof(tf_rotation_[0]));
-                memcpy(tf_translation_, translation_ptr_->getSFVec3f(),
-                       3 * sizeof(tf_translation_[0]));
+        node_ = super_->getFromDef(pose_name);
+        if (node_ != nullptr) {
+            translation_ptr_ = node_->getField("translation");
+            rotation_ptr_ = node_->getField("rotation");
 
-                LOG_INFO("pose node :", pose_name.c_str());
-                LOG_INFO("pose rotation %.3f, %.3f, %.3f, %.3f",
-                         tf_rotation_[0], tf_rotation_[1], tf_rotation_[2],
-                         tf_rotation_[3]);
+            memcpy(tf_rotation_, rotation_ptr_->getSFRotation(),
+                   4 * sizeof(tf_rotation_[0]));
+            memcpy(tf_translation_, translation_ptr_->getSFVec3f(),
+                   3 * sizeof(tf_translation_[0]));
 
-                LOG_INFO("pose translation %.3f, %.3f, %.3f",
-                         tf_translation_[0], tf_translation_[1],
-                         tf_translation_[2]);
-            }
+            LOG_INFO("pose node :", pose_name.c_str());
+            LOG_INFO("pose rotation %.3f, %.3f, %.3f, %.3f", tf_rotation_[0],
+                     tf_rotation_[1], tf_rotation_[2], tf_rotation_[3]);
+
+            LOG_INFO("pose translation %.3f, %.3f, %.3f", tf_translation_[0],
+                     tf_translation_[1], tf_translation_[2]);
         }
 
         // 设置雷达数据生成其实步数，间隔雷达数据
@@ -219,11 +216,14 @@ class WLidar : public WBase {
         webots_points_address_ = lidar_->getPointCloud();
         if (is_sim_NRLS_) {
             // 模拟非重复线扫
-            NRLS_->simulation(webots_points_address_, point_cloud_);
+            point_cloud_.set_name(lidar_name_);
+            NRLS_->simulation(webots_points_address_, point_cloud_,
+                              lidar_name_);
         } else {
             // 增加时间戳
             point_cloud_.set_timestamp(Timer::getInstance()->getTimeStamp());
             point_cloud_.clear_point_cloud();
+            point_cloud_.set_name(lidar_name_);
 
             const LidarPoint *address = webots_points_address_;
             double x = 0;
@@ -244,13 +244,15 @@ class WLidar : public WBase {
                     point->set_z(z);
                     point->set_time(address[i].time);
                     point->set_layer_id(address[i].layer_id);
+
+                    point->set_intensity(150);
                     // TODO: 要修改位置
-                    if (ReflectorChecker::getInstance()->checkInReflector(
-                            lidar_name_, point)) {
-                        point->set_intensity(200);
-                    } else {
-                        point->set_intensity(150);
-                    }
+                    // if (ReflectorChecker::getInstance()->checkInReflector(
+                    //         lidar_name_, point)) {
+                    //     point->set_intensity(200);
+                    // } else {
+                    //      point->set_intensity(150);
+                    // }
                 }
             }
         }
