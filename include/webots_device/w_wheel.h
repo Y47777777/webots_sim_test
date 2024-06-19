@@ -145,6 +145,8 @@ class WWheel : public WBase {
         setYaw(yaw);
     }
 
+    double getWheelArcLength() { return getSenosorValue() * radius_; }
+
     double getSenosorValue() {
         std::shared_lock<std::shared_mutex> lock(rw_mutex_);
         double result = pos_sensor_value_;

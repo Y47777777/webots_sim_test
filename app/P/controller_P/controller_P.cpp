@@ -37,8 +37,8 @@ NormalSTController::NormalSTController() : BaseController() {
         std::make_shared<WWheel>("FL", "SteerWheel", "SteerSolid", "FLWheel");
     // l_ptr_ = std::make_shared<WWheel>("", "", "R_D_SteerSolid", "", "BRPS");
     // r_ptr_ = std::make_shared<WWheel>("", "", "L_D_SteerSolid", "", "BLPS");
-    l_ptr_ = std::make_shared<WWheel>("", "", "", "", "BRPS");
-    r_ptr_ = std::make_shared<WWheel>("", "", "", "", "BLPS");
+    l_ptr_ = std::make_shared<WWheel>("", "", "", "RS", "BRPS");
+    r_ptr_ = std::make_shared<WWheel>("", "", "", "LS", "BLPS");
 
     BP_ptr_ = std::make_shared<WLidar>("BP", "", 50);
     // VertivalFov fov = {.begin = 0, .end = PI / 2};
@@ -140,15 +140,18 @@ void NormalSTController::sendSerialSpin() {
     payload.set_timestamp(timer_ptr_->getTimeStamp());
     payload.set_forkposez(fork_ptr_->getSenosorValue());
     payload.set_steerposition(stree_ptr_->getSenosorValue());
-    payload.set_l_wheel(l_ptr_->getSenosorValue());
-    payload.set_r_wheel(r_ptr_->getSenosorValue());
+    payload.set_l_wheel(l_ptr_->getWheelArcLength());
+    payload.set_r_wheel(r_ptr_->getWheelArcLength());
+    // std::cout << "calculated arc length = [" << payload.l_wheel() << ","
+    //           << payload.r_wheel() << "]" << std::endl;
     payload.set_steering_theta(stree_ptr_->getMotorYaw());
 
     foxglove::Imu *imu = payload.mutable_imu();
+    // imu->mutable_orientation()->CopyFrom(imu_ptr_->getInertialValue());
+    // // TODO: 临时使用pose位置，后续要排查imu问题
+    // imu->mutable_orientation()->set_w(pose_ptr_->getVehicleYaw());
+    // X is Roll in rad, Y is Pitch in rad, Z is Yaw in rad
     imu->mutable_orientation()->CopyFrom(imu_ptr_->getInertialValue());
-    // TODO: 临时使用pose位置，后续要排查imu问题
-    imu->mutable_orientation()->set_w(pose_ptr_->getVehicleYaw());
-
     imu->mutable_angular_velocity()->CopyFrom(imu_ptr_->getGyroValue());
     imu->mutable_linear_acceleration()->CopyFrom(imu_ptr_->getAccValue());
 

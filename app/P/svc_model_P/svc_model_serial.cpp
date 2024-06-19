@@ -41,18 +41,15 @@ void SVCModelSerial::onWebotMsg(const char *topic_name,
     {
         // std::shared_lock<std::shared_mutex> lock(lock_mutex_);
         // This period should be locked
-        Eigen::Quaterniond t(
-            imu->mutable_orientation()->x(), imu->mutable_orientation()->y(),
-            imu->mutable_orientation()->z(), imu->mutable_orientation()->w());
-        report_msg_.webot_msg.imu.angle[2] = imu->mutable_orientation()->w();
+        report_msg_.webot_msg.imu.angle[2] = imu->mutable_orientation()->z();
         // FIXME: current imu vehicle yaw is not correct, use old function
         // P车编码器为绝对式
         // printf("l = %.8f  r = %.8f\n", payload2.l_wheel(),
         // payload2.r_wheel());
         report_msg_.webot_msg.l_wheel +=
-            (payload2.l_wheel() * 0.105 * 0.5);  // give arc length
+            (payload2.l_wheel() * 0.5);  // give arc length
         report_msg_.webot_msg.r_wheel +=
-            (payload2.r_wheel() * 0.105 * 0.5);  // give arc length
+            (payload2.r_wheel() * 0.5);  // give arc length
         report_msg_.webot_msg.forkPose.z = payload2.forkposez();
         report_msg_.webot_msg.imu.velocity[0] = imu->angular_velocity().x();
         report_msg_.webot_msg.imu.velocity[1] = imu->angular_velocity().y();
