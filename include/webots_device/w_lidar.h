@@ -71,6 +71,8 @@ class WLidar : public WBase {
             for (int i = 0; i < size_of_layer_; i++) {
                 v_webots_address_.push_back(lidar_->getLayerPointCloud(i));
             }
+            start_point_ = 0;
+            end_point_ = size_of_point_cloud_;
         }
 
         // creat pose
@@ -98,7 +100,7 @@ class WLidar : public WBase {
 
         // 设置雷达数据生成其实步数，间隔雷达数据
         // TODO: +1 为错步发送
-        start_step_ = super_->getStepCnt() + 1;
+        start_step_ = super_->getStepCnt();
         super_->step(step_duration_);
         data_is_ready_ = false;
     }
@@ -242,7 +244,7 @@ class WLidar : public WBase {
                     point->set_z(z);
                     point->set_time(address[i].time);
                     point->set_layer_id(address[i].layer_id);
-                    //TODO: 要修改位置
+                    // TODO: 要修改位置
                     if (ReflectorChecker::getInstance()->checkInReflector(
                             lidar_name_, point)) {
                         point->set_intensity(200);
