@@ -50,11 +50,14 @@ class NormalSTController : public BaseController {
     void whileSpin();
     void BpReportSpin();
     void Mid360ReportSpin();
+    void Mid360TwoReportSpin();
     void sendSerialSpin();
+    
 
    private:
     std::shared_ptr<WLidar> BP_ptr_;
     std::shared_ptr<WLidar> mid360_ptr_;
+    std::shared_ptr<WLidar> mid360Two_ptr_;
     std::shared_ptr<WImu> imu_ptr_;
     std::shared_ptr<WWheel> stree_ptr_;
     std::shared_ptr<WWheel> l_ptr_;

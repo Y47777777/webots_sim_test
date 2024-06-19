@@ -22,10 +22,14 @@ class SVCModelLidar : public BaseSVCModel {
                  const eCAL::SReceiveCallbackData *data);
     void onMid360Msg(const char *topic_name,
                      const eCAL::SReceiveCallbackData *data);
+    void onMid360TwoMsg(const char *topic_name,
+                        const eCAL::SReceiveCallbackData *data);
+
 
    private:
     uint8_t buf_[DEFAULT_LIDAR_MSG];
     uint8_t buf2_[DEFAULT_LIDAR_MSG];
+    uint8_t buf3_[DEFAULT_LIDAR_MSG];
     uint64_t seq_bp_{0};
     uint64_t seq_mid360_{0};
 };

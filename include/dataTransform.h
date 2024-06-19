@@ -15,6 +15,7 @@
 #include "sim_data_flow/point_cloud2.pb.h"
 #include "sim_data_flow/point_cloud.pb.h"
 #include "lidar_simulation/high_reflector.h"
+#include "time/time.h"
 
 // TODO: data width 可以用sizeof(获取？)
 #define PBPOINT_BANDWIDTH 4 * 6
@@ -45,7 +46,8 @@ void pbTopb2(const sim_data_flow::WBPointCloud &payload,
     // header
     payload_send.mutable_header()->set_frame_id("");
     payload_send.mutable_header()->set_seq(seq);
-    payload_send.mutable_header()->set_timestamp(payload.timestamp());
+    payload_send.mutable_header()->set_timestamp(Timer::getInstance()->getTimeStamp());
+    // payload.timestamp()
     // body
     payload_send.set_height(1);
     payload_send.set_width(point_size);

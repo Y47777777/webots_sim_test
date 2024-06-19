@@ -40,12 +40,15 @@ NormalSTController::NormalSTController() : BaseController() {
     l_ptr_ = std::make_shared<WWheel>("", "", "", "RS", "BRPS");
     r_ptr_ = std::make_shared<WWheel>("", "", "", "LS", "BLPS");
 
-    BP_ptr_ = std::make_shared<WLidar>("BP", "", 50);
+    // BP_ptr_ = std::make_shared<WLidar>("BP", "BP", 50);
     // VertivalFov fov = {.begin = 0, .end = PI / 2};
     // BP_ptr_->setFov(fov);
 
     mid360_ptr_ = std::make_shared<WLidar>("mid360", "MID360", 100);
     mid360_ptr_->setSimulationNRLS("mid360.csv");
+
+    mid360Two_ptr_ = std::make_shared<WLidar>("mid360Two", "MID360Two", 100);
+    mid360Two_ptr_->setSimulationNRLS("mid360.csv");
 
     pose_ptr_ = std::make_shared<WPose>("RobotNode");
 
@@ -54,8 +57,11 @@ NormalSTController::NormalSTController() : BaseController() {
     reflector_check_ptr_->copyFrom(reflector_ptr_->getReflectors());
     reflector_check_ptr_->setSensorMatrix4d("mid360",
                                             mid360_ptr_->getMatrixFromLidar());
-    reflector_check_ptr_->setSensorMatrix4d("BP",
-                                            BP_ptr_->getMatrixFromLidar());
+    reflector_check_ptr_->setSensorMatrix4d("mid360Two", 
+                                            mid360Two_ptr_->getMatrixFromLidar());
+                                            
+    // reflector_check_ptr_->setSensorMatrix4d("BP",
+    //                                         BP_ptr_->getMatrixFromLidar());
 
     // TODO: creat task
     v_while_spin_.push_back(bind(&WBase::spin, stree_ptr_));
@@ -63,19 +69,24 @@ NormalSTController::NormalSTController() : BaseController() {
     v_while_spin_.push_back(bind(&WBase::spin, r_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, fork_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, imu_ptr_));
-    v_while_spin_.push_back(bind(&WBase::spin, BP_ptr_));
+    // v_while_spin_.push_back(bind(&WBase::spin, BP_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, mid360_ptr_));
+    v_while_spin_.push_back(bind(&WBase::spin, mid360Two_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, pose_ptr_));
 
     ecal_ptr_->addEcal("webot/P_msg");
     ecal_ptr_->addEcal("webot/pointCloud");
     ecal_ptr_->addEcal("webot/perception");
+    ecal_ptr_->addEcal("webot/perceptionTwo");
 
-    m_thread_.insert(std::pair<std::string, std::thread>(
-        "bp_report", std::bind(&NormalSTController::BpReportSpin, this)));
+    // m_thread_.insert(std::pair<std::string, std::thread>(
+    //     "bp_report", std::bind(&NormalSTController::BpReportSpin, this)));
     m_thread_.insert(std::pair<std::string, std::thread>(
         "mid360_report",
         std::bind(&NormalSTController::Mid360ReportSpin, this)));
+    m_thread_.insert(std::pair<std::string, std::thread>(
+        "mid360Two_report",
+        std::bind(&NormalSTController::Mid360TwoReportSpin, this)));
 
     // std::thread local_thread(
     //     std::bind(&NormalSTController::BpReportSpin, this));
@@ -177,9 +188,41 @@ void NormalSTController::Mid360ReportSpin() {
         //         __FUNCTION__, payload.ByteSize(), BP_LIDAR_MSG_BUF);
         //     continue;
         // }
+        for (int i = 0; i < payload.point_cloud_size(); i++) {
+            if (ReflectorChecker::getInstance()->checkInReflector(
+                    payload.name(), &payload.point_cloud().at(i))) {
+                payload.mutable_point_cloud()->at(i).set_intensity(200);
+            }
+        }
         uint8_t buf[payload.ByteSize()];
         payload.SerializePartialToArray(buf, payload.ByteSize());
         ecal_ptr_->send("webot/perception", buf, payload.ByteSize());
+        timer_ptr_->sleep<milliseconds>(90);
+    }
+    return;
+}
+
+void NormalSTController::Mid360TwoReportSpin() {
+    LOG_INFO("Mid360TwoReportSpin start\n");
+    sim_data_flow::WBPointCloud payload;
+
+    while (!webotsExited_) {
+        // FIXME: 可以修改为信号量触发
+        if (!mid360Two_ptr_->checkDataReady()) {
+            timer_ptr_->sleep<microseconds>(5);
+            continue;
+        }
+        mid360Two_ptr_->getLocalPointCloud(payload);
+
+        for (int i = 0; i < payload.point_cloud_size(); i++) {
+            if (ReflectorChecker::getInstance()->checkInReflector(
+                    payload.name(), &payload.point_cloud().at(i))) {
+                payload.mutable_point_cloud()->at(i).set_intensity(200);
+            }
+        }
+        uint8_t buf[payload.ByteSize()];
+        payload.SerializePartialToArray(buf, payload.ByteSize());
+        ecal_ptr_->send("webot/perceptionTwo", buf, payload.ByteSize());
         timer_ptr_->sleep<milliseconds>(90);
     }
     return;
@@ -203,6 +246,12 @@ void NormalSTController::BpReportSpin() {
         //         __FUNCTION__, payload.ByteSize(), BP_LIDAR_MSG_BUF);
         //     continue;
         // }
+        for (int i = 0; i < payload.point_cloud_size(); i++) {
+            if (ReflectorChecker::getInstance()->checkInReflector(
+                    payload.name(), &payload.point_cloud().at(i))) {
+                payload.mutable_point_cloud()->at(i).set_intensity(200);
+            }
+        }
         uint8_t buf[payload.ByteSize()];
         payload.SerializePartialToArray(buf, payload.ByteSize());
         ecal_ptr_->send("webot/pointCloud", buf, payload.ByteSize());

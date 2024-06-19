@@ -110,6 +110,11 @@ void SVCModelSerial::onDownStreamProcess(uint8_t *msg, int len) {
 void SVCModelSerial::onUpStreamProcess() {
     uint16_t battery_device = 100;
     uint32_t dataidx_upload = report_msg_.dataidx_upload++;
+    if (dataidx_upload == 0) {
+        LOG_INFO("set base timer");
+        Timer::getInstance()->setBaseTime();
+    }
+    
     bool fork[2] = {false, false};
     const char Axis[3] = {'X', 'Y', 'Z'};
     uint32_t l_dataidx = 0;

@@ -131,9 +131,9 @@ class ReflectorChecker {
                 continue;
 
             // 通过中心位置排除 > 1m
-            if (fabs(point.x() - reflector.center.x()) > 1)
+            if (fabs(point.x() - reflector.center.x()) > 2)
                 continue;
-            if (fabs(point.y() - reflector.center.y()) > 1)
+            if (fabs(point.y() - reflector.center.y()) > 2)
                 continue;
 
             // return true;
