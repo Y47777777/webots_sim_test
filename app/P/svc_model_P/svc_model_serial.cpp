@@ -39,7 +39,7 @@ void SVCModelSerial::onWebotMsg(const char *topic_name,
     // use a spin lock to manage data copy
     // if the time consumption is huge, use a real mutex instead
     {
-        std::shared_lock<std::shared_mutex> lock(lock_mutex_);
+        // std::shared_lock<std::shared_mutex> lock(lock_mutex_);
         // This period should be locked
         Eigen::Quaterniond t(
             imu->mutable_orientation()->x(), imu->mutable_orientation()->y(),
@@ -47,14 +47,12 @@ void SVCModelSerial::onWebotMsg(const char *topic_name,
         report_msg_.webot_msg.imu.angle[2] = imu->mutable_orientation()->w();
         // FIXME: current imu vehicle yaw is not correct, use old function
         // P车编码器为绝对式
-        // report_msg_.webot_msg.l_wheel += payload2.l_wheel() / 6.28 * 1000;
-        // report_msg_.webot_msg.r_wheel += payload2.r_wheel() / 6.28 * 1000;
+        // printf("l = %.8f  r = %.8f\n", payload2.l_wheel(),
+        // payload2.r_wheel());
         report_msg_.webot_msg.l_wheel +=
             (payload2.l_wheel() * 0.105 * 0.5);  // give arc length
         report_msg_.webot_msg.r_wheel +=
             (payload2.r_wheel() * 0.105 * 0.5);  // give arc length
-        // report_msg_.webot_msg.l_wheel = payload2.l_wheel() * 0.105;
-        // report_msg_.webot_msg.r_wheel = payload2.r_wheel() * 0.105;
         report_msg_.webot_msg.forkPose.z = payload2.forkposez();
         report_msg_.webot_msg.imu.velocity[0] = imu->angular_velocity().x();
         report_msg_.webot_msg.imu.velocity[1] = imu->angular_velocity().y();
@@ -76,6 +74,7 @@ void SVCModelSerial::onWebotMsg(const char *topic_name,
         report_msg_.webot_msg.last_wheel_position = wheel_position;
         report_msg_.webot_msg.wheel_yaw = payload2.steering_theta();
     }
+    this->onUpStreamProcess();
 }
 
 void SVCModelSerial::onDownStreamProcess(uint8_t *msg, int len) {
@@ -96,13 +95,15 @@ void SVCModelSerial::onDownStreamProcess(uint8_t *msg, int len) {
     // payload_Down.set_steering_speed(MoveDevice * 2.53807107);
     payload_Down.set_steering_speed(MoveDevice);  // quicker speed
     payload_Down.set_steering_theta(SteeringDevice);
-
+    LOG_INFO("try update speed = %.8f, yaw angle = %.8f\n", MoveDevice,
+             SteeringDevice);
     // publish
     payload.SerializePartialToArray(buf, payload.ByteSize());
     ecal_ptr_->send("svc_model_st/P_msg", buf, payload.ByteSize());
     {
         // This period should be locked
-        std::shared_lock<std::shared_mutex> lock(lock_mutex_);
+        // std::shared_lock<std::shared_mutex> lock(lock_mutex_);
+        std::unique_lock<std::shared_mutex> lock(lock_mutex_);
         report_msg_.dataidx = data_idx;
         // TODO: ？？发布数据直接写入回复？
         // report_msg_.webot_msg.wheel_yaw = SteeringDevice;
@@ -122,9 +123,13 @@ void SVCModelSerial::onUpStreamProcess() {
     double l_forkZ = 0;
     struct Serial_Imu l_Imu;
     {
-        // This period should be locked
         std::unique_lock<std::shared_mutex> lock(lock_mutex_);
         l_dataidx = report_msg_.dataidx;
+    }
+    {
+        // This period should be locked
+        // std::unique_lock<std::shared_mutex> lock(lock_mutex_);
+        // l_dataidx = report_msg_.dataidx;
         l_steer_yaw = report_msg_.webot_msg.wheel_yaw;
         l_l = report_msg_.webot_msg.l_wheel;
         l_r = report_msg_.webot_msg.r_wheel;
@@ -169,6 +174,7 @@ void SVCModelSerial::onUpStreamProcess() {
     //           l_l
     //           << "," << l_r << "] , forkZ = " << l_forkZ << std::endl;
     // std::cout << "report yaw = " << l_Imu.angle[2] << std::endl;
+    LOG_INFO("report left = %.8f, report right = %.8f\n", l_l, l_r);
     const struct Package *pack = encoder_.encodePackage();
     ecal_ptr_->send("Sensor/read", pack->buf, pack->len);
 }

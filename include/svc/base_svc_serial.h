@@ -76,15 +76,15 @@ class BaseSerialSVCModel : public BaseSVCModel {
                     std::placeholders::_1, std::placeholders::_2));
             this->onInitService();
             // report thread
-            std::thread sensor_msg_report_thread([&]() {
-                Timer alarm;
-                alarm.alarmTimerInit(10);
-                while (!SVCExit_) {
-                    this->onUpStreamProcess();
-                    alarm.wait();
-                }
-            });
-            sensor_msg_report_thread_ = std::move(sensor_msg_report_thread);
+            // std::thread sensor_msg_report_thread([&]() {
+            //     Timer alarm;
+            //     alarm.alarmTimerInit(10);
+            //     while (!SVCExit_) {
+            //         this->onUpStreamProcess();
+            //         alarm.wait();
+            //     }
+            // });
+            // sensor_msg_report_thread_ = std::move(sensor_msg_report_thread);
         } while (0);
         return ret;
     }

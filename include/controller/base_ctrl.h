@@ -5,8 +5,8 @@
  * @LastEditTime: 2024-06-07 16:22:41
  * @FilePath: /webots_ctrl/include/controller/base_ctrl.h
  * @Description:  ctrler base 类
- * 
- * Copyright (c) 2024 by ${git_name_email}, All Rights Reserved. 
+ *
+ * Copyright (c) 2024 by ${git_name_email}, All Rights Reserved.
  */
 
 #ifndef __BASE_CTRL_H__
@@ -65,18 +65,33 @@ class BaseController : public QThread {
         // task
         webotsExited_ = false;
         alarm_.alarmTimerInit(step_duration_);
-
+        elapsed_timer_.restart();
+        // SerialElapsedTimer_.restart();
         while (supervisor_->step(step_duration_) != -1) {
+            uint32_t els =
+                elapsed_timer_.Timer::elapsed<std::chrono::milliseconds>();
+            if (els > step_duration_) {
+                LOG_INFO("step elapsed = %u ms, %s\n", els,
+                         (els > step_duration_ ? "BAD" : "GOOD"));
+            }
             // 循环遍历注册的任务
             for (int i = 0; i < v_while_spin_.size(); ++i) {
                 v_while_spin_[i]();
             }
+            serial_counter_++;
+            // std::cout << "serial_counter = " << serial_counter_ << std::endl;
+            if (serial_counter_ >= (10 / step_duration_)) {
+                // 特殊的需要执行的任务
+                // if (serial_counter_ == 2) {
+                // basetime is 5ms, serialtime is 10ms
+                serial_counter_ = 0;
+                this->whileSpin();
+                //    SerialElapsedTimer_.restart();
+            }
 
-            // 特殊的需要执行的任务
-            this->whileSpin();
-            
             // 休眠直到目标时间
             alarm_.wait();
+            elapsed_timer_.restart();
         }
         webotsExited_ = true;
 
@@ -101,7 +116,10 @@ class BaseController : public QThread {
     std::shared_ptr<Timer> timer_ptr_;
     std::shared_ptr<EcalWrapper> ecal_ptr_;
     Timer alarm_;
-};
+    int serial_counter_ = 0;
+    Timer elapsed_timer_;
+    Timer SerialElapsedTimer_;
+};  // namespace VNSim
 
 }  // namespace VNSim
 
