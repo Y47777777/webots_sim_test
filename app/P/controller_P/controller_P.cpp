@@ -41,8 +41,8 @@ NormalSTController::NormalSTController() : BaseController() {
     r_ptr_ = std::make_shared<WWheel>("", "", "", "", "BLPS");
 
     BP_ptr_ = std::make_shared<WLidar>("BP", "", 50);
-    VertivalFov fov = {.begin = 0, .end = PI / 2};
-    BP_ptr_->setFov(fov);
+    // VertivalFov fov = {.begin = 0, .end = PI / 2};
+    // BP_ptr_->setFov(fov);
 
     mid360_ptr_ = std::make_shared<WLidar>("mid360", "MID360", 100);
     mid360_ptr_->setSimulationNRLS("mid360.csv");
