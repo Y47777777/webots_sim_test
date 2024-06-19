@@ -131,7 +131,8 @@ class NRLS {
      *                              点云行数，列数放在result的size_of_*中
      */
     void simulation(const LidarPoint *source,
-                    sim_data_flow::WBPointCloud &point_cloud) {
+                    sim_data_flow::WBPointCloud &point_cloud,
+                    std::string lidar_name) {
         int layers = point_cloud.size_of_layer();
         int size_of_each_layer = point_cloud.size_of_each_layer();
 
@@ -172,13 +173,14 @@ class NRLS {
                 point->set_z(cur_ptr->z);
                 point->set_time(cur_ptr->time);
                 point->set_layer_id(cur_ptr->layer_id);
+                point->set_intensity(150);
                 // TODO:要修改位置
-                if (ReflectorChecker::getInstance()->checkInReflector("mid360",
-                                                                      point)) {
-                    point->set_intensity(200);
-                } else {
-                    point->set_intensity(150);
-                }
+                // if (ReflectorChecker::getInstance()->checkInReflector(
+                //         lidar_name, point)) {
+                //     point->set_intensity(200);
+                // } else {
+                //     point->set_intensity(150);
+                // }
             }
         }
     }

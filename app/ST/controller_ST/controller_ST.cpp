@@ -44,6 +44,9 @@ NormalSTController::NormalSTController() : BaseController() {
     mid360_ptr_ = std::make_shared<WLidar>("mid360", "MID360", 100);
     mid360_ptr_->setSimulationNRLS("mid360.csv");
 
+    // mid3601_ptr_ = std::make_shared<WLidar>("mid3602", "MID3602", 100);
+    // mid3601_ptr_->setSimulationNRLS("mid360.csv");
+
     pose_ptr_ = std::make_shared<WPose>("RobotNode_ST");
 
     reflector_ptr_ = std::make_shared<WReflector>("HighReflector");
@@ -51,6 +54,8 @@ NormalSTController::NormalSTController() : BaseController() {
     reflector_check_ptr_->copyFrom(reflector_ptr_->getReflectors());
     reflector_check_ptr_->setSensorMatrix4d("mid360",
                                             mid360_ptr_->getMatrixFromLidar());
+    // reflector_check_ptr_->setSensorMatrix4d("mid3602",
+    //                                         mid3601_ptr_->getMatrixFromLidar());
     reflector_check_ptr_->setSensorMatrix4d("BP",
                                             BP_ptr_->getMatrixFromLidar());
 
@@ -60,11 +65,13 @@ NormalSTController::NormalSTController() : BaseController() {
     v_while_spin_.push_back(bind(&WBase::spin, imu_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, BP_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, mid360_ptr_));
+    // v_while_spin_.push_back(bind(&WBase::spin, mid3601_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, pose_ptr_));
 
     ecal_ptr_->addEcal("webot/ST_msg");
     ecal_ptr_->addEcal("webot/pointCloud");
     ecal_ptr_->addEcal("webot/perception");
+    ecal_ptr_->addEcal("webot/perception1");
     ecal_ptr_->addEcal("webot/highreflector");
 
     m_thread_.insert(std::pair<std::string, std::thread>(
@@ -72,6 +79,10 @@ NormalSTController::NormalSTController() : BaseController() {
     m_thread_.insert(std::pair<std::string, std::thread>(
         "mid360_report",
         std::bind(&NormalSTController::Mid360ReportSpin, this)));
+
+    // m_thread_.insert(std::pair<std::string, std::thread>(
+    //     "mid360_report1",
+    //     std::bind(&NormalSTController::Mid3601ReportSpin, this)));
 
     ecal_ptr_->addEcal("svc_model_st/ST_msg",
                        std::bind(&NormalSTController::onRemoteSerialMsg, this,
@@ -180,9 +191,43 @@ void NormalSTController::Mid360ReportSpin() {
         //         __FUNCTION__, payload.ByteSize(), BP_LIDAR_MSG_BUF);
         //     continue;
         // }
+        for (int i = 0; i < payload.point_cloud_size(); i++) {
+            if (ReflectorChecker::getInstance()->checkInReflector(
+                    payload.name(), &payload.point_cloud().at(i))) {
+                payload.mutable_point_cloud()->at(i).set_intensity(200);
+            }
+        }
         uint8_t buf[payload.ByteSize()];
         payload.SerializePartialToArray(buf, payload.ByteSize());
         ecal_ptr_->send("webot/perception", buf, payload.ByteSize());
+        timer_ptr_->sleep<milliseconds>(90);
+    }
+    return;
+}
+
+void NormalSTController::Mid3601ReportSpin() {
+    LOG_INFO("Mid360ReportSpin start\n");
+    // sim_data_flow::WBPointCloud payload;
+
+    while (!webotsExited_) {
+        // FIXME: 可以修改为信号量触发
+        if (!mid3601_ptr_->checkDataReady()) {
+            timer_ptr_->sleep<microseconds>(5);
+            continue;
+        }
+        sim_data_flow::WBPointCloud payload;
+
+        mid3601_ptr_->getLocalPointCloud(payload);
+        // if (payload.ByteSize() > BP_LIDAR_MSG_BUF) {
+        //     LOG_WARN(
+        //         "%s --> payload bytes size is larger, current = %d, expect =
+        //         ",
+        //         __FUNCTION__, payload.ByteSize(), BP_LIDAR_MSG_BUF);
+        //     continue;
+        // }
+        uint8_t buf[payload.ByteSize()];
+        payload.SerializePartialToArray(buf, payload.ByteSize());
+        ecal_ptr_->send("webot/perception1", buf, payload.ByteSize());
         timer_ptr_->sleep<milliseconds>(90);
     }
     return;
@@ -206,6 +251,12 @@ void NormalSTController::BpReportSpin() {
         //         __FUNCTION__, payload.ByteSize(), BP_LIDAR_MSG_BUF);
         //     continue;
         // }
+        for (int i = 0; i < payload.point_cloud_size(); i++) {
+            if (ReflectorChecker::getInstance()->checkInReflector(
+                    payload.name(), &payload.point_cloud().at(i))) {
+                payload.mutable_point_cloud()->at(i).set_intensity(200);
+            }
+        }
         uint8_t buf[payload.ByteSize()];
         payload.SerializePartialToArray(buf, payload.ByteSize());
         ecal_ptr_->send("webot/pointCloud", buf, payload.ByteSize());

@@ -136,15 +136,53 @@ class ReflectorChecker {
             if (fabs(point.y() - reflector.center.y()) > 1)
                 continue;
 
+            // return true;
             if (isPonitInCube(point, reflector)) {
                 return true;
             }
+            // if (isPointInCube(point, reflector.point_list)) {
+            //     return true;
+            // }
         }
 
         return false;
     }
 
    private:
+    bool isPointInCube(const Eigen::Vector4d &p,
+                       const std::vector<Eigen::Vector4d> &cubeVertices) {
+        // 对于每个轴（立方体的每个边）
+        for (int i = 0; i < 12; i++) {
+            Eigen::Vector4d axis;
+            // 计算轴（立方体的边）
+            if (i < 4) {
+                axis = cubeVertices[i + 1] - cubeVertices[i];
+            } else if (i < 8) {
+                axis = cubeVertices[i - 3] - cubeVertices[i - 4];
+            } else {
+                axis = cubeVertices[i - 8] - cubeVertices[i - 7];
+            }
+
+            // 计算点和立方体在轴上的投影
+            double dotP = dotProduct(p, axis);
+            double minDotCube = dotProduct(cubeVertices[0], axis);
+            double maxDotCube = minDotCube;
+            for (int j = 1; j < 8; j++) {
+                double dotCube = dotProduct(cubeVertices[j], axis);
+                minDotCube = std::min(minDotCube, dotCube);
+                maxDotCube = std::max(maxDotCube, dotCube);
+            }
+
+            // 如果点的投影不在立方体的投影范围内，那么这个点就不在立方体内
+            if (dotP < minDotCube || dotP > maxDotCube) {
+                return false;
+            }
+        }
+
+        // 点在所有轴上的投影都在立方体的投影范围内，所以这个点在立方体内
+        return true;
+    }
+
     bool isPonitInCube(const Eigen::Vector4d &point,
                        const Reflector &reflector) {
         for (int i = 0; i < reflector.axis_list.size(); i++) {
@@ -166,83 +204,3 @@ class ReflectorChecker {
 };
 
 }  // namespace VNSim
-
-// 计算交叉乘积
-// bool isPointInCube(const Eigen::Vector4d &p,
-//                    const std::vector<Eigen::Vector4d> &cubeVertices) {
-//     static bool first = true;
-//     // 对于每个轴（立方体的每个边）
-//     for (int i = 0; i < 12; i++) {
-//         Eigen::Vector4d axis;
-//         // 计算轴（立方体的边）
-//         if (i < 4) {
-//             axis = cubeVertices[i + 1] - cubeVertices[i];
-//         } else if (i < 8) {
-//             axis = cubeVertices[i - 3] - cubeVertices[i - 4];
-//         } else {
-//             axis = cubeVertices[i - 8] - cubeVertices[i - 7];
-//         }
-
-//         // 计算点和立方体在轴上的投影
-//         double dotP = dotProduct(p, axis);
-//         double minDotCube = dotProduct(cubeVertices[0], axis);
-//         double maxDotCube = minDotCube;
-//         for (int j = 1; j < 8; j++) {
-//             double dotCube = dotProduct(cubeVertices[j], axis);
-//             minDotCube = std::min(minDotCube, dotCube);
-//             maxDotCube = std::max(maxDotCube, dotCube);
-//         }
-//         if (first) {
-//             LOG_INFO("min : %.2f", minDotCube);
-//             LOG_INFO("max : %.2f", maxDotCube);
-//         }
-//         // 如果点的投影不在立方体的投影范围内，那么这个点就不在立方体内
-//         if (dotP < minDotCube || dotP > maxDotCube) {
-//             return false;
-//         }
-//     }
-//     first = false;
-
-//     // 点在所有轴上的投影都在立方体的投影范围内，所以这个点在立方体内
-//     return true;
-// }
-
-// double crossProduct(const Eigen::Vector2d &a, const Eigen::Vector2d &b) {
-//         return a.x() * b.y() - a.y() * b.x();
-//     }
-// return true;
-// 检查是否在当前包围盒中
-// Eigen::Vector2d point_xy(point.x(), point.y());
-// Eigen::Vector2d a(reflector.point_list[0].x(),
-//                   reflector.point_list[0].y());
-// Eigen::Vector2d b(reflector.point_list[1].x(),
-//                   reflector.point_list[1].y());
-// Eigen::Vector2d c(reflector.point_list[2].x(),
-//                   reflector.point_list[2].y());
-// Eigen::Vector2d d(reflector.point_list[3].x(),
-//                   reflector.point_list[3].y());
-
-// return isPointInBox(point_xy, a, b, c, d);
-// // }
-
-//   double crossProduct(const Eigen::Vector2d &a, const Eigen::Vector2d &b) {
-//         return a.x() * b.y() - a.y() * b.x();
-//     }
-
-//     // 判断点是否在矩形内
-//     bool isPointInBox(const Eigen::Vector2d &p, const Eigen::Vector2d &a,
-//                       const Eigen::Vector2d &b, const Eigen::Vector2d &c,
-//                       const Eigen::Vector2d &d) {
-//         Eigen::Vector2d ap = p - a;
-//         Eigen::Vector2d bp = p - b;
-//         Eigen::Vector2d cp = p - c;
-//         Eigen::Vector2d dp = p - d;
-
-//         double ab = crossProduct(ap, bp);
-//         double bc = crossProduct(bp, cp);
-//         double cd = crossProduct(cp, dp);
-//         double da = crossProduct(dp, ap);
-
-//         return (ab >= 0 && bc >= 0 && cd >= 0 && da >= 0) ||
-//                (ab <= 0 && bc <= 0 && cd <= 0 && da <= 0);
-//     }
