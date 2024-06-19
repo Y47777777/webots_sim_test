@@ -57,8 +57,6 @@ class ReflectorChecker {
     void copyFrom(std::vector<Reflector> list) {
         reflector_list_ = list;
         LOG_INFO("reflector size: %d", reflector_list_.size());
-        LOG_INFO("reflector point size: %d",
-                 reflector_list_[0].point_list.size());
     }
 
     void setSensorPose(std::string name, foxglove::Pose pose) {
@@ -117,7 +115,9 @@ class ReflectorChecker {
         if (m_sensor_matrix_.find(name) == m_sensor_matrix_.end()) {
             return false;
         }
-
+        if (reflector_list_.empty()) {
+            return false;
+        }
         // 变换至世界
         Eigen::Vector4d point(p->x(), p->y(), p->z(), 1);
         point = m_sensor_matrix_[name] * point;
@@ -145,7 +145,6 @@ class ReflectorChecker {
     }
 
    private:
-   
     bool isPonitInCube(const Eigen::Vector4d &point,
                        const Reflector &reflector) {
         for (int i = 0; i < reflector.axis_list.size(); i++) {
