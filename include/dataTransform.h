@@ -46,8 +46,9 @@ void pbTopb2(const sim_data_flow::WBPointCloud &payload,
     // header
     payload_send.mutable_header()->set_frame_id("");
     payload_send.mutable_header()->set_seq(seq);
-    payload_send.mutable_header()->set_timestamp(Timer::getInstance()->getTimeStamp());
-    // payload.timestamp()
+    // payload_send.mutable_header()->set_timestamp(Timer::getInstance()->getTimeStamp());
+    payload_send.mutable_header()->set_timestamp(payload.timestamp());
+    
     // body
     payload_send.set_height(1);
     payload_send.set_width(point_size);
@@ -78,7 +79,7 @@ void pbTopb2(const sim_data_flow::WBPointCloud &payload,
         float y = payload.point_cloud().at(i).y();
         float z = payload.point_cloud().at(i).z();
         float time = payload.point_cloud().at(i).time();
-        uint32_t intensity = payload.point_cloud().at(i).intensity();
+        float intensity = payload.point_cloud().at(i).intensity();
         if (std::abs(x) != INFINITY && std::abs(y) != INFINITY &&
             std::abs(z) != INFINITY) {
             memcpy(pb_data_ptr + i * PBPOINT_BANDWIDTH, &(x), 4);

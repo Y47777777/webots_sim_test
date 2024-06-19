@@ -70,6 +70,8 @@ void SVCModelSerial::onWebotMsg(const char *topic_name,
             SIM_FAC;
         report_msg_.webot_msg.last_wheel_position = wheel_position;
         report_msg_.webot_msg.wheel_yaw = payload2.steering_theta();
+
+        report_msg_.dataidx_upload = payload2.dataidx_upload();
     }
     this->onUpStreamProcess();
 }
@@ -92,8 +94,8 @@ void SVCModelSerial::onDownStreamProcess(uint8_t *msg, int len) {
     // payload_Down.set_steering_speed(MoveDevice * 2.53807107);
     payload_Down.set_steering_speed(MoveDevice);  // quicker speed
     payload_Down.set_steering_theta(SteeringDevice);
-    LOG_INFO("try update speed = %.8f, yaw angle = %.8f\n", MoveDevice,
-             SteeringDevice);
+    // LOG_INFO("try update speed = %.8f, yaw angle = %.8f\n", MoveDevice,
+    //          SteeringDevice);
     // publish
     payload.SerializePartialToArray(buf, payload.ByteSize());
     ecal_ptr_->send("svc_model_st/P_msg", buf, payload.ByteSize());
@@ -109,12 +111,12 @@ void SVCModelSerial::onDownStreamProcess(uint8_t *msg, int len) {
 
 void SVCModelSerial::onUpStreamProcess() {
     uint16_t battery_device = 100;
-    uint32_t dataidx_upload = report_msg_.dataidx_upload++;
-    if (dataidx_upload == 0) {
-        LOG_INFO("set base timer");
-        Timer::getInstance()->setBaseTime();
-    }
-    
+    uint32_t dataidx_upload = report_msg_.dataidx_upload;
+    // if (dataidx_upload == 0) {
+    //     LOG_INFO("set base timer");
+    //     Timer::getInstance()->setBaseTime();
+    // }
+
     bool fork[2] = {false, false};
     const char Axis[3] = {'X', 'Y', 'Z'};
     uint32_t l_dataidx = 0;
@@ -176,7 +178,7 @@ void SVCModelSerial::onUpStreamProcess() {
     //           l_l
     //           << "," << l_r << "] , forkZ = " << l_forkZ << std::endl;
     // std::cout << "report yaw = " << l_Imu.angle[2] << std::endl;
-    LOG_INFO("report left = %.8f, report right = %.8f\n", l_l, l_r);
+    // LOG_INFO("report left = %.8f, report right = %.8f\n", l_l, l_r);
     const struct Package *pack = encoder_.encodePackage();
     ecal_ptr_->send("Sensor/read", pack->buf, pack->len);
 }

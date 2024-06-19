@@ -57,9 +57,9 @@ NormalSTController::NormalSTController() : BaseController() {
     reflector_check_ptr_->copyFrom(reflector_ptr_->getReflectors());
     reflector_check_ptr_->setSensorMatrix4d("mid360",
                                             mid360_ptr_->getMatrixFromLidar());
-    reflector_check_ptr_->setSensorMatrix4d("mid360Two", 
-                                            mid360Two_ptr_->getMatrixFromLidar());
-                                            
+    reflector_check_ptr_->setSensorMatrix4d(
+        "mid360Two", mid360Two_ptr_->getMatrixFromLidar());
+
     // reflector_check_ptr_->setSensorMatrix4d("BP",
     //                                         BP_ptr_->getMatrixFromLidar());
 
@@ -87,10 +87,6 @@ NormalSTController::NormalSTController() : BaseController() {
     m_thread_.insert(std::pair<std::string, std::thread>(
         "mid360Two_report",
         std::bind(&NormalSTController::Mid360TwoReportSpin, this)));
-
-    // std::thread local_thread(
-    //     std::bind(&NormalSTController::BpReportSpin, this));
-    // m_thread_["bp_report"] = std::move(local_thread);
 
     // ecal_ptr_->addEcal("webot/pointCloud");
     // ecal_ptr_->addEcal("webot/perception");
@@ -147,7 +143,12 @@ void NormalSTController::onRemoteSerialMsg(
 }
 
 void NormalSTController::sendSerialSpin() {
+    // if (dataidx_upload == 0) {
+    //     Timer::getInstance()->setBaseTime();
+    // }
+    std::unique_lock<std::shared_mutex> lock(send_lock_);
     sim_data_flow::PUp payload;
+    payload.set_dataidx_upload(dataidx_upload);
     payload.set_timestamp(timer_ptr_->getTimeStamp());
     payload.set_forkposez(fork_ptr_->getSenosorValue());
     payload.set_steerposition(stree_ptr_->getSenosorValue());
@@ -168,6 +169,8 @@ void NormalSTController::sendSerialSpin() {
 
     payload.SerializePartialToArray(buf, payload.ByteSize());
     ecal_ptr_->send("webot/P_msg", buf, payload.ByteSize());
+    dataidx_upload++;
+    // LOG_INFO("dataidx_upload webots: %d ",dataidx_upload);
 }
 
 void NormalSTController::Mid360ReportSpin() {

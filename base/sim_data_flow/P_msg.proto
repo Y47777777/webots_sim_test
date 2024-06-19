@@ -13,6 +13,7 @@ message PUp{
   double l_wheel = 5;
   double r_wheel = 6;
   double steering_theta = 7;
+  uint32 dataidx_upload = 8;
 }
 
 message PDown{

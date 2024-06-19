@@ -52,7 +52,6 @@ class NormalSTController : public BaseController {
     void Mid360ReportSpin();
     void Mid360TwoReportSpin();
     void sendSerialSpin();
-    
 
    private:
     std::shared_ptr<WLidar> BP_ptr_;
@@ -71,6 +70,8 @@ class NormalSTController : public BaseController {
     sim_data_flow::PUp payload_Up;
     foxglove::Imu payload_imu;
     uint8_t buf[SERIAL_MSG_BUF];
+    uint32_t dataidx_upload = 0;
+    std::shared_mutex send_lock_;
 
    public:
     void onRemoteSerialMsg(const char *topic_name,

@@ -67,10 +67,11 @@ class BaseController : public QThread {
         alarm_.alarmTimerInit(step_duration_);
         elapsed_timer_.restart();
         // SerialElapsedTimer_.restart();
+        Timer::getInstance()->setBaseTime();
         while (supervisor_->step(step_duration_) != -1) {
             uint32_t els =
                 elapsed_timer_.Timer::elapsed<std::chrono::milliseconds>();
-            if (els > step_duration_) {
+            if (els > step_duration_ + 5) {
                 LOG_INFO("step elapsed = %u ms, %s\n", els,
                          (els > step_duration_ ? "BAD" : "GOOD"));
             }
