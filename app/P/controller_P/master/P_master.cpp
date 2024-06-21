@@ -4,9 +4,9 @@
  * @brief 主控 ctrl
  * @version 2.0
  * @date 2024-06-21
- * 
+ *
  * @copyright Copyright (c) 2024
- * 
+ *
  */
 
 #include <ecal/msg/protobuf/publisher.h>
@@ -26,27 +26,20 @@
 using namespace VNSim;
 using namespace webots;
 
-#define BP_LIDAR_MSG_BUF 900000
-#define MAXIMUM_BP_UPLOAD 28800
-#define MAXIMUM_MID360_UPLOAD 20722
-
 // TODO: 构造的位置要想想
 std::shared_ptr<Timer> Timer::instance_ptr_ = nullptr;
 std::shared_ptr<EcalWrapper> EcalWrapper::instance_ptr_ = nullptr;
 std::shared_ptr<ReflectorChecker> ReflectorChecker::instance_ptr_ = nullptr;
 
-NormalSTController::NormalSTController() : BaseController() {
-    // sensor init
+AGVController::AGVController() : BaseController() {
     imu_ptr_ = std::make_shared<WImu>("inertial unit", "gyro", "accelerometer");
     fork_ptr_ = std::make_shared<WFork>("fork height motor");
-    stree_ptr_ =
-        std::make_shared<WWheel>("FL", "SteerWheel", "SteerSolid", "FLWheel");
+    stree_ptr_ = std::make_shared<WWheel>("FL", "SteerWheel", "SteerSolid", "FLWheel");
     l_ptr_ = std::make_shared<WWheel>("", "", "", "RS", "BRPS");
     r_ptr_ = std::make_shared<WWheel>("", "", "", "LS", "BLPS");
 
     pose_ptr_ = std::make_shared<WPose>("RobotNode");
 
-    // TODO: creat task
     v_while_spin_.push_back(bind(&WBase::spin, stree_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, l_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, r_ptr_));
@@ -54,18 +47,18 @@ NormalSTController::NormalSTController() : BaseController() {
     v_while_spin_.push_back(bind(&WBase::spin, imu_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, pose_ptr_));
 
+    // pub
     ecal_ptr_->addEcal("webot/P_msg");
     ecal_ptr_->addEcal("webot/transfer");
 
-    ecal_ptr_->addEcal("svc_model_st/P_msg",
-                       std::bind(&NormalSTController::onRemoteSerialMsg, this,
-                                 std::placeholders::_1, std::placeholders::_2));
+    // sub
+    ecal_ptr_->addEcal("svc_model_st/P_msg", std::bind(&AGVController::onRemoteSerialMsg, this,
+                                                       std::placeholders::_1, std::placeholders::_2));
 }
 
-NormalSTController::~NormalSTController() {}
+AGVController::~AGVController() {}
 
-void NormalSTController::manualSetState(
-    const std::map<std::string, double> &msg) {
+void AGVController::manualSetState(const std::map<std::string, double> &msg) {
     static double steer_speed = 0;
     static double steer_yaw = 0;
     static double fork_speed = 0;
@@ -78,7 +71,7 @@ void NormalSTController::manualSetState(
     }
 }
 
-void NormalSTController::manualGetState(std::map<std::string, double> &msg) {
+void AGVController::manualGetState(std::map<std::string, double> &msg) {
     msg["steer_speed"] = stree_ptr_->getSpeed();
     msg["steer_yaw"] = stree_ptr_->getMotorYaw();
     msg["fork_speed"] = fork_ptr_->getVelocityValue();
@@ -87,33 +80,52 @@ void NormalSTController::manualGetState(std::map<std::string, double> &msg) {
     // TODO: fork_speed real_speed
 }
 
-void NormalSTController::whileSpin() {
-    // 主循环 在super_->step()后
-    this->sendSerialSpin();
+void AGVController::whileSpin() {
+    /* 主循环 在super_->step()后*/
+    // 发送至svc
+    sendSerialSpin();
 
-
+    // 发送至shadow
+    sendTransfer();
 }
 
+void AGVController::sendTransfer() {
+    double *tran = pose_ptr_->getTransfer();
+    double *rotation = pose_ptr_->getRotaion();
 
+    sim_data_flow::Pose pose;
+    pose.mutable_position()->set_x(tran[0]);
+    pose.mutable_position()->set_y(tran[1]);
+    pose.mutable_position()->set_z(tran[2]);
 
-void NormalSTController::onRemoteSerialMsg(
-    const char *topic_name, const eCAL::SReceiveCallbackData *data) {
+    pose.mutable_orientation()->set_x(rotation[0]);
+    pose.mutable_orientation()->set_y(rotation[1]);
+    pose.mutable_orientation()->set_z(rotation[2]);
+    pose.mutable_orientation()->set_w(rotation[3]);
+    pose.set_timestamp(time_stamp_);
+    uint8_t buf[pose.ByteSize()];
+
+    pose.SerializePartialToArray(buf, pose.ByteSize());
+    ecal_ptr_->send("webot/transfer", buf, pose.ByteSize());
+}
+
+void AGVController::onRemoteSerialMsg(const char *topic_name, const eCAL::SReceiveCallbackData *data) {
     if (!isManual_) {
         sim_data_flow::PMsg payload;
         payload.ParseFromArray(data->buf, data->size);
 
-        stree_ptr_->setSpeed(payload.down_msg().steering_speed(),
-                             payload.down_msg().steering_theta());
+        stree_ptr_->setSpeed(payload.down_msg().steering_speed(), payload.down_msg().steering_theta());
         fork_ptr_->setVelocity(payload.down_msg().forkspeedz());
     }
 }
 
-void NormalSTController::sendSerialSpin() {
+void AGVController::sendSerialSpin() {
     sim_data_flow::PUp payload;
 
-    // payload.set_timestamp(time_sys_);
+    payload.set_timestamp(time_stamp_);
     payload.set_forkposez(fork_ptr_->getSenosorValue());
     payload.set_steerposition(stree_ptr_->getSenosorValue());
+
     payload.set_l_wheel(l_ptr_->getWheelArcLength());
     payload.set_r_wheel(r_ptr_->getWheelArcLength());
 

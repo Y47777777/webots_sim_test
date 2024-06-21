@@ -34,14 +34,12 @@ class WWheel : public WBase {
      * @param[raidus]           轮径
      * @param[sensor_name]      positionSensor
      */
-    WWheel(std::string motor_name = "", std::string yaw_node_name = "",
-           std::string solid_name = "", std::string radius_name = "",
-           std::string sensor_name = "")
+    WWheel(std::string motor_name = "", std::string yaw_node_name = "", std::string solid_name = "",
+           std::string radius_name = "", std::string sensor_name = "")
         : WBase() {
         motor_name_ = motor_name;
-        LOG_INFO("init wheel: %s,%s,%s,%s,%s", motor_name.c_str(),
-                 yaw_node_name.c_str(), solid_name.c_str(), radius_name.c_str(),
-                 sensor_name.c_str());
+        LOG_INFO("init wheel: %s,%s,%s,%s,%s", motor_name.c_str(), yaw_node_name.c_str(), solid_name.c_str(),
+                 radius_name.c_str(), sensor_name.c_str());
 
         // creat motor
         motor_ = super_->getMotor(motor_name);
@@ -52,23 +50,16 @@ class WWheel : public WBase {
             LOG_INFO("creat motor: %s", motor_name.c_str());
         }
 
-        // Node *mid360Node = super_->getFromDef(yaw_node_name);
-        // Field *mid360_tf = mid360Node->getField("rotation");
-        // const double *mid360_pose = mid360_tf->getSFRotation();
-
         // creat yaw node
         Node *yaw_node = super_->getFromDef(yaw_node_name);
         if (yaw_node != nullptr) {
             yaw_rotation_ptr_ = yaw_node->getField("rotation");
 
-            memcpy(&set_yaw_rotation_, yaw_rotation_ptr_->getSFRotation(),
-                   4 * sizeof(set_yaw_rotation_[0]));
-            memcpy(&get_yaw_rotation_, set_yaw_rotation_,
-                   4 * sizeof(get_yaw_rotation_[0]));
+            memcpy(&set_yaw_rotation_, yaw_rotation_ptr_->getSFRotation(), 4 * sizeof(set_yaw_rotation_[0]));
+            memcpy(&get_yaw_rotation_, set_yaw_rotation_, 4 * sizeof(get_yaw_rotation_[0]));
 
             LOG_INFO("yaw node :", yaw_node_name.c_str());
-            LOG_INFO("yaw rotation %.3f, %.3f, %.3f, %.3f",
-                     set_yaw_rotation_[0], set_yaw_rotation_[1],
+            LOG_INFO("yaw rotation %.3f, %.3f, %.3f, %.3f", set_yaw_rotation_[0], set_yaw_rotation_[1],
                      set_yaw_rotation_[2], set_yaw_rotation_[3]);
         }
 
@@ -78,19 +69,15 @@ class WWheel : public WBase {
             solid_rotation_ptr_ = soild_node->getField("rotation");
             solid_translation_ptr_ = soild_node->getField("translation");
 
-            memcpy(solid_init_rotation_, solid_rotation_ptr_->getSFRotation(),
-                   4 * sizeof(solid_init_rotation_[0]));
-            memcpy(solid_init_translation_,
-                   solid_translation_ptr_->getSFVec3f(),
+            memcpy(solid_init_rotation_, solid_rotation_ptr_->getSFRotation(), 4 * sizeof(solid_init_rotation_[0]));
+            memcpy(solid_init_translation_, solid_translation_ptr_->getSFVec3f(),
                    3 * sizeof(solid_translation_ptr_[0]));
 
             LOG_INFO("soild node :", solid_name.c_str());
-            LOG_INFO("soild rotation %.3f, %.3f, %.3f, %.3f",
-                     solid_init_rotation_[0], solid_init_rotation_[1],
+            LOG_INFO("soild rotation %.3f, %.3f, %.3f, %.3f", solid_init_rotation_[0], solid_init_rotation_[1],
                      solid_init_rotation_[2], solid_init_rotation_[3]);
 
-            LOG_INFO("soild translation %.3f, %.3f, %.3f",
-                     solid_init_translation_[0], solid_init_translation_[1],
+            LOG_INFO("soild translation %.3f, %.3f, %.3f", solid_init_translation_[0], solid_init_translation_[1],
                      solid_init_translation_[2]);
             // 直接固定旋转轴
             solid_init_rotation_[0] = 0;
@@ -110,16 +97,13 @@ class WWheel : public WBase {
             if (position_sensor_ != nullptr) {
                 position_sensor_->enable(step_duration_);
                 last_pos_sensor_value_ = position_sensor_->getValue();
-                LOG_INFO("creat motor:%s  motor sensor :%s", motor_name.c_str(),
-                         sensor_name.c_str());
+                LOG_INFO("creat motor:%s  motor sensor :%s", motor_name.c_str(), sensor_name.c_str());
             }
         }
 
         // set wheel radius
         if (radius_name != "") {
-            radius_ = super_->getFromDef(radius_name)
-                          ->getField("radius")
-                          ->getSFFloat();
+            radius_ = super_->getFromDef(radius_name)->getField("radius")->getSFFloat();
             LOG_INFO("%s radius :%s", motor_name.c_str(), radius_name.c_str());
         }
     }
@@ -145,6 +129,8 @@ class WWheel : public WBase {
         setYaw(yaw);
     }
 
+
+    // TODO: 这个接口定义的不好，要改一下
     double getWheelArcLength() { return getSenosorValue() * radius_; }
 
     double getSenosorValue() {
@@ -152,16 +138,21 @@ class WWheel : public WBase {
         double result = pos_sensor_value_;
         pos_sensor_value_ = 0;
         return result;
-        // return pos_sensor_value_;
     }
-    double getMotorYaw() {
-        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
-        return get_yaw_rotation_[3];
-    }
+
+    //TODO: 同上
     double getSpeed() {
         std::shared_lock<std::shared_mutex> lock(rw_mutex_);
         return speed_ * radius_;
     }
+
+    double getMotorYaw() {
+        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+        return get_yaw_rotation_[3];
+    }
+
+    
+
     void spin() {
         std::unique_lock<std::shared_mutex> lock(rw_mutex_);
 
@@ -170,7 +161,9 @@ class WWheel : public WBase {
             // 增量式编码器，只计算增量
             double now_value = position_sensor_->getValue();
             double diff = now_value - last_pos_sensor_value_;
-            if (fabs(diff) > 0.00005) {  // 0.000005
+
+            // 死区
+            if (fabs(diff) > 0.00005) {
                 pos_sensor_value_ += diff;
             }
             last_pos_sensor_value_ = now_value;
@@ -185,10 +178,8 @@ class WWheel : public WBase {
             const double *angle = solid_rotation_ptr_->getSFRotation();
 
             // 防止轮子自己动
-            if (fabs(Normalize2(angle[3] - last_rotation_angle)) > 0.005) {
+            if (fabs(angle[3] - last_rotation_angle) > 0.005) {
                 solid_init_rotation_[3] = angle[3];
-                // LOG_INFO("%s, is stay  angle %f", motor_name_.c_str(),
-                //          solid_init_rotation_[3]);
             }
 
             last_rotation_angle = solid_init_rotation_[3];
@@ -203,8 +194,7 @@ class WWheel : public WBase {
         // yaw
         if (yaw_rotation_ptr_) {
             // get
-            memcpy(&get_yaw_rotation_, yaw_rotation_ptr_->getSFRotation(),
-                   4 * sizeof(get_yaw_rotation_[0]));
+            memcpy(&get_yaw_rotation_, yaw_rotation_ptr_->getSFRotation(), 4 * sizeof(get_yaw_rotation_[0]));
 
             // set
             yaw_rotation_ptr_->setSFRotation(set_yaw_rotation_);
@@ -215,7 +205,7 @@ class WWheel : public WBase {
     // motor
     std::string motor_name_;
     Motor *motor_ = nullptr;
-    double speed_ = 0;
+    double speed_ = 0;  //线速度
     double radius_ = 1;
 
     // stree

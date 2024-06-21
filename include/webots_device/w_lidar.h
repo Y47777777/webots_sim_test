@@ -220,8 +220,6 @@ class WLidar : public WBase {
             NRLS_->simulation(webots_points_address_, point_cloud_,
                               lidar_name_);
         } else {
-            // 增加时间戳
-            point_cloud_.set_timestamp(Timer::getInstance()->getTimeStamp());
             point_cloud_.clear_point_cloud();
             point_cloud_.set_name(lidar_name_);
 

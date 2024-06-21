@@ -42,40 +42,18 @@ class WPose : public WBase {
     }
 
     Eigen::Matrix4d getTransferMatrix() {
+        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
         return createTransformMatrix(tf_rotation_, tf_translation_);
     }
 
-    Eigen::Vector3d getTransfer() {
+    double *getTransfer() {
         std::shared_lock<std::shared_mutex> lock(rw_mutex_);
-        Eigen::Vector3d result;
-        result[0] = tf_rotation_[0];
-        result[1] = tf_rotation_[1];
-        result[2] = tf_rotation_[2];
-        return result;
+        return tf_translation_;
     }
 
-    // Eigen::AngleAxisd getAngleAxisd() {
-    //     std::shared_lock<std::shared_mutex> lock(rw_mutex_);
-    //     return rotation_;
-    // }
-
-    // TODO: 这段要改
-    double getVehicleYaw() {
+    double *getRotaion() {
         std::shared_lock<std::shared_mutex> lock(rw_mutex_);
-        // static auto *robot_rot =
-        //     super_->getFromDef("RobotNode_ST")->getField("rotation");
-
-        // auto tmp_r = robot_rot->getSFRotation();
-
-        // Eigen::AngleAxisd tmp_angleaxis(
-        //     tmp_r[3], Eigen::Vector3d(tmp_r[0], tmp_r[1], tmp_r[2]));
-
-        Eigen::AngleAxisd rotation = {
-            tf_rotation_[3],
-            Eigen::Vector3d(tf_rotation_[0], tf_rotation_[1], tf_rotation_[2])};
-
-        Eigen::Vector3d r_eulerangle3 = rotation.matrix().eulerAngles(2, 1, 0);
-        return r_eulerangle3[0];
+        return tf_rotation_;
     }
 
     void spin() {
@@ -91,7 +69,7 @@ class WPose : public WBase {
         tf_rotation_[2] = rotation_address[2];
         tf_rotation_[3] = rotation_address[3];
 
-        ReflectorChecker::getInstance()->setCurPose(this->getTransferMatrix());
+        ReflectorChecker::getInstance()->setCurPose(createTransformMatrix(tf_rotation_, tf_translation_));
     }
 
    private:

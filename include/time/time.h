@@ -31,7 +31,7 @@ class Timer {
     static std::shared_ptr<Timer> getInstance() {
         if (instance_ptr_ == nullptr) {
             instance_ptr_ = std::make_shared<Timer>();
-            instance_ptr_->setBaseTime();
+            // instance_ptr_->setBaseTime();
         }
         return instance_ptr_;
     }
@@ -61,30 +61,13 @@ class Timer {
         std::this_thread::sleep_for(T(time));
     }
 
-    /**
-     * @brief  获取时间戳
-     *
-     * @return 时间戳(微秒)，可以通过 setBaseTime设置起点
-     */
-    uint64_t getTimeStamp() {
-        auto now = std::chrono::system_clock::now();
+    uint64_t getCurrentFromSystem() { return now<microseconds>(); }
 
-        auto time = (now - start_) + base_time;
-        auto time_stamp = std::chrono::duration_cast<microseconds>(time);
+    uint64_t getTimeFromBase(uint64_t now) { return (now - base_time.count() + base_time_offset); }
 
-        return time_stamp.count();
-    }
+    void setBaseTime(uint64_t base) { base_time = microseconds(base); }
 
-    /**
-     * @brief  设置时间戳起点
-     *
-     * @param[base]  起点，默认起点 //beijing time : 2022.01.01 00:00:00; us
-     */
-    void setBaseTime(uint64_t base = 1640966400000000 +
-                                     (long long) 8 * 3600 * 1000000) {
-        start_ = std::chrono::high_resolution_clock::now();
-        base_time = microseconds(base);
-    }
+    void setBaseTimeOffset(uint64_t offset) { base_time_offset = offset; }
 
     void restart() { start_ = std::chrono::high_resolution_clock::now(); }
 
@@ -107,6 +90,7 @@ class Timer {
    private:
     std::chrono::high_resolution_clock::time_point start_;
     microseconds base_time;
+    uint64_t base_time_offset = 1640966400000000 + (long long) 8 * 3600 * 1000000;
 
     std::chrono::system_clock::time_point next_wakeup_;
     int step_duration_ = 0;

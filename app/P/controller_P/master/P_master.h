@@ -4,9 +4,9 @@
  * @brief 主控 ctrl.h
  * @version 2.0
  * @date 2024-06-21
- * 
+ *
  * @copyright Copyright (c) 2024
- * 
+ *
  */
 #pragma once
 #include <thread>
@@ -20,15 +20,12 @@
 #include "webots_device/w_pose.h"
 #include "webots_device/w_reflector.h"
 
-// TODO: 统一该定义
-#define SERIAL_MSG_BUF 256
-
 namespace VNSim {
 
-class NormalSTController : public BaseController {
+class AGVController : public BaseController {
    public:
-    NormalSTController();
-    ~NormalSTController();
+    AGVController();
+    ~AGVController();
 
     // Manual
     virtual void manualSetState(const std::map<std::string, double> &msg);
@@ -48,15 +45,10 @@ class NormalSTController : public BaseController {
     std::shared_ptr<WFork> fork_ptr_;
     std::shared_ptr<WPose> pose_ptr_;
 
-
     sim_data_flow::PMsg payload;
-    sim_data_flow::PUp payload_Up;
-    foxglove::Imu payload_imu;
-  
 
    public:
-    void onRemoteSerialMsg(const char *topic_name,
-                           const eCAL::SReceiveCallbackData *data);
+    void onRemoteSerialMsg(const char *topic_name, const eCAL::SReceiveCallbackData *data);
 };
 
 }  // namespace VNSim

@@ -1,6 +1,5 @@
 syntax = "proto3";
 
-import "google/protobuf/timestamp.proto";
 import "Imu.proto";
 
 package sim_data_flow;
@@ -25,7 +24,6 @@ message PDown{
 
 // A position and orientation for an object or reference frame in 3D space
 message PMsg {
-  google.protobuf.Timestamp timestamp = 1;
   PDown down_msg = 2;
   PUp up_msg = 3;
 }

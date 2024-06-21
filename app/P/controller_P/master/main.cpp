@@ -12,13 +12,10 @@ int main(int argc, char *argv[]) {
     LOG_INFO("log init...");
     QApplication a(argc, argv);
     // init ctrl
-    std::shared_ptr<BaseController> ctrl_ptr =
-        std::make_shared<NormalSTController>();
-    // ctrl_ptr->init() ;
+    std::shared_ptr<BaseController> ctrl_ptr = std::make_shared<AGVController>();
+
     ctrl_ptr->start();
-    LOG_INFO("try start svc_ST");
-    // TODO: start svc_model_ST and close svc_model_ST....
-    system("./svc_P &");
+
     QObject::connect(ctrl_ptr.get(), SIGNAL(finished()), &a, SLOT(quit()));
 
     // init keyboard

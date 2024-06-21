@@ -64,7 +64,7 @@ void KeyboardForm::on_checkBox_stateChanged(int arg1) {
 void KeyboardForm::on_pushButton_speedUp_clicked() {
     double c_value = manual_state_.steer_speed;
     if (c_value < 4) {
-        c_value += 0.5;
+        c_value += 0.2;
     }
     manual_state_.steer_speed = c_value;
     sendMsg();
@@ -78,7 +78,7 @@ void KeyboardForm::on_pushButton_stop_clicked() {
 void KeyboardForm::on_pushButton_speedDown_clicked() {
     double c_value = manual_state_.steer_speed;
     if (c_value > -4) {
-        c_value -= 0.5;
+        c_value -= 0.2;
     }
     manual_state_.steer_speed = c_value;
     sendMsg();
@@ -87,7 +87,7 @@ void KeyboardForm::on_pushButton_speedDown_clicked() {
 void KeyboardForm::on_pushButton_turnLeft_clicked() {
     double c_value = manual_state_.steer_yaw;
     if (c_value < 1.57) {
-        c_value += 0.26;
+        c_value += 0.16;
     }
     if (std::abs(c_value) > 1.57) {
         c_value = 1.57;
@@ -99,7 +99,7 @@ void KeyboardForm::on_pushButton_turnLeft_clicked() {
 void KeyboardForm::on_pushButton_turnRight_clicked() {
     double c_value = manual_state_.steer_yaw;
     if (c_value > -1.57) {
-        c_value -= 0.26;
+        c_value -= 0.16;
     }
     if (std::abs(c_value) > 1.57) {
         c_value = -1.57;
