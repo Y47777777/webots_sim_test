@@ -28,27 +28,28 @@ class AGVController : public BaseController {
     ~AGVController(){};
 
     // Manual
-    virtual void manualSetState(const std::map<std::string, double> &msg);
-    virtual void manualGetState(std::map<std::string, double> &msg);
+    virtual void manualSetState(const std::map<std::string, double> &msg){};
+    virtual void manualGetState(std::map<std::string, double> &msg){};
 
    protected:
     // task
     void whileSpin();
-    void sendSerialSpin();
-    void sendTransfer();
+    void BpReportSpin();
+    void Mid360ReportSpin();
+    void Mid360TwoReportSpin();
+    //  void sendSerialSpin();
 
    private:
-    std::shared_ptr<WImu> imu_ptr_;
-    std::shared_ptr<WWheel> stree_ptr_;
-    std::shared_ptr<WWheel> l_ptr_;
-    std::shared_ptr<WWheel> r_ptr_;
-    std::shared_ptr<WFork> fork_ptr_;
-    std::shared_ptr<WPose> pose_ptr_;
+    std::shared_ptr<WLidar> BP_ptr_;
+    std::shared_ptr<WLidar> mid360_ptr_;
+    std::shared_ptr<WLidar> mid360Two_ptr_;
 
-    sim_data_flow::PMsg payload;
+    std::shared_ptr<WPose> pose_ptr_;
+    std::shared_ptr<WReflector> reflector_ptr_;
+    std::shared_ptr<ReflectorChecker> reflector_check_ptr_;
 
    public:
-    void onRemoteSerialMsg(const char *topic_name, const eCAL::SReceiveCallbackData *data);
+    void TransferCallBack(const char *topic_name, const eCAL::SReceiveCallbackData *data);
 };
 
 }  // namespace VNSim

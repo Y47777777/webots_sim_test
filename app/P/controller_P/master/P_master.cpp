@@ -52,11 +52,9 @@ AGVController::AGVController() : BaseController() {
     ecal_ptr_->addEcal("webot/transfer");
 
     // sub
-    ecal_ptr_->addEcal("svc_model_st/P_msg", std::bind(&AGVController::onRemoteSerialMsg, this,
-                                                       std::placeholders::_1, std::placeholders::_2));
+    ecal_ptr_->addEcal("svc_model_st/P_msg", std::bind(&AGVController::onRemoteSerialMsg, this, std::placeholders::_1,
+                                                       std::placeholders::_2));
 }
-
-AGVController::~AGVController() {}
 
 void AGVController::manualSetState(const std::map<std::string, double> &msg) {
     static double steer_speed = 0;

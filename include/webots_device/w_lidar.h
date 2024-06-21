@@ -14,12 +14,15 @@
 #include <webots/Node.hpp>
 #include <webots/Lidar.hpp>
 
-#include "geometry/geometry.h"
-#include "time/time.h"
-#include "NRLS.h"
-#include "webots_device/w_base.h"
-#include "sim_data_flow/point_cloud.pb.h"
 #include "logvn/logvn.h"
+#include "geometry/geometry.h"
+
+#include "sim_data_flow/point_cloud.pb.h"
+
+#include "webots_device/w_base.h"
+#include "webots_device/w_pose.h"
+
+#include "NRLS.h"
 
 namespace VNSim {
 using namespace webots;
@@ -212,17 +215,19 @@ class WLidar : public WBase {
         if (cur_step_cnt % frequency_cnt_ != 0) {
             return;
         }
+
+        // 开始拷贝数据
         data_is_ready_ = true;
         webots_points_address_ = lidar_->getPointCloud();
+
+        point_cloud_.clear_point_cloud();
+        point_cloud_.set_name(lidar_name_);
+
         if (is_sim_NRLS_) {
             // 模拟非重复线扫
-            point_cloud_.set_name(lidar_name_);
             NRLS_->simulation(webots_points_address_, point_cloud_,
                               lidar_name_);
         } else {
-            point_cloud_.clear_point_cloud();
-            point_cloud_.set_name(lidar_name_);
-
             const LidarPoint *address = webots_points_address_;
             double x = 0;
             double y = 0;

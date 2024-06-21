@@ -5,9 +5,9 @@ import "Vector3.proto";
 
 package sim_data_flow;
 
-// A position and orientation for an object or reference frame in 3D space
+// TODO: 改一个 repeated double的
 message Pose {
-  uint64 timestamp =1;
+  uint64 timestamp = 1;
   // Point denoting position in 3D space
   foxglove.Vector3 position = 2;
 

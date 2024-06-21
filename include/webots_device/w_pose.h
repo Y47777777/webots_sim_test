@@ -56,6 +56,26 @@ class WPose : public WBase {
         return tf_rotation_;
     }
 
+    void setTransfer(double *transfer, double *rotation, uint64_t time_stamp) {
+        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+        had_recive_tran_ = true;
+
+        set_tf_translation_[0] = transfer[0];
+        set_tf_translation_[1] = transfer[1];
+        set_tf_translation_[2] = transfer[2];
+
+        set_tf_rotation_[0] = rotation[0];
+        set_tf_rotation_[1] = rotation[1];
+        set_tf_rotation_[2] = rotation[2];
+        set_tf_rotation_[3] = rotation[3];
+        t_stamp_befoe_set_ = time_stamp;
+    }
+
+    uint64_t getTimeStamp() {
+        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+        return last_time_stamp_;
+    }
+
     void spin() {
         std::unique_lock<std::shared_mutex> lock(rw_mutex_);
         const double *translation_address = translation_ptr_->getSFVec3f();
@@ -70,6 +90,15 @@ class WPose : public WBase {
         tf_rotation_[3] = rotation_address[3];
 
         ReflectorChecker::getInstance()->setCurPose(createTransformMatrix(tf_rotation_, tf_translation_));
+
+        if (had_recive_tran_) {
+            had_recive_tran_ = false;
+            translation_ptr_->setSFVec3f(set_tf_translation_);
+            rotation_ptr_->setSFRotation(set_tf_rotation_);
+
+            last_time_stamp_ = t_stamp_cur_;
+            t_stamp_cur_ = t_stamp_befoe_set_;
+        }
     }
 
    private:
@@ -80,6 +109,16 @@ class WPose : public WBase {
 
     double tf_translation_[3] = {0, 0, 0};
     double tf_rotation_[4] = {0, 0, 1, 0};
+
+    bool had_recive_tran_ = false;
+
+    double set_tf_translation_[3] = {0, 0, 0};
+    double set_tf_rotation_[4] = {0, 0, 1, 0};
+    uint64_t AGVController = 0;
+
+    uint64_t t_stamp_befoe_set_ = 0;  // 收到未设入webots 的webots
+    uint64_t t_stamp_cur_ = 0;
+    uint64_t last_time_stamp_ = 0;
 };
 
 }  // namespace VNSim

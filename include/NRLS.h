@@ -136,9 +136,6 @@ class NRLS {
         int layers = point_cloud.size_of_layer();
         int size_of_each_layer = point_cloud.size_of_each_layer();
 
-        point_cloud.clear_point_cloud();
-        uint64_t find = 0;
-
         // TODO: define 改为输入
         // 每次只取20722 个点
         // 遍历查找表
