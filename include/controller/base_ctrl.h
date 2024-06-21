@@ -25,7 +25,8 @@ namespace VNSim {
 
 class BaseController : public QThread {
    public:
-    explicit BaseController(QObject *parent = nullptr) : QThread{parent} {
+    explicit BaseController(std::string ecal_name, QObject *parent = nullptr)
+        : QThread{parent} {
         supervisor_ = WSupervisor::getSupervisorInstance();
         step_duration_ = supervisor_->getBasicTimeStep();
 
@@ -35,7 +36,7 @@ class BaseController : public QThread {
 
         // 初始化timer
         timer_ptr_ = Timer::getInstance();
-        ecal_ptr_ = EcalWrapper::getInstance("webots_ctrl");
+        ecal_ptr_ = EcalWrapper::getInstance(ecal_name);
     }
 
     // 由base管理线程
@@ -70,7 +71,8 @@ class BaseController : public QThread {
         elapsed_timer_.restart();
 
         // 当前系统时间 + webots增长
-        time_stamp_ = Timer::getInstance()->getCurrentFromSystem() + step_duration_ * 1000;
+        time_stamp_ = Timer::getInstance()->getCurrentFromSystem() +
+                      step_duration_ * 1000;
 
         while (supervisor_->step(step_duration_) != -1) {
             uint32_t els = elapsed_timer_.elapsed<std::chrono::milliseconds>();
@@ -79,7 +81,9 @@ class BaseController : public QThread {
             }
 
             // 循环遍历注册的任务
-            for (int i = 0; i < v_while_spin_.size(); ++i) { v_while_spin_[i](); }
+            for (int i = 0; i < v_while_spin_.size(); ++i) {
+                v_while_spin_[i]();
+            }
 
             // 保证周期为 10ms
             serial_counter_++;
@@ -94,7 +98,8 @@ class BaseController : public QThread {
             alarm_.wait();
 
             // 当前系统时间 + webots增长
-            time_stamp_ = Timer::getInstance()->getCurrentFromSystem() + step_duration_ * 1000;
+            time_stamp_ = Timer::getInstance()->getCurrentFromSystem() +
+                          step_duration_ * 1000;
 
             elapsed_timer_.restart();
         }

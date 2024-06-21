@@ -31,7 +31,7 @@ std::shared_ptr<Timer> Timer::instance_ptr_ = nullptr;
 std::shared_ptr<EcalWrapper> EcalWrapper::instance_ptr_ = nullptr;
 std::shared_ptr<ReflectorChecker> ReflectorChecker::instance_ptr_ = nullptr;
 
-AGVController::AGVController() : BaseController() {
+AGVController::AGVController() : BaseController("webots_shadow_lidar") {
     // BP_ptr_ = std::make_shared<WLidar>("BP", "BP", 50);
     // VertivalFov fov = {.begin = 0, .end = (PI / 2 + 0.1)};
     // BP_ptr_->setFov(fov);
