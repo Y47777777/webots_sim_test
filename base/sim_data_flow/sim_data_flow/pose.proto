@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+import "Quaternion.proto";
+import "Vector3.proto";
+
+package sim_data_flow;
+
+// A position and orientation for an object or reference frame in 3D space
+message Pose {
+  uint64 timestamp =1;
+  // Point denoting position in 3D space
+  foxglove.Vector3 position = 2;
+
+  // Quaternion denoting orientation in 3D space
+  foxglove.Quaternion orientation = 3;
+}
