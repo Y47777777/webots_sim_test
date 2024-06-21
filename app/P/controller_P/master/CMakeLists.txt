@@ -10,9 +10,9 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+set(CONTROL_NAME "master")
 
-# FILE(GLOB src_files ${CMAKE_SOURCE_DIR}/controller_${PROJECT_NAME}/*.c*)
-# FILE(GLOB header_files ${CMAKE_SOURCE_DIR}/controller_${PROJECT_NAME}/*.h*)
+
 file(GLOB src_files "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
 file(GLOB header_files "${CMAKE_CURRENT_SOURCE_DIR}/*.h")
 
@@ -41,15 +41,15 @@ set(CMAKE_INSTALL_RPATH "../../libraries")
 
 set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/../../../../simulation_world/webots/controllers)
 
-set(CONTROLLER_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/controller_${PROJECT_NAME})
+set(CONTROLLER_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}_${CONTROL_NAME})
 
-add_executable(controller_${PROJECT_NAME}
+add_executable(${PROJECT_NAME}_${CONTROL_NAME}
   ${src_files}
   ${header_files}
   #${VN_INCLUDE}/sim_data_flow/ST_msg.pb.cc
 )
 
-set_target_properties(controller_${PROJECT_NAME} PROPERTIES INSTALL_RPATH_USE_LINK_PATH TRUE)
+set_target_properties(${PROJECT_NAME}_${CONTROL_NAME} PROPERTIES INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 include(GNUInstallDirs)
 
@@ -60,7 +60,7 @@ include_directories(${PCL_INCLUDE_DIRS})
 include_directories(${KEYBOARD_INCLUDE})
 include_directories(/usr/local/webots/include/controller/cpp)
 
-target_link_libraries(controller_${PROJECT_NAME}
+target_link_libraries(${PROJECT_NAME}_${CONTROL_NAME}
     ${LIBRARY_INSTALL_DIR}/liblogvn.so # TODO: FIXME: can not execute on ST server
     ${LIBRARY_INSTALL_DIR}/libgeometry.so 
     ${WEBOTSLIB_SO}/libCppController.so
@@ -72,7 +72,7 @@ target_link_libraries(controller_${PROJECT_NAME}
     Qt${QT_VERSION_MAJOR}::Widgets
 )
 
-install(TARGETS controller_${PROJECT_NAME}
+install(TARGETS ${PROJECT_NAME}_${CONTROL_NAME}
 PERMISSIONS
 OWNER_READ
 OWNER_WRITE

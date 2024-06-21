@@ -1,25 +1,14 @@
-/*
- * @Author: weijchen weijchen@visionnav.com
- * @Date: 2024-06-06 15:18:00
- * @LastEditors: weijchen weijchen@visionnav.com
- * @LastEditTime: 2024-06-07 16:22:54
- * @FilePath: /webots_ctrl/app/ST/controller_ST/controller_ST.h
- * @Description:
- *
- * Copyright (c) 2024 by visionnav, All Rights Reserved.
+/**
+ * @file P_master.h
+ * @author weijchen (weijchen@visionnav.com)
+ * @brief 主控 ctrl.h
+ * @version 2.0
+ * @date 2024-06-21
+ * 
+ * @copyright Copyright (c) 2024
+ * 
  */
-/*
- * @Author: weijchen weijchen@visionnav.com
- * @Date: 2024-06-06 15:18:00
- * @LastEditors: weijchen weijchen@visionnav.com
- * @LastEditTime: 2024-06-07 11:36:09
- * @FilePath: /webots_ctrl/app/ST/controller_ST/controller_ST.h
- * @Description:
- *
- * Copyright (c) 2024 by visionnav, All Rights Reserved.
- */
-#ifndef __WEBOTST_HPP__
-#define __WEBOTST_HPP__
+#pragma once
 #include <thread>
 
 #include "sim_data_flow/P_msg.pb.h"
@@ -48,30 +37,22 @@ class NormalSTController : public BaseController {
    protected:
     // task
     void whileSpin();
-    void BpReportSpin();
-    void Mid360ReportSpin();
-    void Mid360TwoReportSpin();
     void sendSerialSpin();
+    void sendTransfer();
 
    private:
-    std::shared_ptr<WLidar> BP_ptr_;
-    std::shared_ptr<WLidar> mid360_ptr_;
-    std::shared_ptr<WLidar> mid360Two_ptr_;
     std::shared_ptr<WImu> imu_ptr_;
     std::shared_ptr<WWheel> stree_ptr_;
     std::shared_ptr<WWheel> l_ptr_;
     std::shared_ptr<WWheel> r_ptr_;
     std::shared_ptr<WFork> fork_ptr_;
     std::shared_ptr<WPose> pose_ptr_;
-    std::shared_ptr<WReflector> reflector_ptr_;
-    std::shared_ptr<ReflectorChecker> reflector_check_ptr_;
+
 
     sim_data_flow::PMsg payload;
     sim_data_flow::PUp payload_Up;
     foxglove::Imu payload_imu;
-    uint8_t buf[SERIAL_MSG_BUF];
-    uint32_t dataidx_upload = 0;
-    std::shared_mutex send_lock_;
+  
 
    public:
     void onRemoteSerialMsg(const char *topic_name,
@@ -79,5 +60,3 @@ class NormalSTController : public BaseController {
 };
 
 }  // namespace VNSim
-
-#endif

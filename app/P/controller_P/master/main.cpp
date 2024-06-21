@@ -1,6 +1,6 @@
 #include <QApplication>
 #include "keyboardform/keyboardform.h"
-#include "controller_P.h"
+#include "P_master.h"
 #include "logvn/logvn.h"
 
 using namespace VNSim;

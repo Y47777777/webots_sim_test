@@ -31,7 +31,7 @@ set(CMAKE_INSTALL_RPATH "../../libraries")
 
 set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/../../../../simulation_world/webots/controllers)
 
-set(CONTROLLER_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/controller_${PROJECT_NAME})
+set(CONTROLLER_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/svc_${PROJECT_NAME})
 
 set(EIGEN_INCLUDE /usr/include/eigen3)
 
