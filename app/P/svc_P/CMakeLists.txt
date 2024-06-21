@@ -3,15 +3,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 
 
-FILE(GLOB src_files ${CMAKE_SOURCE_DIR}/svc_model_${PROJECT_NAME}/*.c*)
-FILE(GLOB header_files ${CMAKE_SOURCE_DIR}/svc_model_${PROJECT_NAME}/*.h*)
+file(GLOB src_files "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
+file(GLOB header_files "${CMAKE_CURRENT_SOURCE_DIR}/*.h")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build/sub_build")
 
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
-# find_package(QT5Widgets)
-# find_package(PCL REQUIRED)
 find_package(eCAL REQUIRED)
 
 
@@ -38,19 +34,15 @@ set(EIGEN_INCLUDE /usr/include/eigen3)
 add_executable(svc_${PROJECT_NAME}
   ${src_files}
   ${header_files}
-
 )
-# add_executable(svc_${PROJECT_NAME}
-#   main_tmp.cpp
-#   process_service_ST.cpp
-# )
+
 set_target_properties(svc_${PROJECT_NAME} PROPERTIES INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 include(GNUInstallDirs)
 
 include_directories(${VN_INCLUDE})
 include_directories(${VN_INCLUDE}/foxglove-vn)
-# include_directories(${CMAKE_SOURCE_DIR}/../../base)
+
 include_directories(${ECAL_INCLUDE_DIRS})
 include_directories(${PCL_INCLUDE_DIRS})
 include_directories(${KEYBOARD_INCLUDE})
@@ -65,8 +57,6 @@ target_link_libraries(svc_${PROJECT_NAME}
     ${LIBRARY_INSTALL_DIR}/libsim_data_flow.a
     ${LIBRARY_INSTALL_DIR}/libgeometry.so 
     eCAL::core
-    Qt${QT_VERSION_MAJOR}::Core 
-    Qt${QT_VERSION_MAJOR}::Widgets
 )
 
 install(TARGETS svc_${PROJECT_NAME}

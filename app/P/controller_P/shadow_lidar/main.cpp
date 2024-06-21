@@ -18,10 +18,6 @@ int main(int argc, char *argv[]) {
 
     QObject::connect(ctrl_ptr.get(), SIGNAL(finished()), &a, SLOT(quit()));
 
-    // init keyboard
-    KeyboardForm f(ctrl_ptr);
-    f.show();
-
     a.exec();
     LOG_INFO("try stop svc_P");
     system("killall svc_P");

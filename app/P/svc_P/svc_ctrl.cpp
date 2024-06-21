@@ -1,14 +1,5 @@
 #include "geometry/geometry.h"
-#include "svc_model_serial.h"
-
-// #define SERIAL_MSG_BUF 128
-#define SIM_FAC 1.06695119
-#define FORK_LIFTUP_HEIGHT 0.085
-#define FORK_LIFTDOWN_HEIGHT 0
-#define HEIGHT_DEVIATION 0.0001
-#define SPEED_REAL_WORLD_TO_SIMULATION 7.8863
-
-enum FORK_STATE { ON_FORK_BOTTOM = 0, ON_FORK_MIDDLE = 1, ON_FORK_TOP = 2 };
+#include "svc_ctrl.h"
 
 using namespace VNSim;
 
@@ -65,14 +56,14 @@ void SVCModelSerial::onWebotMsg(const char *topic_name,
             report_msg_.webot_msg.last_wheel_position = wheel_position;
             rpm_init_ = true;
         }
-        report_msg_.rpm =
-            (wheel_position - report_msg_.webot_msg.last_wheel_position) *
-            SIM_FAC;
+
         report_msg_.webot_msg.last_wheel_position = wheel_position;
         report_msg_.webot_msg.wheel_yaw = payload2.steering_theta();
 
-        report_msg_.dataidx_upload = payload2.dataidx_upload();
+        // report_msg_.dataidx_upload = payload2.dataidx_upload();
     }
+
+    time_stamp = payload2.timestamp();
     this->onUpStreamProcess();
 }
 
@@ -112,10 +103,13 @@ void SVCModelSerial::onDownStreamProcess(uint8_t *msg, int len) {
 void SVCModelSerial::onUpStreamProcess() {
     uint16_t battery_device = 100;
     uint32_t dataidx_upload = report_msg_.dataidx_upload;
-    // if (dataidx_upload == 0) {
-    //     LOG_INFO("set base timer");
-    //     Timer::getInstance()->setBaseTime();
-    // }
+
+    if (dataidx_upload == 0) {
+        // LOG_INFO("set base timer");
+        std::cout << "set base timer " << time_stamp;
+        Timer::getInstance()->setBaseTime(time_stamp);
+    }
+    report_msg_.dataidx_upload++;
 
     bool fork[2] = {false, false};
     const char Axis[3] = {'X', 'Y', 'Z'};

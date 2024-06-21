@@ -13,7 +13,6 @@
 #define __TIME_H__
 #include <chrono>
 #include <thread>
-#include <qelapsedtimer.h>
 
 namespace VNSim {
 

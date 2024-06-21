@@ -1,6 +1,5 @@
 #ifndef __SVC_MODEL_SLAM_LIDAR_H__
 #define __SVC_MODEL_SLAM_LIDAR_H__
-#define DEFAULT_LIDAR_MSG 900000
 
 #include "time/time.h"
 #include "sim_data_flow/point_cloud2.pb.h"
@@ -8,7 +7,7 @@
 #include "svc/base_svc_ctrl.h"
 
 namespace VNSim {
-// This is for BP and mid360
+
 class SVCModelLidar : public BaseSVCModel {
    public:
     SVCModelLidar();
@@ -25,11 +24,7 @@ class SVCModelLidar : public BaseSVCModel {
     void onMid360TwoMsg(const char *topic_name,
                         const eCAL::SReceiveCallbackData *data);
 
-
    private:
-    uint8_t buf_[DEFAULT_LIDAR_MSG];
-    uint8_t buf2_[DEFAULT_LIDAR_MSG];
-    uint8_t buf3_[DEFAULT_LIDAR_MSG];
     uint64_t seq_bp_{0};
     uint64_t seq_mid360_{0};
 };

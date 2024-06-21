@@ -72,6 +72,7 @@ class SVCModelSerial : public BaseSerialSVCModel {
     uint8_t buf[SERIAL_MSG_BUF];
     sim_data_flow::PMsg payload;
     sim_data_flow::PDown payload_Down;
+    uint64_t time_stamp = 0;
 };
 }  // namespace VNSim
 

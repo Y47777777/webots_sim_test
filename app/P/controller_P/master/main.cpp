@@ -25,5 +25,6 @@ int main(int argc, char *argv[]) {
     a.exec();
     LOG_INFO("try stop svc_P");
     system("killall svc_P");
+    
     return 0;
 }

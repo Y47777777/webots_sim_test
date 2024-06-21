@@ -12,8 +12,9 @@
 #include <unistd.h>
 #include <iostream>
 #include "logvn/logvn.h"
-#include "svc_model_serial.h"
-#include "svc_model_slam_lidar.h"
+
+#include "svc_ctrl.h"
+#include "svc_sensor.h"
 
 using namespace VNSim;
 
@@ -22,12 +23,15 @@ int main(int argc, char *argv[]) {
     // TODO: 生成不同的log
     g_Logger.initLog("../../plugins/log_config/general_controller.ini");
     LOG_INFO("start svc_ST");
+
     std::shared_ptr<BaseSVCModel> serial_service =
         std::make_shared<SVCModelSerial>();
     serial_service->init(true, "svc_P");
+
     std::shared_ptr<BaseSVCModel> lidar_service =
         std::make_shared<SVCModelLidar>();
     lidar_service->init(false, "lidar");
+
     bool flag = true;
     // TODO: How to exit
     while (flag) {
