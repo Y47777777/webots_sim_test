@@ -174,7 +174,7 @@ class WLidar : public WBase {
      * @return int 雷达频率
      */
     int getSleepTime() {
-        int sleep = frequency_ - 20;
+        int sleep = frequency_ - 10;
         sleep = sleep < 0 ? 0 : sleep;
         return sleep;
     }

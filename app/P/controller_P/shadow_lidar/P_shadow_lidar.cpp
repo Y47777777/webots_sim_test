@@ -49,6 +49,7 @@ AGVController::AGVController() : BaseController("webots_shadow_lidar") {
 
     // 机器人位姿
     pose_ptr_ = std::make_shared<WPose>("RobotNode");
+    transfer_ptr_ = std::make_shared<WTransfer>();
 
     // 高反
     reflector_ptr_ = std::make_shared<WReflector>("HighReflector");
@@ -67,12 +68,17 @@ AGVController::AGVController() : BaseController("webots_shadow_lidar") {
     v_while_spin_.push_back(bind(&WBase::spin, mid360_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, mid360Two_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, pose_ptr_));
+    v_while_spin_.push_back(bind(&WBase::spin, transfer_ptr_));
 
     ecal_ptr_->addEcal(BP_webots_topic.c_str());
     ecal_ptr_->addEcal(MID360_webots_topic.c_str());
     ecal_ptr_->addEcal(MID360Two_webots_topic.c_str());
 
-    ecal_ptr_->addEcal("webot/robot/transfer",
+    ecal_ptr_->addEcal("webot/pose",
+                       std::bind(&AGVController::poseCallBack, this,
+                                 std::placeholders::_1, std::placeholders::_2));
+
+    ecal_ptr_->addEcal("webot/transfer",
                        std::bind(&AGVController::transferCallBack, this,
                                  std::placeholders::_1, std::placeholders::_2));
 
@@ -90,8 +96,8 @@ void AGVController::whileSpin() {
     // 主循环 在super_->step()后
 }
 
-void AGVController::transferCallBack(const char *topic_name,
-                                     const eCAL::SReceiveCallbackData *data) {
+void AGVController::poseCallBack(const char *topic_name,
+                                 const eCAL::SReceiveCallbackData *data) {
     sim_data_flow::Pose pose;
     pose.ParseFromArray(data->buf, data->size);
 
@@ -101,6 +107,17 @@ void AGVController::transferCallBack(const char *topic_name,
                           pose.orientation().z(), pose.orientation().w()};
 
     pose_ptr_->setTransfer(transfer, rotation, pose.timestamp());
+}
+
+void AGVController::transferCallBack(const char *topic_name,
+                                     const eCAL::SReceiveCallbackData *data) {
+    sim_data_flow::MTransfer transfer;
+    transfer.ParseFromArray(data->buf, data->size);
+    transfer_ptr_->setTransfer(transfer);
+
+    // LOG_INFO("data->size %d", data->size);
+    // LOG_INFO("transfer ByteSize %d", transfer.ByteSize());
+    // LOG_INFO("map size %d", transfer.map().size());
 }
 
 void AGVController::BpReportSpin() {
@@ -133,7 +150,6 @@ bool AGVController::sendPointCloud(std::string topic,
     }
 
     Timer lidar_alarm;
-
     lidar_alarm.alarmTimerInit(lidar_ptr->getSleepTime());
 
     sim_data_flow::WBPointCloud payload;
@@ -152,6 +168,9 @@ bool AGVController::sendPointCloud(std::string topic,
     uint8_t buf[payload.ByteSize()];
     payload.SerializePartialToArray(buf, payload.ByteSize());
     ecal_ptr_->send(topic.c_str(), buf, payload.ByteSize());
+
+    // LOG_INFO("point ByteSize %d", payload.ByteSize());
+    // LOG_INFO("point_cloud size %d", payload.point_cloud().size());
 
     lidar_alarm.wait();
     return true;

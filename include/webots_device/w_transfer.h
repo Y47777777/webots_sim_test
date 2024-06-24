@@ -16,6 +16,7 @@
 
 #include "webots_device/w_base.h"
 #include "logvn/logvn.h"
+#include "sim_data_flow/transfer.pb.h"
 
 namespace VNSim {
 using namespace webots;
@@ -47,29 +48,58 @@ class WTransfer : public WBase {
         LOG_INFO("size of tran map %d", m_tanfer_.size());
     }
 
-    nlohmann::json getTransfer() {
+    void getTransfer(sim_data_flow::MTransfer &tanfer_msgs) {
         std::shared_lock<std::shared_mutex> lock(rw_mutex_);
-        nlohmann::json msg;
 
+        tanfer_msgs.clear_map();
         for (auto it = m_tanfer_.begin(); it != m_tanfer_.end(); ++it) {
-            double *translation = it->second.translation;
-            double *rotation = it->second.rotation;
+            auto ptr = tanfer_msgs.add_map();
+            ptr->set_name(it->first);
 
-            msg[it->first]["translation"]["x"] = translation[0];
-            msg[it->first]["translation"]["y"] = translation[1];
-            msg[it->first]["translation"]["z"] = translation[2];
+            ptr->mutable_translation()->set_x(it->second.translation[0]);
+            ptr->mutable_translation()->set_y(it->second.translation[1]);
+            ptr->mutable_translation()->set_z(it->second.translation[2]);
 
-            msg[it->first]["rotation"]["x"] = rotation[0];
-            msg[it->first]["rotation"]["y"] = rotation[1];
-            msg[it->first]["rotation"]["z"] = rotation[2];
-            msg[it->first]["rotation"]["w"] = rotation[3];
+            ptr->mutable_rotation()->set_x(it->second.rotation[0]);
+            ptr->mutable_rotation()->set_y(it->second.rotation[1]);
+            ptr->mutable_rotation()->set_z(it->second.rotation[2]);
+            ptr->mutable_rotation()->set_w(it->second.rotation[3]);
+
+            // if (it->first == "wall(3)") {
+            //     LOG_INFO("wall(3) tran %.2f, %.2f, %.2f",
+            //              ptr->mutable_translation()->x(),
+            //              ptr->mutable_translation()->y(),
+            //              ptr->mutable_translation()->z());
+            //     LOG_INFO(
+            //         "wall(3) rotation %.2f, %.2f, %.2f, %.2f",
+            //         ptr->mutable_rotation()->x(),
+            //         ptr->mutable_rotation()->y(),
+            //         ptr->mutable_rotation()->z(),
+            //         ptr->mutable_rotation()->w());
+            // }
         }
-
-        return msg;
     }
 
-    void setTransfer(nlohmann::json msg) {
+    void setTransfer(const sim_data_flow::MTransfer &msgs) {
         std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+
+        set_flag = true;
+        for (int i = 0; i < msgs.map().size(); i++) {
+            std::string name = msgs.map().at(i).name();
+            if (m_tanfer_.find(name) == m_tanfer_.end()) {
+                LOG_INFO("can`t find %s", name.c_str());
+                return;
+            }
+
+            m_tanfer_[name].tran_set[0] = msgs.map().at(i).translation().x();
+            m_tanfer_[name].tran_set[1] = msgs.map().at(i).translation().y();
+            m_tanfer_[name].tran_set[2] = msgs.map().at(i).translation().z();
+
+            m_tanfer_[name].rota_set[0] = msgs.map().at(i).rotation().x();
+            m_tanfer_[name].rota_set[1] = msgs.map().at(i).rotation().y();
+            m_tanfer_[name].rota_set[2] = msgs.map().at(i).rotation().z();
+            m_tanfer_[name].rota_set[3] = msgs.map().at(i).rotation().w();
+        }
     }
 
     void spin() {
@@ -92,10 +122,8 @@ class WTransfer : public WBase {
                 const double *rota =
                     it->second.rotation_f_ptr_->getSFRotation();
 
-                memcpy(it->second.translation, tran,
-                       sizeof((*it->second.translation)) * 3);
-                memcpy(it->second.rotation, rota,
-                       sizeof((*it->second.rotation)) * 4);
+                memcpy(it->second.translation, tran, sizeof((*tran)) * 3);
+                memcpy(it->second.rotation, rota, sizeof((*rota)) * 4);
             }
         }
     }

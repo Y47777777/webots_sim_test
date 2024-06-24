@@ -11,7 +11,6 @@
 #pragma once
 #include <thread>
 
-
 #include "controller/base_ctrl.h"
 #include "webots_device/w_lidar.h"
 #include "webots_device/w_pose.h"
@@ -45,10 +44,14 @@ class AGVController : public BaseController {
     std::shared_ptr<WLidar> mid360Two_ptr_;
 
     std::shared_ptr<WPose> pose_ptr_;
+    std::shared_ptr<WTransfer> transfer_ptr_;
     std::shared_ptr<WReflector> reflector_ptr_;
     std::shared_ptr<ReflectorChecker> reflector_check_ptr_;
 
-   public:
+   private:
+    void poseCallBack(const char *topic_name,
+                      const eCAL::SReceiveCallbackData *data);
+
     void transferCallBack(const char *topic_name,
                           const eCAL::SReceiveCallbackData *data);
 };

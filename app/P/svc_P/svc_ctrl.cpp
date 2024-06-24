@@ -85,8 +85,8 @@ void SVCMaster::pubUpStream() {
     uint16_t battery_device = 100;
     encoder_.updateValue2("BatterySencer",      &battery_device,   sizeof(uint16_t));
 
-    double wheel_coder_l = 0;
-    double wheel_coder_r = 0;
+    static double wheel_coder_l = 0;
+    static double wheel_coder_r = 0;
     wheel_coder_l += msg_from_webots_.l_wheel()* 0.5;
     wheel_coder_r += msg_from_webots_.r_wheel()* 0.5;
     encoder_.updateValue ("WheelCoder",          2, wheel_coder_l, wheel_coder_r);

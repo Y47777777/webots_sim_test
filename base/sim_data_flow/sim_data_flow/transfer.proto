@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+
+import "Quaternion.proto";
+import "Vector3.proto";
+
+package sim_data_flow;
+
+message Transfer {
+    // 单点
+    string name = 1;
+    foxglove.Vector3  translation = 2;
+    foxglove.Quaternion rotation = 3;
+}
+  
+message MTransfer
+{
+    repeated Transfer map = 1;
+}

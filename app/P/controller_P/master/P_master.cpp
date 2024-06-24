@@ -93,11 +93,12 @@ void AGVController::whileSpin() {
 }
 
 void AGVController::pubTransferSpin() {
-    // std::string msg_str = transfer_ptr_->getTransfer().dump();
-    // std::vector<uint8_t> buf(msg_str.begin(), msg_str.end());
+    sim_data_flow::MTransfer payload;
+    transfer_ptr_->getTransfer(payload);
 
-    // //publish
-    // ecal_ptr_->send("webot/transfer", buf.data(), buf.size());
+    uint8_t buf[payload.ByteSize()];
+    payload.SerializePartialToArray(buf, payload.ByteSize());
+    ecal_ptr_->send("webot/transfer", buf, payload.ByteSize());
 }
 
 void AGVController::pubRobotPoseSpin() {
@@ -136,7 +137,7 @@ void AGVController::pubSerialSpin() {
     sim_data_flow::PMsgUp payload;
 
     payload.set_timestamp(time_stamp_);
-    payload.set_forkposeZ(fork_ptr_->getSenosorValue());
+    payload.set_forkposez(fork_ptr_->getSenosorValue());
     payload.set_steerposition(stree_ptr_->getSenosorValue());
 
     payload.set_l_wheel(l_ptr_->getWheelArcLength());
