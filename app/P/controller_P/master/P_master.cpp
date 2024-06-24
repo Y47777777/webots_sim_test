@@ -49,7 +49,7 @@ AGVController::AGVController() : BaseController("webots_master") {
 
     // pub
     ecal_ptr_->addEcal("webot/P_msg");
-    ecal_ptr_->addEcal("webot/robot/transfer");
+    ecal_ptr_->addEcal("webot/transfer");
 
     // sub
     ecal_ptr_->addEcal("svc/P_msg",
@@ -84,11 +84,11 @@ void AGVController::whileSpin() {
     // 发送至svc
     pubSerialSpin();
 
-    // 发送至shadow
+    // // 发送至shadow
     pubTransferSpin();
 }
 
-void AGVController::pubSerialSpin() {
+void AGVController::pubTransferSpin() {
     double *tran = pose_ptr_->getTransfer();
     double *rotation = pose_ptr_->getRotaion();
 
@@ -102,8 +102,8 @@ void AGVController::pubSerialSpin() {
     pose.mutable_orientation()->set_z(rotation[2]);
     pose.mutable_orientation()->set_w(rotation[3]);
     pose.set_timestamp(time_stamp_);
-    uint8_t buf[pose.ByteSize()];
 
+    uint8_t buf[pose.ByteSize()];
     pose.SerializePartialToArray(buf, pose.ByteSize());
     ecal_ptr_->send("webot/transfer", buf, pose.ByteSize());
 }
@@ -120,7 +120,7 @@ void AGVController::subPMsgCallBack(const char *topic_name,
     }
 }
 
-void AGVController::pubTransferSpin() {
+void AGVController::pubSerialSpin() {
     sim_data_flow::PMsgUp payload;
 
     payload.set_timestamp(time_stamp_);

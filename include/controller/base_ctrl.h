@@ -76,7 +76,7 @@ class BaseController : public QThread {
 
         while (supervisor_->step(step_duration_) != -1) {
             uint32_t els = elapsed_timer_.elapsed<std::chrono::milliseconds>();
-            if (els > step_duration_ + 5) {
+            if (els > 40) {
                 LOG_INFO("step elapsed = %u ms, BAD\n", els);
             }
 
@@ -95,11 +95,13 @@ class BaseController : public QThread {
             }
 
             // 休眠直到目标时间
+            // 与仿真时间同步
+            time_stamp_ += step_duration_ * 1000;
             alarm_.wait();
 
             // 当前系统时间 + webots增长 TODO: 修改为步长*步数
-            time_stamp_ = Timer::getInstance()->getCurrentFromSystem() +
-                          step_duration_ * 1000;
+            // time_stamp_ = Timer::getInstance()->getCurrentFromSystem() +
+            //               step_duration_ * 1000;
 
             elapsed_timer_.restart();
         }

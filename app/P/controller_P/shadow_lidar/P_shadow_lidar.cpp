@@ -121,14 +121,15 @@ void AGVController::Mid360TwoReportSpin() {
 }
 
 // TODO:可以放到base中
-void AGVController::sendPointCloud(std::string topic,
+bool AGVController::sendPointCloud(std::string topic,
                                    std::shared_ptr<WLidar> lidar_ptr) {
     if (lidar_ptr == nullptr) {
-        return;
+        return false;
     }
 
     if (!lidar_ptr->checkDataReady()) {
-        return;
+        Timer::getInstance()->sleep<microseconds>(5);
+        return false;
     }
 
     Timer lidar_alarm;
@@ -153,4 +154,5 @@ void AGVController::sendPointCloud(std::string topic,
     ecal_ptr_->send(topic.c_str(), buf, payload.ByteSize());
 
     lidar_alarm.wait();
+    return true;
 }

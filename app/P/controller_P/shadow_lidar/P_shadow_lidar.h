@@ -34,12 +34,12 @@ class AGVController : public BaseController {
    protected:
     // task
     void whileSpin();
-    
+
     void BpReportSpin();
     void Mid360ReportSpin();
     void Mid360TwoReportSpin();
 
-    void sendPointCloud(std::string topic,std::shared_ptr<WLidar> lidar_ptr);
+    bool sendPointCloud(std::string topic,std::shared_ptr<WLidar> lidar_ptr);
     
 
    private:
