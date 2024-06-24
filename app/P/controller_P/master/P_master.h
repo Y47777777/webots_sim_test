@@ -34,8 +34,8 @@ class AGVController : public BaseController {
    protected:
     // task
     void whileSpin();
-    void sendSerialSpin();
-    void sendTransfer();
+    void pubSerialSpin();
+    void pubTransferSpin();
 
    private:
     std::shared_ptr<WImu> imu_ptr_;
@@ -45,10 +45,9 @@ class AGVController : public BaseController {
     std::shared_ptr<WFork> fork_ptr_;
     std::shared_ptr<WPose> pose_ptr_;
 
-    sim_data_flow::PMsg payload;
-
    public:
-    void onRemoteSerialMsg(const char *topic_name, const eCAL::SReceiveCallbackData *data);
+    void subPMsgCallBack(const char *topic_name,
+                         const eCAL::SReceiveCallbackData *data);
 };
 
 }  // namespace VNSim

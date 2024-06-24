@@ -97,7 +97,7 @@ class BaseController : public QThread {
             // 休眠直到目标时间
             alarm_.wait();
 
-            // 当前系统时间 + webots增长
+            // 当前系统时间 + webots增长 TODO: 修改为步长*步数
             time_stamp_ = Timer::getInstance()->getCurrentFromSystem() +
                           step_duration_ * 1000;
 

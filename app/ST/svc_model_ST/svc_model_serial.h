@@ -20,16 +20,16 @@
 namespace VNSim {
 // TODO: 删除
 
-class SVCModelSerial : public BaseSerialSVCModel {
+class SVCMaster : public BaseSerialSvc {
     // TODO: 接口说明
    public:
-    SVCModelSerial();
-    ~SVCModelSerial();
+    SVCMaster();
+    ~SVCMaster();
 
    public:
     int onInitService();
-    void onDownStreamProcess(uint8_t *msg, int len);
-    void onUpStreamProcess();
+    void subDownStreamCallBack(uint8_t *msg, int len);
+    void pubUpStream();
 
    public:
     void onWebotMsg(const char *topic_name,

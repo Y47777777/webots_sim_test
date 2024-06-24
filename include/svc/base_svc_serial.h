@@ -16,25 +16,14 @@
 #include "Parser/parser.hpp"
 #include "time/time.h"
 #include "lock/Spinlock.h"
-#include "base_svc_ctrl.h"
+#include "base_svc.h"
 
 namespace VNSim {
 
-class BaseSerialSVCModel : public BaseSVCModel {
-   protected:
-    InputDecoder decoder_;
-    OutputEncoder encoder_;
-    uint64_t lidar_count_;
-    std::thread sensor_msg_report_thread_;  // not lidar, sensors.config
-    std::shared_mutex lock_mutex_;
-
+class BaseSerialSvc : public BaseSvc {
    public:
-    BaseSerialSVCModel() : BaseSVCModel(), lidar_count_(0) {}
-    ~BaseSerialSVCModel() {
-        if (sensor_msg_report_thread_.joinable()) {
-            sensor_msg_report_thread_.join();
-        }
-    }
+    BaseSerialSvc() : BaseSvc() {}
+    ~BaseSerialSvc() {}
 
    protected:
     // TODO: config 路径修改
@@ -68,7 +57,7 @@ class BaseSerialSVCModel : public BaseSVCModel {
                         struct Package pack {
                             (uint8_t *) data->buf, (int) data->size
                         };
-                        this->onDownStreamProcess(
+                        this->subDownStreamCallBack(
                             pack.buf,
                             pack.len);  // user send webot
                                         // in the derive class
@@ -80,7 +69,7 @@ class BaseSerialSVCModel : public BaseSVCModel {
             //     Timer alarm;
             //     alarm.alarmTimerInit(10);
             //     while (!SVCExit_) {
-            //         this->onUpStreamProcess();
+            //         this->pubUpStream();
             //         alarm.wait();
             //     }
             // });
@@ -91,9 +80,20 @@ class BaseSerialSVCModel : public BaseSVCModel {
 
    public:
     virtual int onInitService() = 0;
-    virtual void onDownStreamProcess(uint8_t *msg, int len) = 0;
-    virtual void onUpStreamProcess() = 0;
-};  // namespace VNSim
+    virtual void subDownStreamCallBack(uint8_t *msg, int len) = 0;
+    virtual void pubUpStream() = 0;
+
+   protected:
+    InputDecoder decoder_;
+    OutputEncoder encoder_;
+    std::mutex msgs_lock_;
+
+    // 发送的包数
+    uint32_t dataidx_upload_ = 0;
+    uint32_t dataidx_sub_ = 0;
+    bool first_pub_report_ = true;
+
+};
 }  // namespace VNSim
 
 #endif

@@ -168,6 +168,16 @@ class WLidar : public WBase {
         }
     }
 
+    /**
+     * @brief Get the Frequency object
+     *
+     * @return int 雷达频率
+     */
+    int getSleepTime() {
+        int sleep = frequency_ - 20;
+        sleep = sleep < 0 ? 0 : sleep;
+        return sleep;
+    }
     /*
      * @brief  移动雷达(叉端mid360 随动)
      *

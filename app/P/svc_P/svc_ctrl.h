@@ -1,78 +1,41 @@
-/*
- * @Author: weijchen weijchen@visionnav.com
- * @Date: 2024-06-06 15:18:00
- * @LastEditors: weijchen weijchen@visionnav.com
- * @LastEditTime: 2024-06-07 12:30:40
- * @FilePath: /webots_ctrl/app/ST/svc_model_ST/svc_model_serial.h
- * @Description:
+/**
+ * @file svc_ctrl.h
+ * @author your name (you@domain.com)
+ * @brief
+ * @version 0.1
+ * @date 2024-06-21
  *
- * Copyright (c) 2024 by visionnav, All Rights Reserved.
+ * @copyright Copyright (c) 2024
+ *
  */
 #ifndef __SVC_MODEL_SERIAL_H__
 #define __SVC_MODEL_SERIAL_H__
 
-// #include "foxglove-vn/Speed.pb.h"
 #include "sim_data_flow/P_msg.pb.h"
 #include "svc/base_svc_serial.h"
 
-#define SERIAL_MSG_BUF 128
-
 namespace VNSim {
-// TODO: 删除
 
-class SVCModelSerial : public BaseSerialSVCModel {
+class SVCMaster : public BaseSerialSvc {
     // TODO: 接口说明
    public:
-    SVCModelSerial();
-    ~SVCModelSerial();
-
-   public:
-    int onInitService();
-    void onDownStreamProcess(uint8_t *msg, int len);
-    void onUpStreamProcess();
-
-   public:
-    void onWebotMsg(const char *topic_name,
-                    const eCAL::SReceiveCallbackData *data);
+    SVCMaster();
+    ~SVCMaster();
 
    private:
-    struct Serial_Imu {
-        double angle[3] = {0, 0, 0};
-        double velocity[3] = {0, 0, 0};
-        double acceleration[3] = {0, 0, 0};
-    };
+    int onInitService();
+    void subDownStreamCallBack(uint8_t *msg, int len);
+    void subPMsgCallBack(const char *topic_name,
+                         const eCAL::SReceiveCallbackData *data);
 
-    struct Serial_ForkPose {
-        // double x;
-        // double y;
-        double z = {0};
-        // double raw;
-        // double yaw;
-        // double pitch;
-    };
+    void pubUpStream();
+    void pubPMsgsToWebots();
 
-    struct WebotMsg {
-        struct Serial_Imu imu;
-        struct Serial_ForkPose forkPose;
-        double last_wheel_position = 0;
-        double wheel_yaw = 0;
-        double l_wheel{0};
-        double r_wheel{0};
-    };
+   private:
+    sim_data_flow::PMsgUp   msg_from_webots_;
+    sim_data_flow::PMsgDown msg_to_webots_;
+    struct Package          msgs_from_agv_;
 
-    struct ReportMsg {
-        uint32_t dataidx = 0;
-        uint32_t dataidx_upload = 0;
-        double rpm = 0;
-        // int fork_state = 0;
-        struct WebotMsg webot_msg;
-    };
-    struct ReportMsg report_msg_;
-    bool rpm_init_;
-    uint8_t buf[SERIAL_MSG_BUF];
-    sim_data_flow::PMsg payload;
-    sim_data_flow::PDown payload_Down;
-    uint64_t time_stamp = 0;
 };
 }  // namespace VNSim
 

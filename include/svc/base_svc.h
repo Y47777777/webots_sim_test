@@ -3,7 +3,7 @@
  * @Date: 2024-06-07 17:39:42
  * @LastEditors: weijchen weijchen@visionnav.com
  * @LastEditTime: 2024-06-07 20:03:33
- * @FilePath: /webots_ctrl/include/svc/base_svc_ctrl.h
+ * @FilePath: /webots_ctrl/include/svc/base_svc.h
  * @Description:
  *
  * Copyright (c) 2024 by visionnav, All Rights Reserved.
@@ -14,14 +14,14 @@
 #include <memory>
 #include "ecal_wrapper/ecal_wrapper.h"
 namespace VNSim {
-class BaseSVCModel {
+class BaseSvc {
    protected:
     std::shared_ptr<EcalWrapper> ecal_ptr_;
     bool SVCExit_;
 
    public:
-    BaseSVCModel() : SVCExit_(false) {}
-    virtual ~BaseSVCModel() {}
+    BaseSvc() : SVCExit_(false) {}
+    virtual ~BaseSvc() {}
 
    public:
     int init(bool OnInit, const char *name) {

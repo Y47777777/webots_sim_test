@@ -34,10 +34,10 @@ std::shared_ptr<ReflectorChecker> ReflectorChecker::instance_ptr_ = nullptr;
 AGVController::AGVController() : BaseController("webots_master") {
     imu_ptr_ = std::make_shared<WImu>("inertial unit", "gyro", "accelerometer");
     fork_ptr_ = std::make_shared<WFork>("fork height motor");
-    stree_ptr_ = std::make_shared<WWheel>("FL", "SteerWheel", "SteerSolid", "FLWheel");
+    stree_ptr_ =
+        std::make_shared<WWheel>("FL", "SteerWheel", "SteerSolid", "FLWheel");
     l_ptr_ = std::make_shared<WWheel>("", "", "", "RS", "BRPS");
     r_ptr_ = std::make_shared<WWheel>("", "", "", "LS", "BLPS");
-
     pose_ptr_ = std::make_shared<WPose>("RobotNode");
 
     v_while_spin_.push_back(bind(&WBase::spin, stree_ptr_));
@@ -49,11 +49,12 @@ AGVController::AGVController() : BaseController("webots_master") {
 
     // pub
     ecal_ptr_->addEcal("webot/P_msg");
-    ecal_ptr_->addEcal("webot/transfer");
+    ecal_ptr_->addEcal("webot/robot/transfer");
 
     // sub
-    ecal_ptr_->addEcal("svc_model_st/P_msg", std::bind(&AGVController::onRemoteSerialMsg, this, std::placeholders::_1,
-                                                       std::placeholders::_2));
+    ecal_ptr_->addEcal("svc/P_msg",
+                       std::bind(&AGVController::subPMsgCallBack, this,
+                                 std::placeholders::_1, std::placeholders::_2));
 }
 
 void AGVController::manualSetState(const std::map<std::string, double> &msg) {
@@ -81,13 +82,13 @@ void AGVController::manualGetState(std::map<std::string, double> &msg) {
 void AGVController::whileSpin() {
     /* 主循环 在super_->step()后*/
     // 发送至svc
-    sendSerialSpin();
+    pubSerialSpin();
 
     // 发送至shadow
-    sendTransfer();
+    pubTransferSpin();
 }
 
-void AGVController::sendTransfer() {
+void AGVController::pubSerialSpin() {
     double *tran = pose_ptr_->getTransfer();
     double *rotation = pose_ptr_->getRotaion();
 
@@ -107,18 +108,20 @@ void AGVController::sendTransfer() {
     ecal_ptr_->send("webot/transfer", buf, pose.ByteSize());
 }
 
-void AGVController::onRemoteSerialMsg(const char *topic_name, const eCAL::SReceiveCallbackData *data) {
+void AGVController::subPMsgCallBack(const char *topic_name,
+                                    const eCAL::SReceiveCallbackData *data) {
     if (!isManual_) {
-        sim_data_flow::PMsg payload;
+        sim_data_flow::PMsgDown payload;
         payload.ParseFromArray(data->buf, data->size);
 
-        stree_ptr_->setSpeed(payload.down_msg().steering_speed(), payload.down_msg().steering_theta());
-        fork_ptr_->setVelocity(payload.down_msg().forkspeedz());
+        stree_ptr_->setSpeed(payload.steering_speed(),
+                             payload.steering_theta());
+        fork_ptr_->setVelocity(payload.forkspeedz());
     }
 }
 
-void AGVController::sendSerialSpin() {
-    sim_data_flow::PUp payload;
+void AGVController::pubTransferSpin() {
+    sim_data_flow::PMsgUp payload;
 
     payload.set_timestamp(time_stamp_);
     payload.set_forkposez(fork_ptr_->getSenosorValue());
@@ -129,10 +132,7 @@ void AGVController::sendSerialSpin() {
 
     payload.set_steering_theta(stree_ptr_->getMotorYaw());
 
-    foxglove::Imu *imu = payload.mutable_imu();
-    imu->mutable_orientation()->CopyFrom(imu_ptr_->getInertialValue());
-    imu->mutable_angular_velocity()->CopyFrom(imu_ptr_->getGyroValue());
-    imu->mutable_linear_acceleration()->CopyFrom(imu_ptr_->getAccValue());
+    payload.set_gyroscope(imu_ptr_->getInertialYaw());
 
     uint8_t buf[payload.ByteSize()];
     payload.SerializePartialToArray(buf, payload.ByteSize());

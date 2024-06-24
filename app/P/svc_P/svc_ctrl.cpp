@@ -6,173 +6,99 @@ using namespace VNSim;
 std::shared_ptr<Timer> Timer::instance_ptr_ = nullptr;
 std::shared_ptr<EcalWrapper> EcalWrapper::instance_ptr_ = nullptr;
 
-SVCModelSerial::SVCModelSerial() : BaseSerialSVCModel(), rpm_init_(false) {}
+SVCMaster::SVCMaster() : BaseSerialSvc() {}
 
-SVCModelSerial::~SVCModelSerial() {}
+SVCMaster::~SVCMaster() {}
 
-int SVCModelSerial::onInitService() {
+int SVCMaster::onInitService() {
     // send msg to general
     ecal_ptr_->addEcal("Sensor/read");
+    ecal_ptr_->addEcal("svc/P_msg");
+
     // Receive
     ecal_ptr_->addEcal("webot/P_msg",
-                       std::bind(&SVCModelSerial::onWebotMsg, this,
+                       std::bind(&SVCMaster::subPMsgCallBack, this,
                                  std::placeholders::_1, std::placeholders::_2));
-    ecal_ptr_->addEcal("svc_model_st/P_msg");
-    payload.set_allocated_down_msg(&payload_Down);
-    return 0;
 }
 
-void SVCModelSerial::onWebotMsg(const char *topic_name,
-                                const eCAL::SReceiveCallbackData *data) {
-    sim_data_flow::PUp payload2;
-    payload2.ParseFromArray(data->buf, data->size);
-    foxglove::Imu *imu = payload2.mutable_imu();
-    // use a spin lock to manage data copy
-    // if the time consumption is huge, use a real mutex instead
-    {
-        // std::shared_lock<std::shared_mutex> lock(lock_mutex_);
-        // This period should be locked
-        report_msg_.webot_msg.imu.angle[2] = imu->mutable_orientation()->z();
-        // FIXME: current imu vehicle yaw is not correct, use old function
-        // P车编码器为绝对式
-        // printf("l = %.8f  r = %.8f\n", payload2.l_wheel(),
-        // payload2.r_wheel());
-        report_msg_.webot_msg.l_wheel +=
-            (payload2.l_wheel() * 0.5);  // give arc length
-        report_msg_.webot_msg.r_wheel +=
-            (payload2.r_wheel() * 0.5);  // give arc length
-        report_msg_.webot_msg.forkPose.z = payload2.forkposez();
-        report_msg_.webot_msg.imu.velocity[0] = imu->angular_velocity().x();
-        report_msg_.webot_msg.imu.velocity[1] = imu->angular_velocity().y();
-        report_msg_.webot_msg.imu.velocity[2] = imu->angular_velocity().z();
-        report_msg_.webot_msg.imu.acceleration[0] =
-            imu->linear_acceleration().x();
-        report_msg_.webot_msg.imu.acceleration[1] =
-            imu->linear_acceleration().y();
-        report_msg_.webot_msg.imu.acceleration[2] =
-            imu->linear_acceleration().z();
-        double wheel_position = payload2.steerposition();
-        if (!rpm_init_) {
-            report_msg_.webot_msg.last_wheel_position = wheel_position;
-            rpm_init_ = true;
-        }
+void SVCMaster::subPMsgCallBack(const char *topic_name,
+                                     const eCAL::SReceiveCallbackData *data) {
+    // 反序列化
+    msg_from_webots_.ParseFromArray(data->buf, data->size);
 
-        report_msg_.webot_msg.last_wheel_position = wheel_position;
-        report_msg_.webot_msg.wheel_yaw = payload2.steering_theta();
-
-        // report_msg_.dataidx_upload = payload2.dataidx_upload();
-    }
-
-    time_stamp = payload2.timestamp();
-    this->onUpStreamProcess();
+    // 上报
+    pubUpStream();
 }
 
-void SVCModelSerial::onDownStreamProcess(uint8_t *msg, int len) {
+void SVCMaster::subDownStreamCallBack(uint8_t *msg, int len) {
     struct Package pack {
         msg, len
     };
-    uint32_t data_idx;
+
+    // 解包到decoder_中
+    decoder_.decodePackage(&pack);
+
+    pubPMsgsToWebots();
+}
+
+void SVCMaster::pubPMsgsToWebots(){
     double ForkDeviceZ;
     double SteeringDevice;
     double MoveDevice;
-    decoder_.decodePackage(&pack);
-    decoder_.getValue2("DataIndex", &data_idx, 4);         // store in local
-    decoder_.getValue("MoveDevice", &MoveDevice);          // steer wheel
-    decoder_.getValue("SteeringDevice", &SteeringDevice);  // steer yaw
-    decoder_.getValue("ForkDeviceZ", &ForkDeviceZ);        // fork Speed
-    // type2 ST it will be useful.
-    payload_Down.set_forkspeedz(ForkDeviceZ);
-    // payload_Down.set_steering_speed(MoveDevice * 2.53807107);
-    payload_Down.set_steering_speed(MoveDevice);  // quicker speed
-    payload_Down.set_steering_theta(SteeringDevice);
-    // LOG_INFO("try update speed = %.8f, yaw angle = %.8f\n", MoveDevice,
-    //          SteeringDevice);
-    // publish
-    payload.SerializePartialToArray(buf, payload.ByteSize());
-    ecal_ptr_->send("svc_model_st/P_msg", buf, payload.ByteSize());
+
     {
-        // This period should be locked
-        // std::shared_lock<std::shared_mutex> lock(lock_mutex_);
-        std::unique_lock<std::shared_mutex> lock(lock_mutex_);
-        report_msg_.dataidx = data_idx;
-        // TODO: ？？发布数据直接写入回复？
-        // report_msg_.webot_msg.wheel_yaw = SteeringDevice;
+        // 该数据多线程读写
+        std::lock_guard<std::mutex> lock(msgs_lock_);
+        decoder_.getValue2("DataIndex",     &dataidx_sub_, 4);      // 回报
     }
+
+    decoder_.getValue("MoveDevice",     &MoveDevice);           // steer wheel
+    decoder_.getValue("SteeringDevice", &SteeringDevice);       // steer yaw
+    decoder_.getValue("ForkDeviceZ",    &ForkDeviceZ);          // fork Speed
+
+    msg_to_webots_.set_steering_speed   (MoveDevice);
+    msg_to_webots_.set_steering_theta   (SteeringDevice);
+    msg_to_webots_.set_forkspeedz       (ForkDeviceZ);
+
+    // publish
+    uint8_t buf[msg_to_webots_.ByteSize()];
+    msg_to_webots_.SerializePartialToArray(buf, msg_to_webots_.ByteSize());
+    ecal_ptr_->send("svc/P_msg", buf, msg_to_webots_.ByteSize());
 }
 
-void SVCModelSerial::onUpStreamProcess() {
+void SVCMaster::pubUpStream() {
+    if (first_pub_report_) {
+        // 第一帧发送为 系统 0时
+        Timer::getInstance()->setBaseTime(msg_from_webots_.timestamp());
+        first_pub_report_ = false;
+        LOG_INFO("set base timer %d", Timer::getInstance()->getBaseTime());
+    }
+
+    // 数据转换
+    encoder_.updateValue ("IncrementalSteeringCoder",   1, msg_from_webots_.steering_theta());
+    encoder_.updateValue ("Gyroscope",                  1, msg_from_webots_.gyroscope());
+    encoder_.updateValue ("HeightCoder",                1, msg_from_webots_.forkposez());
+    encoder_.updateValue ("ForkDisplacementSencerZ",    1, msg_from_webots_.forkposez()); //TODO: ?两个一样的？
+    encoder_.updateValue2("DataIndex",                  &dataidx_upload_,  sizeof(uint32_t));
+
     uint16_t battery_device = 100;
-    uint32_t dataidx_upload = report_msg_.dataidx_upload;
+    encoder_.updateValue2("BatterySencer",      &battery_device,   sizeof(uint16_t));
 
-    if (dataidx_upload == 0) {
-        // LOG_INFO("set base timer");
-        std::cout << "set base timer " << time_stamp;
-        Timer::getInstance()->setBaseTime(time_stamp);
-    }
-    report_msg_.dataidx_upload++;
+    double wheel_coder_l = 0;
+    double wheel_coder_r = 0;
+    wheel_coder_l += msg_from_webots_.l_wheel()* 0.5;
+    wheel_coder_r += msg_from_webots_.r_wheel()* 0.5;
+    encoder_.updateValue ("WheelCoder",          2, wheel_coder_l, wheel_coder_r);
 
-    bool fork[2] = {false, false};
-    const char Axis[3] = {'X', 'Y', 'Z'};
-    uint32_t l_dataidx = 0;
-    double l_steer_yaw = 0;
-    // double l_rpm = 0;
-    double l_l = 0;
-    double l_r = 0;
-    double l_forkZ = 0;
-    struct Serial_Imu l_Imu;
+    
     {
-        std::unique_lock<std::shared_mutex> lock(lock_mutex_);
-        l_dataidx = report_msg_.dataidx;
-    }
-    {
-        // This period should be locked
-        // std::unique_lock<std::shared_mutex> lock(lock_mutex_);
-        // l_dataidx = report_msg_.dataidx;
-        l_steer_yaw = report_msg_.webot_msg.wheel_yaw;
-        l_l = report_msg_.webot_msg.l_wheel;
-        l_r = report_msg_.webot_msg.r_wheel;
-        // l_rpm = report_msg_.rpm;
-        // 38 is down, 39 is up
-        // if (report_msg_.fork_state == int(FORK_STATE::ON_FORK_TOP)) {
-        //     fork[1] = true;
-        // } else if (report_msg_.fork_state == int(FORK_STATE::ON_FORK_BOTTOM))
-        // {
-        //     fork[0] = true;
-        // }
-        l_forkZ = report_msg_.webot_msg.forkPose.z;
-        l_Imu.angle[2] = report_msg_.webot_msg.imu.angle[2];
-
-        for (int i = 0; i < 3; i++) {
-            l_Imu.acceleration[i] = report_msg_.webot_msg.imu.acceleration[i];
-            l_Imu.velocity[i] = report_msg_.webot_msg.imu.velocity[i];
-        }
+        // 该数据多线程读写
+        std::lock_guard<std::mutex> lock(msgs_lock_);
+        encoder_.updateValue2("DataIndexReturn",            &dataidx_sub_,     sizeof(uint32_t));
     }
 
-    // Data to Upload
-    std::string Imu_Function = "";
-    encoder_.updateValue("IncrementalSteeringCoder", 1, l_steer_yaw);
-    encoder_.updateValue("Gyroscope", 1, l_Imu.angle[2]);
-    // encoder_.updateValue("RPMSensor", 1, l_rpm);
-    encoder_.updateValue2("BatterySencer", &battery_device, sizeof(uint16_t));
-    encoder_.updateValue2("DataIndex", &dataidx_upload, sizeof(uint32_t));
-    encoder_.updateValue2("DataIndexReturn", &l_dataidx, sizeof(uint32_t));
-    encoder_.updateValue("WheelCoder", 2, l_l, l_r);
-    encoder_.updateValue("HeightCoder", 1, l_forkZ);
-    encoder_.updateValue("ForkDisplacementSencerZ", 1, l_forkZ);
-    // for (int i = 0; i < 2; i++)
-    //     encoder_.updateSwitchValue("SwitchSencer", 38 + i, fork[i]);
-    // for (int i = 0; i < 3; i++) {
-    //     Imu_Function = "Accelerometer" + std::string(&Axis[i]);
-    //     encoder_.updateValue(Imu_Function.c_str(), 1, l_Imu.acceleration[i]);
-    //     Imu_Function = "AngularVelocitySensor" + std::string(&Axis[i]);
-    //     encoder_.updateValue(Imu_Function.c_str(), 1, l_Imu.velocity[i]);
-    // }
-    // std::cout << "l_steer_yaw = " << l_steer_yaw
-    //           << ", Gyroscope = " << l_Imu.angle[2] << ", WheelCoder = [" <<
-    //           l_l
-    //           << "," << l_r << "] , forkZ = " << l_forkZ << std::endl;
-    // std::cout << "report yaw = " << l_Imu.angle[2] << std::endl;
-    // LOG_INFO("report left = %.8f, report right = %.8f\n", l_l, l_r);
     const struct Package *pack = encoder_.encodePackage();
     ecal_ptr_->send("Sensor/read", pack->buf, pack->len);
+
+    dataidx_upload_++;
 }

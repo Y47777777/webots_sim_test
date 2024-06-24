@@ -15,19 +15,19 @@ using namespace VNSim;
 #define MAXIMUM_BP_UPLOAD 28800
 #define MAXIMUM_MID360_UPLOAD 20722
 
-SVCModelLidar::SVCModelLidar() : BaseSVCModel() {}
+SVCShadow::SVCShadow() : BaseSvc() {}
 
-SVCModelLidar::~SVCModelLidar() {}
+SVCShadow::~SVCShadow() {}
 
-int SVCModelLidar::initService() {
+int SVCShadow::initService() {
     ecal_ptr_->addEcal("webot/pointCloud",
-                       std::bind(&SVCModelLidar::onBpMsg, this,
+                       std::bind(&SVCShadow::onBpMsg, this,
                                  std::placeholders::_1, std::placeholders::_2));
     ecal_ptr_->addEcal("webot/perception",
-                       std::bind(&SVCModelLidar::onMid360Msg, this,
+                       std::bind(&SVCShadow::onMid360Msg, this,
                                  std::placeholders::_1, std::placeholders::_2));
     ecal_ptr_->addEcal("webot/perception1",
-                       std::bind(&SVCModelLidar::onMid360TwoMsg, this,
+                       std::bind(&SVCShadow::onMid360TwoMsg, this,
                                  std::placeholders::_1, std::placeholders::_2));
 
     ecal_ptr_->addEcal("192.168.1.55");
@@ -36,7 +36,7 @@ int SVCModelLidar::initService() {
     return 0;
 }
 
-void SVCModelLidar::onMid360Msg(const char *topic_name,
+void SVCShadow::onMid360Msg(const char *topic_name,
                                 const eCAL::SReceiveCallbackData *data) {
     sim_data_flow::WBPointCloud payload;
     pb::PointCloud2 payload_send;
@@ -49,7 +49,7 @@ void SVCModelLidar::onMid360Msg(const char *topic_name,
     ecal_ptr_->send("mid360pub", buf2_, payload_send.ByteSize());
 }
 
-void SVCModelLidar::onMid360TwoMsg(const char *topic_name,
+void SVCShadow::onMid360TwoMsg(const char *topic_name,
                                    const eCAL::SReceiveCallbackData *data) {
     sim_data_flow::WBPointCloud payload;
     pb::PointCloud2 payload_send;
@@ -63,7 +63,7 @@ void SVCModelLidar::onMid360TwoMsg(const char *topic_name,
     ecal_ptr_->send("mid360pub1", buf2, payload_send.ByteSize());
 }
 
-void SVCModelLidar::onBpMsg(const char *topic_name,
+void SVCShadow::onBpMsg(const char *topic_name,
                             const eCAL::SReceiveCallbackData *data) {
     // directly send the msg to slam..., try...
     sim_data_flow::WBPointCloud payload;

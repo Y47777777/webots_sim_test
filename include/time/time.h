@@ -66,6 +66,8 @@ class Timer {
 
     void setBaseTime(uint64_t base) { base_time = microseconds(base); }
 
+    uint64_t getBaseTime(){return base_time.count();}
+
     void setBaseTimeOffset(uint64_t offset) { base_time_offset = offset; }
 
     void restart() { start_ = std::chrono::high_resolution_clock::now(); }

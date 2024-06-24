@@ -34,10 +34,13 @@ class AGVController : public BaseController {
    protected:
     // task
     void whileSpin();
+    
     void BpReportSpin();
     void Mid360ReportSpin();
     void Mid360TwoReportSpin();
-    //  void sendSerialSpin();
+
+    void sendPointCloud(std::string topic,std::shared_ptr<WLidar> lidar_ptr);
+    
 
    private:
     std::shared_ptr<WLidar> BP_ptr_;
@@ -49,7 +52,7 @@ class AGVController : public BaseController {
     std::shared_ptr<ReflectorChecker> reflector_check_ptr_;
 
    public:
-    void TransferCallBack(const char *topic_name, const eCAL::SReceiveCallbackData *data);
+    void transferCallBack(const char *topic_name, const eCAL::SReceiveCallbackData *data);
 };
 
 }  // namespace VNSim

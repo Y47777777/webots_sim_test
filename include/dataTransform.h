@@ -33,12 +33,10 @@ struct PointFieldBw {
  *
  * @param payload
  * @param payload_send
- * @param total_lidar_point TODO:??
  * @param seq
  */
 void pbTopb2(const sim_data_flow::WBPointCloud &payload,
-             pb::PointCloud2 &payload_send, uint32_t total_lidar_point,
-             uint64_t seq) {
+             pb::PointCloud2 &payload_send, uint64_t seq) {
     uint64_t point_size = payload.point_cloud().size();
     std::vector<PointFieldBw> PointField{
         {"x", 4, 7, 1},         {"y", 4, 7, 1},     {"z", 4, 7, 1},
@@ -48,7 +46,7 @@ void pbTopb2(const sim_data_flow::WBPointCloud &payload,
     payload_send.mutable_header()->set_seq(seq);
     // payload_send.mutable_header()->set_timestamp(Timer::getInstance()->getTimeStamp());
     // payload_send.mutable_header()->set_timestamp(payload.timestamp());
-    
+
     // body
     payload_send.set_height(1);
     payload_send.set_width(point_size);
@@ -73,7 +71,7 @@ void pbTopb2(const sim_data_flow::WBPointCloud &payload,
     payload_send.mutable_data()->resize(PBPOINT_BANDWIDTH * (point_size));
     char *pb_data_ptr = &((*payload_send.mutable_data())[0]);
     int label = 8;
-    
+
     for (int i = 0; i < point_size; i++) {
         float x = payload.point_cloud().at(i).x();
         float y = payload.point_cloud().at(i).y();

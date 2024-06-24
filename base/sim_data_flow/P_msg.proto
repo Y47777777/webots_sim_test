@@ -1,14 +1,12 @@
 syntax = "proto3";
 
-import "google/protobuf/timestamp.proto";
-import "Imu.proto";
 
 package sim_data_flow;
 
-message PUp{
+message PMsgUp{
   uint64 timestamp = 1;
-  foxglove.Imu imu = 2;
-  double forkposeZ = 3;
+  double gyroscope = 2;
+  double forkposez = 3;
   double steerPosition = 4;
   double l_wheel = 5;
   double r_wheel = 6;
@@ -16,16 +14,11 @@ message PUp{
   uint32 dataidx_upload = 8;
 }
 
-message PDown{
+message PMsgDown{
   uint64 timestamp = 1;
   double steering_theta = 2;
   double steering_speed = 3;
   double forkspeedZ = 4;
 }
 
-// A position and orientation for an object or reference frame in 3D space
-message PMsg {
-  google.protobuf.Timestamp timestamp = 1;
-  PDown down_msg = 2;
-  PUp up_msg = 3;
-}
+

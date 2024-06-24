@@ -14,23 +14,23 @@ using namespace VNSim;
 std::shared_ptr<Timer> Timer::instance_ptr_ = nullptr;
 std::shared_ptr<EcalWrapper> EcalWrapper::instance_ptr_ = nullptr;
 
-SVCModelSerial::SVCModelSerial() : BaseSerialSVCModel(), rpm_init_(false) {}
+SVCMaster::SVCMaster() : BaseSerialSvc(), rpm_init_(false) {}
 
-SVCModelSerial::~SVCModelSerial() {}
+SVCMaster::~SVCMaster() {}
 
-int SVCModelSerial::onInitService() {
+int SVCMaster::onInitService() {
     // send msg to general
     ecal_ptr_->addEcal("Sensor/read");
     // Receive
     ecal_ptr_->addEcal("webot/ST_msg",
-                       std::bind(&SVCModelSerial::onWebotMsg, this,
+                       std::bind(&SVCMaster::onWebotMsg, this,
                                  std::placeholders::_1, std::placeholders::_2));
     ecal_ptr_->addEcal("svc_model_st/ST_msg");
     payload.set_allocated_down_msg(&payload_Down);
     return 0;
 }
 
-void SVCModelSerial::onWebotMsg(const char *topic_name,
+void SVCMaster::onWebotMsg(const char *topic_name,
                                 const eCAL::SReceiveCallbackData *data) {
     sim_data_flow::STUp payload2;
     payload2.ParseFromArray(data->buf, data->size);
@@ -80,7 +80,7 @@ void SVCModelSerial::onWebotMsg(const char *topic_name,
     }
 }
 
-void SVCModelSerial::onDownStreamProcess(uint8_t *msg, int len) {
+void SVCMaster::subDownStreamCallBack(uint8_t *msg, int len) {
     struct Package pack {
         msg, len
     };
@@ -110,7 +110,7 @@ void SVCModelSerial::onDownStreamProcess(uint8_t *msg, int len) {
     }
 }
 
-void SVCModelSerial::onUpStreamProcess() {
+void SVCMaster::pubUpStream() {
     uint16_t battery_device = 100;
     uint32_t dataidx_upload = report_msg_.dataidx_upload++;
     bool fork[2] = {false, false};

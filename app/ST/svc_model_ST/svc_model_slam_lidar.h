@@ -5,14 +5,14 @@
 #include "time/time.h"
 #include "sim_data_flow/point_cloud2.pb.h"
 #include "sim_data_flow/point_cloud.pb.h"
-#include "svc/base_svc_ctrl.h"
+#include "svc/base_svc.h"
 
 namespace VNSim {
 // This is for BP and mid360
-class SVCModelLidar : public BaseSVCModel {
+class SVCShadow : public BaseSvc {
    public:
-    SVCModelLidar();
-    ~SVCModelLidar();
+    SVCShadow();
+    ~SVCShadow();
 
    public:
     int initService();

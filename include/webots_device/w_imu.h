@@ -49,7 +49,7 @@ class WImu : public WBase {
     foxglove::Vector3 getGyroValue() {
         std::shared_lock<std::shared_mutex> lock(rw_mutex_);
         foxglove::Vector3 result;
-        getData(result, gyro_);
+        getVector3(result, gyro_);
 
         return result;
     }
@@ -57,40 +57,33 @@ class WImu : public WBase {
     foxglove::Vector3 getAccValue() {
         std::shared_lock<std::shared_mutex> lock(rw_mutex_);
         foxglove::Vector3 result;
-        getData(result, acc_);
+        getVector3(result, acc_);
 
         return result;
     }
 
-    foxglove::Quaternion getInertialValue() {
-        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
-        foxglove::Quaternion result;
-        getRollPitchYaw(result);
-        return result;
-    }
+    // foxglove::Quaternion getInertialValue() {
+    //     std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+    //     foxglove::Quaternion result;
+    //     getRollPitchYaw(result);
+    //     return result;
+    // }
+
+    double getInertialYaw() { return angles_[2]; }
 
     void spin() {
         std::unique_lock<std::shared_mutex> lock(rw_mutex_);
         memcpy(gyro_.data(), gyro_ptr_->getValues(), 3 * sizeof(gyro_[0]));
         memcpy(acc_.data(), acc_ptr_->getValues(), 3 * sizeof(acc_[0]));
-        const double *angle_ptr = inertial_unit_ptr_->getRollPitchYaw();
-        for (int i = 0; i < 3; i++) angles_[i] = angle_ptr[i];
-        // memcpy(quaternion_.data(), inertial_unit_ptr_->getQuaternion(),
-        //        3 * sizeof(quaternion_[0]));
-        // FIXME: current imu vehicle yaw is not correct, use old function
+        memcpy(angles_.data(), acc_ptr_->getValues(), 3 * sizeof(acc_[0]));
     }
 
    private:
-    void getData(foxglove::Vector3 &result, const std::vector<double> &source) {
+    void getVector3(foxglove::Vector3 &result,
+                    const std::vector<double> &source) {
         result.set_x(source[0]);
         result.set_y(source[1]);
         result.set_z(source[2]);
-    }
-
-    void getRollPitchYaw(foxglove::Quaternion &result) {
-        result.set_x(angles_[0]);
-        result.set_y(angles_[1]);
-        result.set_z(angles_[2]);
     }
 
    private:
@@ -103,7 +96,7 @@ class WImu : public WBase {
     std::vector<double> gyro_ = std::vector<double>(3);
     std::vector<double> acc_ = std::vector<double>(3);
     // std::vector<double> quaternion_ = std::vector<double>(4);
-    std::vector<double> angles_ = {0, 0, 0};  // Roll, Pitch, Yaw
+    std::vector<double> angles_ = std::vector<double>(3);  // Roll, Pitch, Yaw
 };
 
 }  // namespace VNSim
