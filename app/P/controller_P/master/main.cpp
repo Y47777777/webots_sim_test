@@ -8,7 +8,8 @@ using namespace VNSim;
 int main(int argc, char *argv[]) {
     // init glog
     // TODO:FIXME path....
-    g_Logger.initLog("../../plugins/log_config/general_controller.ini");
+    g_Logger.initLog("../../plugins/log_config/webots_master.ini");
+    
     LOG_INFO("log init...");
     QApplication a(argc, argv);
     // init ctrl

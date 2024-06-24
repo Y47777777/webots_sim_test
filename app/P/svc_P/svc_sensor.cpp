@@ -45,11 +45,13 @@ int SVCShadow::initService() {
     ecal_ptr_->addEcal(MID360Two_webots_topic.c_str(),
                        std::bind(&SVCShadow::onMid360TwoMsg, this,
                                  std::placeholders::_1, std::placeholders::_2));
+
+    return 0;
 }
 
 // TODO: 是不是可以归一成一条函数(如何避免多线程？)
 void SVCShadow::onMid360Msg(const char *topic_name,
-                                const eCAL::SReceiveCallbackData *data) {
+                            const eCAL::SReceiveCallbackData *data) {
     sim_data_flow::WBPointCloud payload;
     pb::PointCloud2 payload_send;
     payload.ParseFromArray(data->buf, data->size);
@@ -62,7 +64,7 @@ void SVCShadow::onMid360Msg(const char *topic_name,
 }
 
 void SVCShadow::onMid360TwoMsg(const char *topic_name,
-                                   const eCAL::SReceiveCallbackData *data) {
+                               const eCAL::SReceiveCallbackData *data) {
     sim_data_flow::WBPointCloud payload;
     pb::PointCloud2 payload_send;
     payload.ParseFromArray(data->buf, data->size);
@@ -75,7 +77,7 @@ void SVCShadow::onMid360TwoMsg(const char *topic_name,
 }
 
 void SVCShadow::onBpMsg(const char *topic_name,
-                            const eCAL::SReceiveCallbackData *data) {
+                        const eCAL::SReceiveCallbackData *data) {
     // directly send the msg to slam..., try...
     sim_data_flow::WBPointCloud payload;
     pb::PointCloud2 payload_send;

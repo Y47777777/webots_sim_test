@@ -11,7 +11,7 @@ SVCMaster::SVCMaster() : BaseSerialSvc() {}
 SVCMaster::~SVCMaster() {}
 
 int SVCMaster::onInitService() {
-    // send msg to general
+    // publisher
     ecal_ptr_->addEcal("Sensor/read");
     ecal_ptr_->addEcal("svc/P_msg");
 
@@ -19,6 +19,7 @@ int SVCMaster::onInitService() {
     ecal_ptr_->addEcal("webot/P_msg",
                        std::bind(&SVCMaster::subPMsgCallBack, this,
                                  std::placeholders::_1, std::placeholders::_2));
+    return 0;
 }
 
 void SVCMaster::subPMsgCallBack(const char *topic_name,

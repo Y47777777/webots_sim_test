@@ -39,6 +39,7 @@ AGVController::AGVController() : BaseController("webots_master") {
     l_ptr_ = std::make_shared<WWheel>("", "", "", "RS", "BRPS");
     r_ptr_ = std::make_shared<WWheel>("", "", "", "LS", "BLPS");
     pose_ptr_ = std::make_shared<WPose>("RobotNode");
+    transfer_ptr_ = std::make_shared<WTransfer>();
 
     v_while_spin_.push_back(bind(&WBase::spin, stree_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, l_ptr_));
@@ -46,10 +47,12 @@ AGVController::AGVController() : BaseController("webots_master") {
     v_while_spin_.push_back(bind(&WBase::spin, fork_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, imu_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, pose_ptr_));
+    v_while_spin_.push_back(bind(&WBase::spin, transfer_ptr_));
 
     // pub
     ecal_ptr_->addEcal("webot/P_msg");
     ecal_ptr_->addEcal("webot/transfer");
+    ecal_ptr_->addEcal("webot/pose");
 
     // sub
     ecal_ptr_->addEcal("svc/P_msg",
@@ -84,11 +87,20 @@ void AGVController::whileSpin() {
     // 发送至svc
     pubSerialSpin();
 
-    // // 发送至shadow
+    // 发送至shadow
+    pubRobotPoseSpin();
     pubTransferSpin();
 }
 
 void AGVController::pubTransferSpin() {
+    std::string msg_str = transfer_ptr_->getTransfer().dump();
+    std::vector<uint8_t> buf(msg_str.begin(), msg_str.end());
+
+    //publish
+    ecal_ptr_->send("webot/transfer", buf.data(), buf.size());
+}
+
+void AGVController::pubRobotPoseSpin() {
     double *tran = pose_ptr_->getTransfer();
     double *rotation = pose_ptr_->getRotaion();
 
@@ -105,7 +117,7 @@ void AGVController::pubTransferSpin() {
 
     uint8_t buf[pose.ByteSize()];
     pose.SerializePartialToArray(buf, pose.ByteSize());
-    ecal_ptr_->send("webot/transfer", buf, pose.ByteSize());
+    ecal_ptr_->send("webot/pose", buf, pose.ByteSize());
 }
 
 void AGVController::subPMsgCallBack(const char *topic_name,

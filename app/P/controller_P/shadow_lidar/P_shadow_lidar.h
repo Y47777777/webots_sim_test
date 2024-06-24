@@ -11,14 +11,12 @@
 #pragma once
 #include <thread>
 
-#include "sim_data_flow/P_msg.pb.h"
+
 #include "controller/base_ctrl.h"
-#include "webots_device/w_fork.h"
-#include "webots_device/w_wheel.h"
 #include "webots_device/w_lidar.h"
-#include "webots_device/w_imu.h"
 #include "webots_device/w_pose.h"
 #include "webots_device/w_reflector.h"
+#include "webots_device/w_transfer.h"
 
 namespace VNSim {
 
@@ -39,8 +37,7 @@ class AGVController : public BaseController {
     void Mid360ReportSpin();
     void Mid360TwoReportSpin();
 
-    bool sendPointCloud(std::string topic,std::shared_ptr<WLidar> lidar_ptr);
-    
+    bool sendPointCloud(std::string topic, std::shared_ptr<WLidar> lidar_ptr);
 
    private:
     std::shared_ptr<WLidar> BP_ptr_;
@@ -52,7 +49,8 @@ class AGVController : public BaseController {
     std::shared_ptr<ReflectorChecker> reflector_check_ptr_;
 
    public:
-    void transferCallBack(const char *topic_name, const eCAL::SReceiveCallbackData *data);
+    void transferCallBack(const char *topic_name,
+                          const eCAL::SReceiveCallbackData *data);
 };
 
 }  // namespace VNSim
