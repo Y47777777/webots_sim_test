@@ -75,7 +75,7 @@ class WImu : public WBase {
         std::unique_lock<std::shared_mutex> lock(rw_mutex_);
         memcpy(gyro_.data(), gyro_ptr_->getValues(), 3 * sizeof(gyro_[0]));
         memcpy(acc_.data(), acc_ptr_->getValues(), 3 * sizeof(acc_[0]));
-        memcpy(angles_.data(), acc_ptr_->getValues(), 3 * sizeof(acc_[0]));
+        memcpy(angles_.data(), inertial_unit_ptr_->getRollPitchYaw(), 3 * sizeof(acc_[0]));
     }
 
    private:

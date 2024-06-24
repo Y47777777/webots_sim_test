@@ -74,12 +74,12 @@ void SVCMaster::pubUpStream() {
         first_pub_report_ = false;
         LOG_INFO("set base timer %d", Timer::getInstance()->getBaseTime());
     }
-
+    
     // 数据转换
     encoder_.updateValue ("IncrementalSteeringCoder",   1, msg_from_webots_.steering_theta());
     encoder_.updateValue ("Gyroscope",                  1, msg_from_webots_.gyroscope());
     encoder_.updateValue ("HeightCoder",                1, msg_from_webots_.forkposez());
-    encoder_.updateValue ("ForkDisplacementSencerZ",    1, msg_from_webots_.forkposez()); //TODO: ?两个一样的？
+    encoder_.updateValue ("ForkDisplacementSencerZ",    1, msg_from_webots_.forkposez());
     encoder_.updateValue2("DataIndex",                  &dataidx_upload_,  sizeof(uint32_t));
 
     uint16_t battery_device = 100;

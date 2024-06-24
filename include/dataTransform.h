@@ -44,8 +44,8 @@ void pbTopb2(const sim_data_flow::WBPointCloud &payload,
     // header
     payload_send.mutable_header()->set_frame_id("");
     payload_send.mutable_header()->set_seq(seq);
-    // payload_send.mutable_header()->set_timestamp(Timer::getInstance()->getTimeStamp());
-    // payload_send.mutable_header()->set_timestamp(payload.timestamp());
+    payload_send.mutable_header()->set_timestamp(Timer::getInstance()->getTimeFromBase(payload.timestamp()));
+    // payload_send.mutable_header()->set_timestamp();
 
     // body
     payload_send.set_height(1);
