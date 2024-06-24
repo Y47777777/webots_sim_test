@@ -51,6 +51,9 @@ AGVController::AGVController() : BaseController("webots_shadow_lidar") {
     pose_ptr_ = std::make_shared<WPose>("RobotNode");
     transfer_ptr_ = std::make_shared<WTransfer>();
 
+    // 删除所有物理属性，碰撞属性
+    collision_ptr_ = std::make_shared<WCollision>();
+
     // 高反
     reflector_ptr_ = std::make_shared<WReflector>("HighReflector");
     reflector_check_ptr_ = ReflectorChecker::getInstance();
@@ -83,8 +86,8 @@ AGVController::AGVController() : BaseController("webots_shadow_lidar") {
                                  std::placeholders::_1, std::placeholders::_2));
 
     // 创建线程
-    m_thread_.insert(std::pair<std::string, std::thread>(
-        "bp_report", std::bind(&AGVController::BpReportSpin, this)));
+    // m_thread_.insert(std::pair<std::string, std::thread>(
+    //     "bp_report", std::bind(&AGVController::BpReportSpin, this)));
     m_thread_.insert(std::pair<std::string, std::thread>(
         "mid360_report", std::bind(&AGVController::Mid360ReportSpin, this)));
     m_thread_.insert(std::pair<std::string, std::thread>(
@@ -168,9 +171,6 @@ bool AGVController::sendPointCloud(std::string topic,
     uint8_t buf[payload.ByteSize()];
     payload.SerializePartialToArray(buf, payload.ByteSize());
     ecal_ptr_->send(topic.c_str(), buf, payload.ByteSize());
-
-    // LOG_INFO("point ByteSize %d", payload.ByteSize());
-    // LOG_INFO("point_cloud size %d", payload.point_cloud().size());
 
     lidar_alarm.wait();
     return true;

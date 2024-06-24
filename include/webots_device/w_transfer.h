@@ -144,6 +144,19 @@ class WTransfer : public WBase {
             }
         }
 
+        if (this_ptr->getTypeName().compare("HingeJoint") == 0) {
+            LOG_INFO("there is HingeJoint");
+            Field *iter = this_ptr->getField("endPoint");
+            Node *endPoint = iter->getSFNode();
+            getChildNode(endPoint);
+
+        } else if (this_ptr->getTypeName().compare("SliderJoint") == 0) {
+            LOG_INFO("there is SliderJoint");
+            Field *iter = this_ptr->getField("endPoint");
+            Node *endPoint = iter->getSFNode();
+            getChildNode(endPoint);
+        }
+
         Field *rotation_ptr_ = this_ptr->getField("rotation");
         Field *translation_ptr_ = this_ptr->getField("translation");
 
