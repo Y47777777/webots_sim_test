@@ -38,6 +38,11 @@ void SVCMaster::subDownStreamCallBack(uint8_t *msg, int len) {
 
     // 解包到decoder_中
     decoder_.decodePackage(&pack);
+    {
+        // 该数据多线程读写
+        std::lock_guard<std::mutex> lock(msgs_lock_);
+        decoder_.getValue2("DataIndex", &dataidx_sub_, 4);  // 回报
+    }
 
     pubPMsgsToWebots();
 }
@@ -46,12 +51,6 @@ void SVCMaster::pubPMsgsToWebots(){
     double ForkDeviceZ;
     double SteeringDevice;
     double MoveDevice;
-
-    {
-        // 该数据多线程读写
-        std::lock_guard<std::mutex> lock(msgs_lock_);
-        decoder_.getValue2("DataIndex",     &dataidx_sub_, 4);      // 回报
-    }
 
     decoder_.getValue("MoveDevice",     &MoveDevice);           // steer wheel
     decoder_.getValue("SteeringDevice", &SteeringDevice);       // steer yaw
@@ -83,19 +82,18 @@ void SVCMaster::pubUpStream() {
     encoder_.updateValue2("DataIndex",                  &dataidx_upload_,  sizeof(uint32_t));
 
     uint16_t battery_device = 100;
-    encoder_.updateValue2("BatterySencer",      &battery_device,   sizeof(uint16_t));
+    encoder_.updateValue2("BatterySencer",              &battery_device,   sizeof(uint16_t));
 
     static double wheel_coder_l = 0;
     static double wheel_coder_r = 0;
     wheel_coder_l += msg_from_webots_.l_wheel()* 0.5;
     wheel_coder_r += msg_from_webots_.r_wheel()* 0.5;
-    encoder_.updateValue ("WheelCoder",          2, wheel_coder_l, wheel_coder_r);
+    encoder_.updateValue ("WheelCoder",                 2, wheel_coder_l, wheel_coder_r);
 
-    
     {
         // 该数据多线程读写
         std::lock_guard<std::mutex> lock(msgs_lock_);
-        encoder_.updateValue2("DataIndexReturn",            &dataidx_sub_,     sizeof(uint32_t));
+        encoder_.updateValue2("DataIndexReturn",        &dataidx_sub_,     sizeof(uint32_t));
     }
 
     const struct Package *pack = encoder_.encodePackage();
