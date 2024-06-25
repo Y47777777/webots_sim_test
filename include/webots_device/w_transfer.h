@@ -65,18 +65,6 @@ class WTransfer : public WBase {
             ptr->mutable_rotation()->set_z(it->second.rotation[2]);
             ptr->mutable_rotation()->set_w(it->second.rotation[3]);
 
-            // if (it->first == "wall(3)") {
-            //     LOG_INFO("wall(3) tran %.2f, %.2f, %.2f",
-            //              ptr->mutable_translation()->x(),
-            //              ptr->mutable_translation()->y(),
-            //              ptr->mutable_translation()->z());
-            //     LOG_INFO(
-            //         "wall(3) rotation %.2f, %.2f, %.2f, %.2f",
-            //         ptr->mutable_rotation()->x(),
-            //         ptr->mutable_rotation()->y(),
-            //         ptr->mutable_rotation()->z(),
-            //         ptr->mutable_rotation()->w());
-            // }
         }
     }
 

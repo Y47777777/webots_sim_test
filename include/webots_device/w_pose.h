@@ -56,7 +56,8 @@ class WPose : public WBase {
         return tf_rotation_;
     }
 
-    void setTransfer(double *transfer, double *rotation, uint64_t time_stamp) {
+    void setTransferWithTime(double *transfer, double *rotation,
+                             uint64_t time_stamp) {
         std::shared_lock<std::shared_mutex> lock(rw_mutex_);
         had_recive_tran_ = true;
 
@@ -69,6 +70,15 @@ class WPose : public WBase {
         set_tf_rotation_[2] = rotation[2];
         set_tf_rotation_[3] = rotation[3];
         t_stamp_befoe_set_ = time_stamp;
+    }
+
+    void setTransfer(double *transfer) {
+        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+        had_recive_tran_ = true;
+        
+        set_tf_translation_[0] = transfer[0];
+        set_tf_translation_[1] = transfer[1];
+        set_tf_translation_[2] = transfer[2];
     }
 
     uint64_t getTimeStamp() {
@@ -89,7 +99,8 @@ class WPose : public WBase {
         tf_rotation_[2] = rotation_address[2];
         tf_rotation_[3] = rotation_address[3];
 
-        ReflectorChecker::getInstance()->setCurPose(createTransformMatrix(tf_rotation_, tf_translation_));
+        ReflectorChecker::getInstance()->setCurPose(
+            createTransformMatrix(tf_rotation_, tf_translation_));
 
         if (had_recive_tran_) {
             had_recive_tran_ = false;

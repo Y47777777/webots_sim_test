@@ -37,6 +37,7 @@ class AGVController : public BaseController {
     void pubSerialSpin();
     void pubTransferSpin();
     void pubRobotPoseSpin();
+    void movePerLidarSpin();
 
    private:
     std::shared_ptr<WImu> imu_ptr_;
@@ -45,6 +46,7 @@ class AGVController : public BaseController {
     std::shared_ptr<WWheel> r_ptr_;
     std::shared_ptr<WFork> fork_ptr_;
     std::shared_ptr<WPose> pose_ptr_;
+    std::shared_ptr<WLidar> lidar_pose_ptr_;
     std::shared_ptr<WTransfer> transfer_ptr_;
 
    public:

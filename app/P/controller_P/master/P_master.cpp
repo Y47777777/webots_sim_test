@@ -39,6 +39,7 @@ AGVController::AGVController() : BaseController("webots_master") {
     l_ptr_ = std::make_shared<WWheel>("", "", "", "RS", "BRPS");
     r_ptr_ = std::make_shared<WWheel>("", "", "", "LS", "BLPS");
     pose_ptr_ = std::make_shared<WPose>("RobotNode");
+    lidar_pose_ptr_ = std::make_shared<WLidar>("mid360Per", 100, false);
     transfer_ptr_ = std::make_shared<WTransfer>();
 
     v_while_spin_.push_back(bind(&WBase::spin, stree_ptr_));
@@ -87,9 +88,22 @@ void AGVController::whileSpin() {
     // 发送至svc
     pubSerialSpin();
 
+    // 移动感知激光
+    movePerLidarSpin();
+
     // 发送至shadow
     pubRobotPoseSpin();
+
+    // 休眠一下
+    Timer::getInstance()->sleep<microseconds>(5);
     pubTransferSpin();
+}
+
+void AGVController::movePerLidarSpin() {
+    double fork_z = fork_ptr_->getSenosorValue();  // 米制
+
+    // TODO: 激光随动
+    lidar_pose_ptr_->moveLidar(fork_z);
 }
 
 void AGVController::pubTransferSpin() {

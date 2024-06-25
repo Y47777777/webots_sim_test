@@ -38,18 +38,18 @@ std::string MID360Per_webots_topic = "webots/Lidar/.57/PointCloud";
 
 AGVController::AGVController() : BaseController("webots_shadow_lidar") {
     // Sensor
-    // BP_ptr_ = std::make_shared<WLidar>("BP", "BP", 50);
+    // BP_ptr_ = std::make_shared<WLidar>("BP", 50);
     // VertivalFov fov = {.begin = 0, .end = (PI / 2 + 0.1)};
     // BP_ptr_->setFov(fov);
 
-    mid360_ptr_ = std::make_shared<WLidar>("mid360", "MID360", 100);
+    mid360_ptr_ = std::make_shared<WLidar>("mid360", 100);
     mid360_ptr_->setSimulationNRLS("mid360.csv");
 
-    mid360Two_ptr_ = std::make_shared<WLidar>("mid360Two", "MID360Two", 100);
+    mid360Two_ptr_ = std::make_shared<WLidar>("mid360Two", 100);
     mid360Two_ptr_->setSimulationNRLS("mid360.csv");
 
     mid360_perception_ptr_ =
-        std::make_shared<WLidar>("mid360Per", "MID360Per", 100);
+        std::make_shared<WLidar>("mid360Per", 100);
     mid360_perception_ptr_->setSimulationNRLS("mid360.csv");
 
     // 机器人位姿
@@ -121,7 +121,7 @@ void AGVController::poseCallBack(const char *topic_name,
     double rotation[4] = {pose.orientation().x(), pose.orientation().y(),
                           pose.orientation().z(), pose.orientation().w()};
 
-    pose_ptr_->setTransfer(transfer, rotation, pose.timestamp());
+    pose_ptr_->setTransferWithTime(transfer, rotation, pose.timestamp());
 }
 
 void AGVController::transferCallBack(const char *topic_name,

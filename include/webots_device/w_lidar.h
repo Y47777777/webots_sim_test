@@ -41,8 +41,7 @@ class WLidar : public WBase {
      * @param[in] pose_name   lidar_name 外层pose
      * @param[in] frequency   ladir 频率 (ms)
      */
-    WLidar(std::string lidar_name, std::string pose_name = "",
-           int frequency = 100)
+    WLidar(std::string lidar_name, int frequency = 100, bool enable = true)
         : WBase() {
         // creat lidar
         {
@@ -56,31 +55,32 @@ class WLidar : public WBase {
                 return;
             }
 
-            lidar_->enable(frequency_);
-            lidar_->enablePointCloud();
+            if (enable) {
+                lidar_->enable(frequency_);
+                lidar_->enablePointCloud();
 
-            webots_points_address_ = lidar_->getPointCloud();
-            size_of_layer_ = lidar_->getNumberOfLayers();
-            size_of_point_cloud_ = lidar_->getNumberOfPoints();
-            size_of_each_layer_ = size_of_point_cloud_ / size_of_layer_;
+                webots_points_address_ = lidar_->getPointCloud();
+                size_of_layer_ = lidar_->getNumberOfLayers();
+                size_of_point_cloud_ = lidar_->getNumberOfPoints();
+                size_of_each_layer_ = size_of_point_cloud_ / size_of_layer_;
 
-            point_cloud_.set_size_of_layer(size_of_layer_);
-            point_cloud_.set_size_of_each_layer(size_of_each_layer_);
-            point_cloud_.set_size_of_point_cloud(size_of_point_cloud_);
-            point_cloud_.set_name(lidar_name);
+                point_cloud_.set_size_of_layer(size_of_layer_);
+                point_cloud_.set_size_of_each_layer(size_of_each_layer_);
+                point_cloud_.set_size_of_point_cloud(size_of_point_cloud_);
+                point_cloud_.set_name(lidar_name);
 
-            // 获取每层的地址
-            v_webots_address_.clear();
-            for (int i = 0; i < size_of_layer_; i++) {
-                v_webots_address_.push_back(lidar_->getLayerPointCloud(i));
+                // 获取每层的地址
+                // v_webots_address_.clear();
+                // for (int i = 0; i < size_of_layer_; i++) {
+                //     v_webots_address_.push_back(lidar_->getLayerPointCloud(i));
+                // }
+                start_point_ = 0;
+                end_point_ = size_of_point_cloud_;
             }
-            start_point_ = 0;
-            end_point_ = size_of_point_cloud_;
         }
 
         // creat pose
-
-        node_ = super_->getFromDef(pose_name);
+        node_ = super_->getFromDevice(lidar_);
         if (node_ != nullptr) {
             translation_ptr_ = node_->getField("translation");
             rotation_ptr_ = node_->getField("rotation");
@@ -90,7 +90,6 @@ class WLidar : public WBase {
             memcpy(tf_translation_, translation_ptr_->getSFVec3f(),
                    3 * sizeof(tf_translation_[0]));
 
-            LOG_INFO("pose node :", pose_name.c_str());
             LOG_INFO("pose rotation %.3f, %.3f, %.3f, %.3f", tf_rotation_[0],
                      tf_rotation_[1], tf_rotation_[2], tf_rotation_[3]);
 
@@ -178,19 +177,24 @@ class WLidar : public WBase {
         sleep = sleep < 0 ? 0 : sleep;
         return sleep;
     }
+
     /*
      * @brief  移动雷达(叉端mid360 随动)
      *
      * @param[values]  Vec3f
      */
-    void moveLidar(const double values[3]) {
+    void moveLidar(const double &values) {
         std::shared_lock<std::shared_mutex> lock(rw_mutex_);
         // check lidar can be move
+
         if (translation_ptr_ == nullptr) {
             LOG_ERROR("can`t move %s", lidar_name_.c_str());
             return;
         }
-        translation_ptr_->setSFVec3f(values);
+        double translation[3] = {tf_translation_[0], tf_translation_[1]};
+        translation[2] = values;
+
+        translation_ptr_->setSFVec3f(translation);
     }
 
     Eigen::Matrix4d getMatrixFromLidar() {
