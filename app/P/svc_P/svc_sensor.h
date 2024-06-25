@@ -21,6 +21,8 @@ class SVCShadow : public BaseSvc {
                      const eCAL::SReceiveCallbackData *data);
     void onMid360TwoMsg(const char *topic_name,
                         const eCAL::SReceiveCallbackData *data);
+    void onMid360PerMsg(const char *topic_name,
+                        const eCAL::SReceiveCallbackData *data);
 
    private:
     uint64_t seq_bp_{0};

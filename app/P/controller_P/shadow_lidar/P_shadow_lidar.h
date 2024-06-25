@@ -36,6 +36,7 @@ class AGVController : public BaseController {
     void BpReportSpin();
     void Mid360ReportSpin();
     void Mid360TwoReportSpin();
+    void Mid360PerceptionReportSpin();
 
     bool sendPointCloud(std::string topic, std::shared_ptr<WLidar> lidar_ptr);
 
@@ -43,6 +44,7 @@ class AGVController : public BaseController {
     std::shared_ptr<WLidar> BP_ptr_;
     std::shared_ptr<WLidar> mid360_ptr_;
     std::shared_ptr<WLidar> mid360Two_ptr_;
+    std::shared_ptr<WLidar> mid360_perception_ptr_;
 
     std::shared_ptr<WPose> pose_ptr_;
     std::shared_ptr<WTransfer> transfer_ptr_;
