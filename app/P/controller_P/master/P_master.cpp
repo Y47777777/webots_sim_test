@@ -104,6 +104,7 @@ void AGVController::movePerLidarSpin() {
 
     // TODO: 激光随动
     lidar_pose_ptr_->moveLidar(fork_z);
+    // LOG_INFO("fork :%.2f", fork_z);
 }
 
 void AGVController::pubTransferSpin() {

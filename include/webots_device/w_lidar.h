@@ -192,7 +192,13 @@ class WLidar : public WBase {
             return;
         }
         double translation[3] = {tf_translation_[0], tf_translation_[1]};
-        translation[2] = values;
+
+        // TODO: 要改到master上
+        if (values < 0.214) {
+            translation[2] = tf_translation_[2];
+        } else {
+            translation[2] = tf_translation_[2] + (values - 0.214);
+        }
 
         translation_ptr_->setSFVec3f(translation);
     }
