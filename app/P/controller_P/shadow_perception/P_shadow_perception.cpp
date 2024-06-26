@@ -21,7 +21,7 @@
 
 #include "logvn/logvn.h"
 
-#include "P_shadow_lidar.h"
+#include "P_shadow_perception.h"
 
 using namespace VNSim;
 using namespace webots;
@@ -32,25 +32,16 @@ std::shared_ptr<EcalWrapper> EcalWrapper::instance_ptr_ = nullptr;
 std::shared_ptr<ReflectorChecker> ReflectorChecker::instance_ptr_ = nullptr;
 
 std::string BP_webots_topic = "webots/Lidar/.55/PointCloud";
-std::string MID360_webots_topic = "webots/Lidar/.54/PointCloud";
-std::string MID360Two_webots_topic = "webots/Lidar/.56/PointCloud";
 std::string MID360Per_webots_topic = "webots/Lidar/.57/PointCloud";
 
-AGVController::AGVController() : BaseController("webots_shadow_lidar") {
+AGVController::AGVController() : BaseController("webots_shadow_perception") {
     // Sensor
-    // BP_ptr_ = std::make_shared<WLidar>("BP", 50);
-    // VertivalFov fov = {.begin = 0, .end = (PI / 2 + 0.1)};
-    // BP_ptr_->setFov(fov);
+    BP_ptr_ = std::make_shared<WLidar>("BP", 50);
+    VertivalFov fov = {.begin = 0, .end = (PI / 2 + 0.1)};
+    BP_ptr_->setFov(fov);
 
-    mid360_ptr_ = std::make_shared<WLidar>("mid360", 100);
-    mid360_ptr_->setSimulationNRLS("mid360.csv");
-
-    mid360Two_ptr_ = std::make_shared<WLidar>("mid360Two", 100);
-    mid360Two_ptr_->setSimulationNRLS("mid360.csv");
-
-    // mid360_perception_ptr_ =
-    //     std::make_shared<WLidar>("mid360Per", 100);
-    // mid360_perception_ptr_->setSimulationNRLS("mid360.csv");
+    mid360_perception_ptr_ = std::make_shared<WLidar>("mid360Per", 100);
+    mid360_perception_ptr_->setSimulationNRLS("mid360.csv");
 
     // 机器人位姿
     pose_ptr_ = std::make_shared<WPose>("RobotNode");
@@ -65,25 +56,19 @@ AGVController::AGVController() : BaseController("webots_shadow_lidar") {
     reflector_check_ptr_->copyFrom(reflector_ptr_->getReflectors());
 
     // 想高反判断部分注册外参
-    // reflector_check_ptr_->setSensorMatrix4d("BP",
-    //                                         BP_ptr_->getMatrixFromLidar());
-    reflector_check_ptr_->setSensorMatrix4d("mid360",
-                                            mid360_ptr_->getMatrixFromLidar());
-    reflector_check_ptr_->setSensorMatrix4d(
-        "mid360Two", mid360Two_ptr_->getMatrixFromLidar());
+    reflector_check_ptr_->setSensorMatrix4d("BP",
+                                            BP_ptr_->getMatrixFromLidar());
+    reflector_check_ptr_->setSensorMatrix4d("mid360Per",
+                                            mid360_perception_ptr_->getMatrixFromLidar());
 
-    // v_while_spin_.push_back(bind(&WBase::spin, BP_ptr_));
-    v_while_spin_.push_back(bind(&WBase::spin, mid360_ptr_));
-    v_while_spin_.push_back(bind(&WBase::spin, mid360Two_ptr_));
-    // v_while_spin_.push_back(bind(&WBase::spin, mid360_perception_ptr_));
+    v_while_spin_.push_back(bind(&WBase::spin, BP_ptr_));
+    v_while_spin_.push_back(bind(&WBase::spin, mid360_perception_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, pose_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, transfer_ptr_));
 
     // creat publish
-    // ecal_ptr_->addEcal(BP_webots_topic.c_str());
-    ecal_ptr_->addEcal(MID360_webots_topic.c_str());
-    ecal_ptr_->addEcal(MID360Two_webots_topic.c_str());
-    // ecal_ptr_->addEcal(MID360Per_webots_topic.c_str());
+    ecal_ptr_->addEcal(BP_webots_topic.c_str());
+    ecal_ptr_->addEcal(MID360Per_webots_topic.c_str());
 
     // creat subscribe
     ecal_ptr_->addEcal("webot/pose",
@@ -95,16 +80,11 @@ AGVController::AGVController() : BaseController("webots_shadow_lidar") {
                                  std::placeholders::_1, std::placeholders::_2));
 
     // 创建线程
-    // m_thread_.insert(std::pair<std::string, std::thread>(
-    //     "bp_report", std::bind(&AGVController::BpReportSpin, this)));
     m_thread_.insert(std::pair<std::string, std::thread>(
-        "mid360_report", std::bind(&AGVController::Mid360ReportSpin, this)));
+        "bp_report", std::bind(&AGVController::BpReportSpin, this)));
     m_thread_.insert(std::pair<std::string, std::thread>(
-        "mid360two_report",
-        std::bind(&AGVController::Mid360TwoReportSpin, this)));
-    // m_thread_.insert(std::pair<std::string, std::thread>(
-    //     "mid360per_report",
-    //     std::bind(&AGVController::Mid360PerceptionReportSpin, this)));
+        "mid360per_report",
+        std::bind(&AGVController::Mid360PerceptionReportSpin, this)));
 }
 
 void AGVController::whileSpin() {
@@ -134,18 +114,6 @@ void AGVController::transferCallBack(const char *topic_name,
 void AGVController::BpReportSpin() {
     LOG_INFO("BpReportSpin start\n");
     while (!webotsExited_) { sendPointCloud(BP_webots_topic, BP_ptr_); }
-}
-
-void AGVController::Mid360ReportSpin() {
-    LOG_INFO("Mid360ReportSpin start\n");
-    while (!webotsExited_) { sendPointCloud(MID360_webots_topic, mid360_ptr_); }
-}
-
-void AGVController::Mid360TwoReportSpin() {
-    LOG_INFO("Mid360TwoReportSpin start\n");
-    while (!webotsExited_) {
-        sendPointCloud(MID360Two_webots_topic, mid360Two_ptr_);
-    }
 }
 
 void AGVController::Mid360PerceptionReportSpin() {

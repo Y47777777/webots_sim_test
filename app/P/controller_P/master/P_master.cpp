@@ -95,7 +95,7 @@ void AGVController::whileSpin() {
     pubRobotPoseSpin();
 
     // 休眠一下
-    Timer::getInstance()->sleep<microseconds>(5);
+    Timer::getInstance()->sleep<microseconds>(10);
     pubTransferSpin();
 }
 
@@ -161,6 +161,9 @@ void AGVController::pubSerialSpin() {
     payload.set_steering_theta(stree_ptr_->getMotorYaw());
 
     payload.set_gyroscope(imu_ptr_->getInertialYaw());
+
+    // double *rotation = pose_ptr_->getRotaion();
+    // LOG_INFO("imu: %.2f, robot: %.2f", imu_ptr_->getInertialYaw(), rotation[3]);
 
     uint8_t buf[payload.ByteSize()];
     payload.SerializePartialToArray(buf, payload.ByteSize());
