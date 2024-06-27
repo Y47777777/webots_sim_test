@@ -53,6 +53,7 @@ class EcalWrapper {
     }
     int addEcal(const char *name) {
         pub_map_[name] = std::make_unique<eCAL::CPublisher>(name);
+        pub_map_[name]->ShmSetBufferCount(4);
         return 0;
     }
     int send(const char *name, const uint8_t *data, int bytes) {
