@@ -47,7 +47,7 @@ include_directories(${ECAL_INCLUDE_DIRS})
 include_directories(${PCL_INCLUDE_DIRS})
 include_directories(${KEYBOARD_INCLUDE})
 include_directories(${EIGEN_INCLUDE})
-include_directories(/usr/local/webots/include/controller/cpp)
+
 
 target_link_libraries(svc_${PROJECT_NAME}
     ${LIBRARY_INSTALL_DIR}/liblogvn.so # TODO: FIXME: can not execute on ST server

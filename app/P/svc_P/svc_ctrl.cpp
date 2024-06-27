@@ -1,4 +1,5 @@
 #include "geometry/geometry.h"
+#include "sim_data_flow/pose.pb.h"
 #include "svc_ctrl.h"
 
 using namespace VNSim;
@@ -14,21 +15,40 @@ int SVCMaster::onInitService() {
     // publisher
     ecal_ptr_->addEcal("Sensor/read");
     ecal_ptr_->addEcal("svc/P_msg");
+    ecal_ptr_->addEcal("svc/pose");
 
     // Receive
     ecal_ptr_->addEcal("webot/P_msg",
                        std::bind(&SVCMaster::subPMsgCallBack, this,
                                  std::placeholders::_1, std::placeholders::_2));
+
+    ecal_ptr_->addEcal("webot/pose",
+                       std::bind(&SVCMaster::subPoseCallBakc, this,
+                                 std::placeholders::_1, std::placeholders::_2));
     return 0;
 }
 
 void SVCMaster::subPMsgCallBack(const char *topic_name,
-                                     const eCAL::SReceiveCallbackData *data) {
+                                const eCAL::SReceiveCallbackData *data) {
     // 反序列化
     msg_from_webots_.ParseFromArray(data->buf, data->size);
 
     // 上报
     pubUpStream();
+}
+
+void SVCMaster::subPoseCallBakc(const char *topic_name,
+                                const eCAL::SReceiveCallbackData *data) {
+    // 反序列化
+    sim_data_flow::Pose pose;
+    pose.ParseFromArray(data->buf, data->size);
+
+    uint64_t time_stamp = pose.timestamp();
+    pose.set_timestamp(Timer::getInstance()->getTimeFromBase(time_stamp));
+
+    uint8_t buf[pose.ByteSize()];
+    pose.SerializePartialToArray(buf, pose.ByteSize());
+    ecal_ptr_->send("svc/pose", buf, pose.ByteSize());
 }
 
 void SVCMaster::subDownStreamCallBack(uint8_t *msg, int len) {
@@ -73,7 +93,7 @@ void SVCMaster::pubUpStream() {
         first_pub_report_ = false;
         LOG_INFO("set base timer %d", Timer::getInstance()->getBaseTime());
     }
-    
+
     // 数据转换
     encoder_.updateValue ("IncrementalSteeringCoder",   1, msg_from_webots_.steering_theta());
     encoder_.updateValue ("Gyroscope",                  1, msg_from_webots_.gyroscope());

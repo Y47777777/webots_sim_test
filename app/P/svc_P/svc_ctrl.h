@@ -27,15 +27,16 @@ class SVCMaster : public BaseSerialSvc {
     void subDownStreamCallBack(uint8_t *msg, int len);
     void subPMsgCallBack(const char *topic_name,
                          const eCAL::SReceiveCallbackData *data);
+    void subPoseCallBakc(const char *topic_name,
+                         const eCAL::SReceiveCallbackData *data);
 
     void pubUpStream();
     void pubPMsgsToWebots();
 
    private:
-    sim_data_flow::PMsgUp   msg_from_webots_;
+    sim_data_flow::PMsgUp msg_from_webots_;
     sim_data_flow::PMsgDown msg_to_webots_;
-    struct Package          msgs_from_agv_;
-
+    struct Package msgs_from_agv_;
 };
 }  // namespace VNSim
 
