@@ -18,7 +18,7 @@
 #include "time/time.h"
 
 // TODO: data width 可以用sizeof(获取？)
-#define PBPOINT_BANDWIDTH 4 * 6
+#define PBPOINT_BANDWIDTH ((4 * 5) + 8)
 
 namespace VNSim {
 struct PointFieldBw {
@@ -44,7 +44,8 @@ void pbTopb2(const sim_data_flow::WBPointCloud &payload,
     // header
     payload_send.mutable_header()->set_frame_id("");
     payload_send.mutable_header()->set_seq(seq);
-    payload_send.mutable_header()->set_timestamp(Timer::getInstance()->getTimeFromBase(payload.timestamp()));
+    payload_send.mutable_header()->set_timestamp(
+        Timer::getInstance()->getTimeFromBase(payload.timestamp()));
     // payload_send.mutable_header()->set_timestamp();
 
     // body
@@ -71,13 +72,23 @@ void pbTopb2(const sim_data_flow::WBPointCloud &payload,
     payload_send.mutable_data()->resize(PBPOINT_BANDWIDTH * (point_size));
     char *pb_data_ptr = &((*payload_send.mutable_data())[0]);
     int label = 8;
+    double point_base_time = 0;
 
     for (int i = 0; i < point_size; i++) {
         float x = payload.point_cloud().at(i).x();
         float y = payload.point_cloud().at(i).y();
         float z = payload.point_cloud().at(i).z();
-        float time = payload.point_cloud().at(i).time();
         float intensity = payload.point_cloud().at(i).intensity();
+        double time = payload.point_cloud().at(i).time();
+
+        // 以帧的时间向上递增
+        if (i == 0) {
+            point_base_time = time;
+        }
+        time = time - point_base_time;
+        time = time * 1000 * 1000;  // 换算成微秒
+        time = time + (double) payload_send.header().timestamp();
+
         if (std::abs(x) != INFINITY && std::abs(y) != INFINITY &&
             std::abs(z) != INFINITY) {
             memcpy(pb_data_ptr + i * PBPOINT_BANDWIDTH, &(x), 4);
@@ -85,7 +96,7 @@ void pbTopb2(const sim_data_flow::WBPointCloud &payload,
             memcpy(pb_data_ptr + 8 + i * PBPOINT_BANDWIDTH, &(z), 4);
             memcpy(pb_data_ptr + 12 + i * PBPOINT_BANDWIDTH, &(intensity), 4);
             memcpy(pb_data_ptr + 16 + i * PBPOINT_BANDWIDTH, &(label), 4);
-            memcpy(pb_data_ptr + 20 + i * PBPOINT_BANDWIDTH, &(time), 4);
+            memcpy(pb_data_ptr + 20 + i * PBPOINT_BANDWIDTH, &(time), 8);
         }
     }
 }

@@ -73,13 +73,20 @@ class BaseController : public QThread {
         // 当前系统时间 + webots增长
         time_stamp_ = Timer::getInstance()->getCurrentFromSystem() +
                       step_duration_ * 1000;
-
+        Timer copy_elapsed_;
         while (supervisor_->step(step_duration_) != -1) {
             uint32_t els = elapsed_timer_.elapsed<std::chrono::milliseconds>();
-            if (els > 40) {
+            if (els > 20) {
                 LOG_INFO("step elapsed = %u ms, BAD\n", els);
             }
 
+            // if (supervisor_->simulationGetMode() !=
+            //     Supervisor::SIMULATION_MODE_FAST) {
+            //     supervisor_->simulationSetMode(
+            //         Supervisor::SIMULATION_MODE_FAST);
+            // }
+
+            copy_elapsed_.restart();
             // 循环遍历注册的任务
             for (int i = 0; i < v_while_spin_.size(); ++i) {
                 v_while_spin_[i]();
@@ -92,6 +99,12 @@ class BaseController : public QThread {
 
                 // 特殊的需要执行的任务
                 this->whileSpin();
+            }
+            
+            uint32_t copy_spend =
+                copy_elapsed_.elapsed<std::chrono::milliseconds>();
+            if (copy_spend > 9) {
+                LOG_INFO("while spend = %d ms\n", copy_spend);
             }
 
             // 休眠直到目标时间
