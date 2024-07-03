@@ -4,9 +4,9 @@ project(foxglove-vn LANGUAGES CXX)
 
 
 #生成.h .cc文件
-execute_process(COMMAND python "../build.py"
-     RESULTS_VARIABLE  msg_all)
-MESSAGE("Commands execute result: ${msg_all}")
+# execute_process(COMMAND python "../build.py"
+#      RESULTS_VARIABLE  msg_all)
+# MESSAGE("Commands execute result: ${msg_all}")
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

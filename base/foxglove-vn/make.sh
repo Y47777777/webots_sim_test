@@ -9,6 +9,7 @@ fi
 
 mkdir build 
 cd build
+python3 ../build.py
 cmake -DCMAKE_BUILD_TYPE=Release ..
 make -j4
 cp *.a* ../../../../../simulation_world/webots/libraries/
