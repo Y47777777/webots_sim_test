@@ -43,10 +43,10 @@ AGVController::AGVController() : BaseController("webots_shadow_lidar") {
     // BP_ptr_->setFov(fov);
 
     mid360_ptr_ = std::make_shared<WLidar>("mid360", 100);
-    mid360_ptr_->setSimulationNRLS("mid360.csv");
+    mid360_ptr_->setSimulationNRLS("mid360.csv", MID360_ONCE_CLOUD_SIZE);
 
     mid360Two_ptr_ = std::make_shared<WLidar>("mid360Two", 100);
-    mid360Two_ptr_->setSimulationNRLS("mid360.csv");
+    mid360Two_ptr_->setSimulationNRLS("mid360.csv", MID360_ONCE_CLOUD_SIZE);
 
     // mid360_perception_ptr_ =
     //     std::make_shared<WLidar>("mid360Per", 100);

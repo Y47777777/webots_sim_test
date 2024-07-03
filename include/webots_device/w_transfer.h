@@ -22,8 +22,8 @@
 namespace VNSim {
 using namespace webots;
 
-typedef struct STransfer {
-    STransfer(Field *rotation_p = nullptr, Field *translation_p = nullptr) {
+typedef struct WTransferNode {
+    WTransferNode(Field *rotation_p = nullptr, Field *translation_p = nullptr) {
         rotation_f_ptr_ = rotation_p;
         translation_f_ptr_ = translation_p;
     }
@@ -157,15 +157,15 @@ class WTransfer : public WBase {
 
             std::string name = name_field->getSFString();
             if (name != "Robot") {
-                STransfer tran(rotation_ptr_, translation_ptr_);
-                m_tanfer_.insert(std::pair<std::string, STransfer>(name, tran));
+                WTransferNode tran(rotation_ptr_, translation_ptr_);
+                m_tanfer_.insert(std::pair<std::string, WTransferNode>(name, tran));
                 LOG_INFO("creat tran %s", name.c_str());
             }
         }
     }
 
     Node *root_ = nullptr;
-    std::map<std::string, STransfer> m_tanfer_;
+    std::map<std::string, WTransferNode> m_tanfer_;
     bool set_flag = false;
 };
 

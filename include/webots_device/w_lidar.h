@@ -109,7 +109,8 @@ class WLidar : public WBase {
      *
      * @param[in] path  查找表 （base 路径已写死）
      */
-    void setSimulationNRLS(std::string path) {
+    void setSimulationNRLS(std::string path,
+                           size_t nrls_cloud_size = MID360_ONCE_CLOUD_SIZE) {
         std::shared_lock<std::shared_mutex> lock(rw_mutex_);
 
         is_sim_NRLS_ = true;
@@ -128,7 +129,7 @@ class WLidar : public WBase {
             NRLS_ = std::make_shared<NRLS>();
         }
 
-        if (NRLS_->load(file.c_str(), input) != 0) {
+        if (NRLS_->load(file.c_str(), input, nrls_cloud_size) != 0) {
             is_sim_NRLS_ = false;
             return;
         }

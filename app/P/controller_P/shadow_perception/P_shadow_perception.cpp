@@ -41,7 +41,8 @@ AGVController::AGVController() : BaseController("webots_shadow_perception") {
     BP_ptr_->setFov(fov);
 
     mid360_perception_ptr_ = std::make_shared<WLidar>("mid360Per", 100);
-    mid360_perception_ptr_->setSimulationNRLS("mid360.csv");
+    mid360_perception_ptr_->setSimulationNRLS("mid360.csv",
+                                              MID360_ONCE_CLOUD_SIZE);
 
     // 机器人位姿
     pose_ptr_ = std::make_shared<WPose>("RobotNode");

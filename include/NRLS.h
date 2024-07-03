@@ -10,7 +10,8 @@
 #include "logvn/logvn.h"
 
 #define M_PI 3.14
-#define MAXIMUM_MID360_UPLOAD 20722
+#define MID360_ONCE_CLOUD_SIZE 20722
+#define HAP_ONCE_CLOUD_SIZE 45200
 namespace VNSim {
 
 struct FBContain {
@@ -47,9 +48,11 @@ class NRLS {
      * @param[in] input  雷达参数
      * @return int
      */
-    int load(const char *path, const struct LidarInfo &input) {
+    int load(const char *path, const struct LidarInfo &input,
+             size_t result_cloud_size) {
         int ret = 0;
         std::vector<std::string> csv_data_;
+        result_cloud_size_ = result_cloud_size;
         do {
             // TODO: is there need try{}catch(...)?
             if (this->readCSV(path, csv_data_) != 0) {
@@ -136,10 +139,9 @@ class NRLS {
         int layers = point_cloud.size_of_layer();
         int size_of_each_layer = point_cloud.size_of_each_layer();
 
-        // TODO: define 改为输入
-        // 每次只取20722 个点
+        // 每次只取 指定 个点
         // 遍历查找表
-        for (int i = 0; i < MAXIMUM_MID360_UPLOAD; i++, list_iter_++) {
+        for (int i = 0; i < result_cloud_size_; i++, list_iter_++) {
             if (list_iter_ == fb_list_.end()) {
                 list_iter_ = fb_list_.begin();
             }
@@ -197,6 +199,9 @@ class NRLS {
         return (std::abs(ptr->x) != INFINITY && std::abs(ptr->y) != INFINITY &&
                 std::abs(ptr->z) != INFINITY);
     }
+
+    // 每帧点云的数量
+    size_t result_cloud_size_ = MID360_ONCE_CLOUD_SIZE;
 };
 }  // namespace VNSim
 
