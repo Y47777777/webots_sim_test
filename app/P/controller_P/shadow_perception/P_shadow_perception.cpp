@@ -37,7 +37,7 @@ std::string MID360Per_webots_topic = "webots/Lidar/.57/PointCloud";
 AGVController::AGVController() : BaseController("webots_shadow_perception") {
     // Sensor
     BP_ptr_ = std::make_shared<WLidar>("BP", 50);
-    VertivalFov fov = {.begin = 0, .end = (PI / 2 + 0.1)};
+    VertivalFov fov = {.begin = 0, .end = (PI / 2)};
     BP_ptr_->setFov(fov);
 
     mid360_perception_ptr_ = std::make_shared<WLidar>("mid360Per", 100);
@@ -59,8 +59,8 @@ AGVController::AGVController() : BaseController("webots_shadow_perception") {
     // 想高反判断部分注册外参
     reflector_check_ptr_->setSensorMatrix4d("BP",
                                             BP_ptr_->getMatrixFromLidar());
-    reflector_check_ptr_->setSensorMatrix4d("mid360Per",
-                                            mid360_perception_ptr_->getMatrixFromLidar());
+    reflector_check_ptr_->setSensorMatrix4d(
+        "mid360Per", mid360_perception_ptr_->getMatrixFromLidar());
 
     v_while_spin_.push_back(bind(&WBase::spin, BP_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, mid360_perception_ptr_));

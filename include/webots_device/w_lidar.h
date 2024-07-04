@@ -28,10 +28,11 @@ namespace VNSim {
 using namespace webots;
 
 typedef struct VertivalFov {
-    // TODO: 非重复线扫数据
-    double begin = 0;
-    double end = 0;
+    // 以z轴为0点，\in [0,PI]
+    double begin = 0;  // 起始角度
+    double end = 0;    // 终止角度
 };
+
 class WLidar : public WBase {
    public:
     /**
@@ -135,36 +136,42 @@ class WLidar : public WBase {
         }
     }
 
+    /**
+     * @brief Set the Fov object
+     *
+     * @param[in] ver_fov fov配置 以z轴为0点，\in [0,PI]
+     */
     void setFov(const VertivalFov ver_fov) {
         int start_layer = 0;
         int end_layer = size_of_layer_;
         if (fabs(ver_fov.begin - ver_fov.end) > 0.01) {
             fov_vertical_enable_ = true;
 
-            // 计算起始层
             double vertical_fov = lidar_->getVerticalFov();
-            double resolution = size_of_layer_ / vertical_fov;
-            double start_angle = PI / 2 - ver_fov.end;
-            start_layer = std::round(start_angle * resolution);
+            double hard_start_angle = (PI - vertical_fov) / 2;  // 硬件起始
+            double resolution = size_of_layer_ / vertical_fov;  // (线/角度)
 
-            // 计算终点
-            double end_angle = PI / 2 - ver_fov.begin;
-            end_layer = std::round(end_angle * resolution);
+            // 计算起始线，终止线
+            start_layer =
+                std::round((ver_fov.begin - hard_start_angle) * resolution);
+            end_layer =
+                std::round((ver_fov.end - hard_start_angle) * resolution);
 
             if (start_layer < 0) {
-                LOG_ERROR("end_layer error :%d", start_layer);
+                LOG_ERROR("%s hardware vetical fov error start_layer: %d",
+                          lidar_name_.c_str(), start_layer);
                 start_layer = 0;
             }
+
             if (end_layer > size_of_layer_) {
-                LOG_INFO("start_layer:%d", end_layer);
+                LOG_ERROR("%s hardware vetical fov error size_of_layer: %d",
+                          lidar_name_.c_str(), end_layer);
                 end_layer = size_of_layer_;
             }
 
+            // result
             start_point_ = start_layer * size_of_each_layer_;
             end_point_ = end_layer * size_of_each_layer_;
-
-            LOG_INFO("start_point_ = %d, end_point_ = %d", start_point_,
-                     end_point_);
         }
     }
 

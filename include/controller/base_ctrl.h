@@ -104,7 +104,7 @@ class BaseController : public QThread {
             uint32_t copy_spend =
                 copy_elapsed_.elapsed<std::chrono::milliseconds>();
             if (copy_spend > 9) {
-                LOG_INFO("while spend = %d ms\n", copy_spend);
+                LOG_INFO("while spend = %d ms,  BAD\n", copy_spend);
             }
 
             // 休眠直到目标时间
