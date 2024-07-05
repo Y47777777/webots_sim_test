@@ -19,11 +19,13 @@ std::string BP_webots_topic = "webots/Lidar/.55/PointCloud";
 std::string MID360_webots_topic = "webots/Lidar/.54/PointCloud";
 std::string MID360Two_webots_topic = "webots/Lidar/.56/PointCloud";
 std::string MID360Per_webots_topic = "webots/Lidar/.57/PointCloud";
+std::string HAP_webots_topic = "webots/Lidar/.200/PointCloud";
 
 std::string BP_real_topic = "192.168.1.55";
 std::string MID360_real_topic = "192.168.1.54";
 std::string MID360Two_real_topic = "192.168.1.56";
 std::string MID360Per_real_topic = "192.168.1.100";
+std::string HAP_real_topic = "192.168.1.200";
 
 SVCShadow::SVCShadow() : BaseSvc() {}
 
@@ -35,6 +37,7 @@ int SVCShadow::initService() {
     ecal_ptr_->addEcal(MID360_real_topic.c_str());     // Mid360
     ecal_ptr_->addEcal(MID360Two_real_topic.c_str());  // Mid360Two
     ecal_ptr_->addEcal(MID360Per_real_topic.c_str());  // Mid360Two
+    ecal_ptr_->addEcal(HAP_real_topic.c_str());        // Mid360Two
 
     // sub
     // TODO: 可以用匿名函数套一手
@@ -51,6 +54,10 @@ int SVCShadow::initService() {
 
     ecal_ptr_->addEcal(MID360Per_webots_topic.c_str(),
                        std::bind(&SVCShadow::onMid360PerMsg, this,
+                                 std::placeholders::_1, std::placeholders::_2));
+
+    ecal_ptr_->addEcal(HAP_webots_topic.c_str(),
+                       std::bind(&SVCShadow::onHapMsg, this,
                                  std::placeholders::_1, std::placeholders::_2));
 
     return 0;
@@ -106,4 +113,17 @@ void SVCShadow::onBpMsg(const char *topic_name,
     uint8_t buf[payload_send.ByteSize()];
     payload_send.SerializePartialToArray(buf, payload_send.ByteSize());
     ecal_ptr_->send(BP_real_topic.c_str(), buf, payload_send.ByteSize());
+}
+
+void SVCShadow::onHapMsg(const char *topic_name,
+                         const eCAL::SReceiveCallbackData *data) {
+    // directly send the msg to slam..., try...
+    // LOG_INFO("111111111111111111111");
+    sim_data_flow::WBPointCloud payload;
+    pb::PointCloud2 payload_send;
+    payload.ParseFromArray(data->buf, data->size);
+    pbTopb2(payload, payload_send, seq_bp_++);
+    uint8_t buf[payload_send.ByteSize()];
+    payload_send.SerializePartialToArray(buf, payload_send.ByteSize());
+    ecal_ptr_->send(HAP_real_topic.c_str(), buf, payload_send.ByteSize());
 }

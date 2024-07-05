@@ -77,7 +77,8 @@
         "shared_mutex": "cpp",
         "core": "cpp",
         "geometry": "cpp",
-        "*.ipp": "cpp"
+        "*.ipp": "cpp",
+        "charconv": "cpp"
     },
     // 头部注释
     "fileheader.customMade": {
