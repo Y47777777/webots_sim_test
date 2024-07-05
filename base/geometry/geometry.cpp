@@ -11,25 +11,61 @@ double Rad2Deg(double x) {
 }
 
 ////[0,2π]
-double Normalize2(double theta) {
-    if (theta < 2 * PI && theta >= 0.0)
-        return theta;
-    double multiplier = floor(theta / (2 * PI));
-    theta = theta - multiplier * 2 * PI;
-    if (theta < 0.0)
-        theta += 2 * PI;
-    if (theta > 2 * PI - 0.01)
-        theta = 0.0;
+double NormalizeTo2PI(double theta) {
+    const double TWO_PI = 2 * M_PI;     
+    theta = fmod(theta, TWO_PI);
+
+    if (theta < 0)
+        theta += TWO_PI;
+
     return theta;
 }
 
 /// [−π:π]
-double Normalize(double theta) {
-    double t = Normalize2(theta);
-    if (t > PI)
-        return t - 2 * PI;
-    else
-        return t;
+double NormalizeToPI(double theta) {
+    const double PI = M_PI; // 使用 <cmath> 中的 M_PI 常量
+    const double TWO_PI = 2 * PI;
+
+    // 使用 fmod 将 theta 归一化到 [-2*PI, 2*PI) 范围
+    theta = fmod(theta, TWO_PI);
+    
+    // 将 theta 调整到 [-PI, PI] 范围
+    if (theta < -PI) {
+        theta += TWO_PI;
+    } else if (theta > PI) {
+        theta -= TWO_PI;
+    }
+
+    return theta;
+}
+
+double NormalizeAngleTo360(double angle) {
+    const double TWO_PI = 360.0; // 2π 弧度转换为度数
+    angle = fmod(angle, TWO_PI);
+
+    if (angle < 0)
+        angle += TWO_PI; // 如果角度是负数，将其转换为正数
+
+    return angle;
+}
+
+double NormalizeAngleTo180(double angle) {
+    const double TWO_PI = 360.0; // 2π 弧度转换为度数
+    const double PI = 180.0;     // π 弧度转换为度数
+    
+    // 首先将角度归一化到 [0, 360)
+    angle = fmod(angle, TWO_PI);
+
+    // 如果角度是负数，加上 360 度使其变为正数
+    if (angle < 0)
+        angle += TWO_PI;
+
+    // 将角度调整到 [-180, 180] 范围内
+    if (angle > PI) {
+        angle -= TWO_PI; // 如果大于 180 度，减去 360 度
+    }
+
+    return angle;
 }
 
 /// Eigen库中欧拉角范围

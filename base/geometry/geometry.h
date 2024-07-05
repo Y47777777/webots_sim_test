@@ -3,6 +3,7 @@
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 #include <vector>
+#include <cmath>
 
 namespace VNSim {
 
@@ -11,11 +12,11 @@ const double PI = 3.1415926;
 double Deg2Rad(double x);
 double Rad2Deg(double x);
 
-////[0,2π]
-double Normalize2(double theta);
-
-/// [−π:π]
-double Normalize(double theta);
+////归一角度
+double NormalizeTo2PI(double theta);
+double NormalizeToPI(double theta);
+double NormalizeAngleTo360(double angle);
+double NormalizeAngleTo180(double angle);
 
 /// Eigen库中欧拉角范围
 /// 0:[−π:π]右滚为正;1:[−π:π]抬头为负;2:[−π:π]左为正
