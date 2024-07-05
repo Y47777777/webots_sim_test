@@ -56,72 +56,69 @@ class NRLS {
         do {
             // TODO: is there need try{}catch(...)?
             if (this->readCSV(path, csv_data_) != 0) {
-                // LOG_ERROR("unalble to load csv --> %s", path);
+                LOG_ERROR("unalble to load csv --> %s", path);
                 ret = -1;
                 break;
             }
 
             bool first_flag = true;
-            double origin_angle = 0;
 
             // 转存
             for (auto &t : csv_data_) {
-                int index;
-                FBContain tmp;
-                std::sscanf(t.c_str(), "%d,%lf,%lf", &index, &tmp.horizon_angle,
-                            &tmp.vertical_angle);
-
                 // 去除第一行
                 if (first_flag) {
                     first_flag = !first_flag;
                     continue;
                 }
 
-                // 找最高角度 作为原点角度
-                // FIXME:最高角度为90???
-                if (tmp.vertical_angle > origin_angle)
-                    origin_angle = tmp.vertical_angle;
+                double index;
+                FBContain tmp;
+                std::sscanf(t.c_str(), "%lf,%lf,%lf", &index,
+                            &tmp.horizon_angle, &tmp.vertical_angle);
+
+                tmp.horizon_angle  = NormalizeAngleTo180(tmp.horizon_angle);
+                tmp.vertical_angle = NormalizeAngleTo180(tmp.vertical_angle);
 
                 fb_list_.push_back(tmp);
             }
 
             // 计算分辨率
-            double sim_ver_res = double(input.numberOfLayers) /
-                                 (input.verticalFieldOfView * 180 / M_PI);
+            double sim_ver_res = double(input.numberOfLayers)       / Rad2Deg(input.verticalFieldOfView);
+            double sim_hor_res = double(input.horizontalResolution) / Rad2Deg(input.fieldOfView);
 
-            double sim_hor_res = double(input.horizontalResolution) / 360.0;
+            LOG_INFO("ver_res:%f, sim_hor_res: %.f", sim_ver_res, sim_hor_res);
 
             // webots point start point layer angle
-            double veritcal_origin =
-                90.0 - ((input.verticalFieldOfView * 180 / M_PI) / 2);
+            double veritcal_origin   = 90.0 - (Rad2Deg(input.verticalFieldOfView) / 2);
+            double horizontal_origin = -Rad2Deg(input.fieldOfView) / 2;
 
-            LOG_INFO("origin_angle %f, ver_res:%f, sim_hor_res: %.f",
-                     origin_angle, sim_ver_res, sim_hor_res);
+            LOG_INFO("origin veritcal:%f, horizontal: %.f", veritcal_origin, horizontal_origin);
 
-            // int min_layer = MAXFLOAT;
-            // int max_layer = 0;
+            int min_layer = MAXFLOAT;
+            int max_layer = 0;
             // 建立查找表
             for (auto &t : fb_list_) {
                 t.layer_count = std::round(
                     (t.vertical_angle - veritcal_origin) * sim_ver_res);
-                t.pc_idx = std::round(t.horizon_angle * sim_hor_res);
+                t.pc_idx = std::round((t.horizon_angle - horizontal_origin) *
+                                      sim_hor_res);
 
                 // 防止溢出
                 if (t.pc_idx == input.horizontalResolution) {
                     t.pc_idx--;
                 }
 
-                // if (min_layer > t.layer_count) {
-                //     min_layer = t.layer_count;
-                // }
-                // if (max_layer < t.layer_count) {
-                //     max_layer = t.layer_count;
-                // }
+                if (min_layer > t.layer_count) {
+                    min_layer = t.layer_count;
+                }
+                if (max_layer < t.layer_count) {
+                    max_layer = t.layer_count;
+                }
             }
 
             list_iter_ = fb_list_.begin();
             LOG_INFO("fb_list_  size %d", fb_list_.size());
-            // LOG_INFO("min layer %d,max %d", min_layer, max_layer);
+            LOG_INFO("min layer %d,max %d", min_layer, max_layer);
         } while (0);
         return ret;
     }
