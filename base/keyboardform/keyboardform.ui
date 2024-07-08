@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>330</width>
-    <height>338</height>
+    <width>321</width>
+    <height>387</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -49,9 +49,23 @@
           </widget>
          </item>
          <item>
+          <widget class="QLabel" name="label_forkYSpeed">
+           <property name="text">
+            <string>forkYSpeed:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_forkYHeight">
+           <property name="text">
+            <string>forkYHeight:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
           <widget class="QLabel" name="label_forkHeight">
            <property name="text">
-            <string>ForkHeight::</string>
+            <string>ForkHeight:</string>
            </property>
           </widget>
          </item>
@@ -82,6 +96,20 @@
          </item>
          <item>
           <widget class="QLabel" name="label_forkSpeed_value">
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_forkYSpeed_value">
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_forkYHeight_value">
            <property name="text">
             <string/>
            </property>
@@ -209,6 +237,31 @@
           </spacer>
          </item>
         </layout>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_6">
+       <item>
+        <widget class="QPushButton" name="pushButton_liftYLeft">
+         <property name="text">
+          <string>LiftYLeft</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushButton_liftYRight">
+         <property name="text">
+          <string>LiftYRight</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushButton_liftYStop">
+         <property name="text">
+          <string>LiftYStop</string>
+         </property>
+        </widget>
        </item>
       </layout>
      </item>
