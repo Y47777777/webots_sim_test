@@ -1,12 +1,12 @@
 /**
  * @file E_shadow_lidar.h
- * @author weijchen (weijchen@visionnav.com)
- * @brief 主控 ctrl.h
- * @version 2.0
- * @date 2024-06-21
- *
+ * @author your name (you@domain.com)
+ * @brief 
+ * @version 0.1
+ * @date 2024-07-09
+ * 
  * @copyright Copyright (c) 2024
- *
+ * 
  */
 #pragma once
 #include <thread>
@@ -33,18 +33,16 @@ class AGVController : public BaseController {
     // task
     void whileSpin();
 
-    void BpReportSpin();
-    void Mid360ReportSpin();
-    void Mid360TwoReportSpin();
-    void Mid360PerceptionReportSpin();
+    
+    void Slam1ReportSpin();
+    void Slam2ReportSpin();
+    
 
     bool sendPointCloud(std::string topic, std::shared_ptr<WLidar> lidar_ptr);
 
    private:
-    std::shared_ptr<WLidar> BP_ptr_;
-    std::shared_ptr<WLidar> mid360_ptr_;
-    std::shared_ptr<WLidar> mid360Two_ptr_;
-    std::shared_ptr<WLidar> mid360_perception_ptr_;
+    std::shared_ptr<WLidar> slam_1_ptr_;
+    std::shared_ptr<WLidar> slam_2_ptr_;
 
     std::shared_ptr<WPose> pose_ptr_;
     std::shared_ptr<WTransfer> transfer_ptr_;

@@ -15,13 +15,13 @@ class SVCShadow : public BaseSvc {
     int initService();
 
    public:
-    void onBpMsg(const char *topic_name,
+    void onSlam1Msg(const char *topic_name,
                  const eCAL::SReceiveCallbackData *data);
-    void onMid360Msg(const char *topic_name,
+    void onSlam2Msg(const char *topic_name,
                      const eCAL::SReceiveCallbackData *data);
-    void onMid360TwoMsg(const char *topic_name,
+    void onSlam3Msg(const char *topic_name,
                         const eCAL::SReceiveCallbackData *data);
-    void onMid360PerMsg(const char *topic_name,
+    void onPerceptionMsg(const char *topic_name,
                         const eCAL::SReceiveCallbackData *data);
 
    private:
