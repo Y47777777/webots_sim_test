@@ -11,7 +11,7 @@
 #pragma once
 #include <thread>
 
-#include "sim_data_flow/P_msg.pb.h"
+#include "sim_data_flow/E_msg.pb.h"
 #include "controller/base_ctrl.h"
 #include "webots_device/w_fork.h"
 #include "webots_device/w_wheel.h"
@@ -53,7 +53,7 @@ class AGVController : public BaseController {
     std::shared_ptr<WTransfer> transfer_ptr_;
 
    public:
-    void subPMsgCallBack(const char *topic_name,
+    void subEMsgCallBack(const char *topic_name,
                          const eCAL::SReceiveCallbackData *data);
 };
 

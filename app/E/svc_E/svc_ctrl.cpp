@@ -14,12 +14,12 @@ SVCMaster::~SVCMaster() {}
 int SVCMaster::onInitService() {
     // publisher
     ecal_ptr_->addEcal("Sensor/read");
-    ecal_ptr_->addEcal("svc/P_msg");
+    ecal_ptr_->addEcal("svc/E_msg");
     ecal_ptr_->addEcal("svc/pose");
 
     // Receive
-    ecal_ptr_->addEcal("webot/P_msg",
-                       std::bind(&SVCMaster::subPMsgCallBack, this,
+    ecal_ptr_->addEcal("webot/E_msg",
+                       std::bind(&SVCMaster::subEMsgCallBack, this,
                                  std::placeholders::_1, std::placeholders::_2));
 
     ecal_ptr_->addEcal("webot/pose",
@@ -28,7 +28,7 @@ int SVCMaster::onInitService() {
     return 0;
 }
 
-void SVCMaster::subPMsgCallBack(const char *topic_name,
+void SVCMaster::subEMsgCallBack(const char *topic_name,
                                 const eCAL::SReceiveCallbackData *data) {
     // 反序列化
     msg_from_webots_.ParseFromArray(data->buf, data->size);
@@ -64,26 +64,32 @@ void SVCMaster::subDownStreamCallBack(uint8_t *msg, int len) {
         decoder_.getValue2("DataIndex", &dataidx_sub_, 4);  // 回报
     }
 
-    pubPMsgsToWebots();
+    pubEMsgsToWebots();
 }
 
-void SVCMaster::pubPMsgsToWebots() {
+void SVCMaster::pubEMsgsToWebots() {
     double ForkDeviceZ;
+    double ForkDeviceY;
+    double ForkDeviceP;
     double SteeringDevice;
     double MoveDevice;
 
     decoder_.getValue("MoveDevice", &MoveDevice);          // steer wheel
     decoder_.getValue("SteeringDevice", &SteeringDevice);  // steer yaw
     decoder_.getValue("ForkDevice", &ForkDeviceZ, "Z");    // fork Speed
+    decoder_.getValue("ForkDevice", &ForkDeviceY, "Y");
+    decoder_.getValue("ForkDevice", &ForkDeviceY, "Z");
 
     msg_to_webots_.set_steering_speed(MoveDevice);
     msg_to_webots_.set_steering_theta(SteeringDevice);
     msg_to_webots_.set_forkspeedz(ForkDeviceZ);
+    msg_to_webots_.set_forkspeedy(ForkDeviceY);
+    msg_to_webots_.set_forkspeedp(ForkDeviceP);
 
     // publish
     uint8_t buf[msg_to_webots_.ByteSize()];
     msg_to_webots_.SerializePartialToArray(buf, msg_to_webots_.ByteSize());
-    ecal_ptr_->send("svc/P_msg", buf, msg_to_webots_.ByteSize());
+    ecal_ptr_->send("svc/E_msg", buf, msg_to_webots_.ByteSize());
 }
 
 void SVCMaster::pubUpStream() {
@@ -93,14 +99,21 @@ void SVCMaster::pubUpStream() {
         first_pub_report_ = false;
         LOG_INFO("set base timer %d", Timer::getInstance()->getBaseTime());
     }
-
+    const char Axis[3] = {'X', 'Y', 'Z'};
+    foxglove::Imu *imu = msg_from_webots_.mutable_imu();
     // 数据转换
-    encoder_.updateValue("IncrementalSteeringCoder", 1, "",
+    encoder_.updateValue("IncrementalSteeringCoder", 1, "LF",
+                         msg_from_webots_.steering_theta());
+    encoder_.updateValue("IncrementalSteeringCoder", 1, "RF",
                          msg_from_webots_.steering_theta());
     encoder_.updateValue("Gyroscope", 1, "", msg_from_webots_.gyroscope());
     encoder_.updateValue("HeightCoder", 1, "", msg_from_webots_.forkposez());
     encoder_.updateValue("ForkDisplacementSencer", 1, "Z",
                          msg_from_webots_.forkposez());
+    encoder_.updateValue("ForkDisplacementSencer", 1, "Y",
+                         msg_from_webots_.forkposey());
+    encoder_.updateValue("ForkDisplacementSencer", 1, "P",
+                         msg_from_webots_.forkposep());
     encoder_.updateValue2("DataIndex", &dataidx_upload_, sizeof(uint32_t));
 
     uint16_t battery_device = 100;
@@ -111,7 +124,18 @@ void SVCMaster::pubUpStream() {
     wheel_coder_l += msg_from_webots_.l_wheel() * 0.5;
     wheel_coder_r += msg_from_webots_.r_wheel() * 0.5;
     encoder_.updateValue("WheelCoder", 2, "", wheel_coder_l, wheel_coder_r);
-
+    encoder_.updateValue("AngularVelocitySensor", 1, "X",
+                         imu->angular_velocity().x());
+    encoder_.updateValue("AngularVelocitySensor", 1, "Y",
+                         imu->angular_velocity().y());
+    encoder_.updateValue("AngularVelocitySensor", 1, "Z",
+                         imu->angular_velocity().z());
+    encoder_.updateValue("Accelerometer", 1, "X",
+                         imu->linear_acceleration().x());
+    encoder_.updateValue("Accelerometer", 1, "Y",
+                         imu->linear_acceleration().y());
+    encoder_.updateValue("Accelerometer", 1, "Z",
+                         imu->linear_acceleration().z());
     {
         // 该数据多线程读写
         std::lock_guard<std::mutex> lock(msgs_lock_);
