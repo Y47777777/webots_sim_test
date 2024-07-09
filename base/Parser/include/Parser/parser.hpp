@@ -13,7 +13,7 @@ struct UpdateValue {
     const void *val;
     int len;  // size of the bytes
     // 1. subId are used for WheelCoder, 0 means left, 1 means right
-    // 2. if no more than 1 param, give anything for subId
+    // 2. if no more than 1 params, give anything for subId
     int subId;
 };
 
@@ -41,7 +41,7 @@ class InputDecoder {
     /// @return error code/*  */
     /// @note 1. 0 means successful
     ///       2. -1 means not config not loaded
-    int getValue(const char *key, double *output);
+    int getValue(const char *key, double *output, const char *func_key = "");
 
     /// @brief get value from origin bytes (uint16_t , int16_t, uint32_t,
     /// int32_t)
@@ -49,14 +49,16 @@ class InputDecoder {
     /// @param output output value
     /// @param len bytes size of the valuable
     /// @return
-    int getValue2(const char *key, void *output, int size);
+    int getValue2(const char *key, void *output, int size,
+                  const char *func_key = "");
 
     /// @brief get value from switch bits value
     /// @param key
     /// @param bits
     /// @param output
     /// @return
-    int getSwitchValue(const char *key, int bits, bool *output);
+    int getSwitchValue(const char *key, int bits, bool *output,
+                       const char *func_key = "");
 };
 
 class OutputEncoder {
@@ -78,15 +80,15 @@ class OutputEncoder {
     /// @return error code
     /// @note 1. 0 means successful
     ///       2. -1 means not config not loaded
-    int updateValue(const char *key, int len, ...);
+    int updateValue(const char *key, int len, const char *func_key = "", ...);
 
     /// @brief update bytes value to each node
     /// @param key
     /// @param size
     /// @param input, uint16_t, int16_t, int32_t, uint32_t value
     /// @return
-    int updateValue2(const char *key, const void *input,
-                     int size);  // input uint16_t, int16_t, int32_t, uint32_t
+    int updateValue2(const char *key, const void *input, int size,
+                     const char *func_key = "");
 
     /// @brief update bits value
     /// @param key key name
@@ -95,7 +97,8 @@ class OutputEncoder {
     /// @note: 1. 0 means successful
     ///        2. -1 means invalid key
     ///        3. -2 means invalid bits position
-    int updateSwitchValue(const char *key, int bits, bool value);
+    int updateSwitchValue(const char *key, int bits, bool value,
+                          const char *func_key = "");
 
     /// @brief get n bytes frame
     /// @return frame info

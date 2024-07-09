@@ -31,7 +31,7 @@ int SVCMaster::onInitService() {
 }
 
 void SVCMaster::onWebotMsg(const char *topic_name,
-                                const eCAL::SReceiveCallbackData *data) {
+                           const eCAL::SReceiveCallbackData *data) {
     sim_data_flow::STUp payload2;
     payload2.ParseFromArray(data->buf, data->size);
     foxglove::Imu *imu = payload2.mutable_imu();
@@ -141,19 +141,23 @@ void SVCMaster::pubUpStream() {
 
     // Data to Upload
     std::string Imu_Function = "";
-    encoder_.updateValue("IncrementalSteeringCoder", 1, l_steer_yaw);
-    encoder_.updateValue("Gyroscope", 1, l_Imu.angle[2]);
-    encoder_.updateValue("RPMSensor", 1, l_rpm);
+    encoder_.updateValue("IncrementalSteeringCoder", 1, "", l_steer_yaw);
+    encoder_.updateValue("Gyroscope", 1, "", l_Imu.angle[2]);
+    encoder_.updateValue("RPMSensor", 1, "", l_rpm);
     encoder_.updateValue2("BatterySencer", &battery_device, sizeof(uint16_t));
     encoder_.updateValue2("DataIndex", &dataidx_upload, sizeof(uint32_t));
     encoder_.updateValue2("DataIndexReturn", &l_dataidx, sizeof(uint32_t));
     for (int i = 0; i < 2; i++)
         encoder_.updateSwitchValue("SwitchSencer", 38 + i, fork[i]);
     for (int i = 0; i < 3; i++) {
-        Imu_Function = "Accelerometer" + std::string(&Axis[i]);
-        encoder_.updateValue(Imu_Function.c_str(), 1, l_Imu.acceleration[i]);
-        Imu_Function = "AngularVelocitySensor" + std::string(&Axis[i]);
-        encoder_.updateValue(Imu_Function.c_str(), 1, l_Imu.velocity[i]);
+        // Imu_Function = "Accelerometer" + std::string(&Axis[i]);
+        // encoder_.updateValue(Imu_Function.c_str(), 1, l_Imu.acceleration[i]);
+        // Imu_Function = "AngularVelocitySensor" + std::string(&Axis[i]);
+        // encoder_.updateValue(Imu_Function.c_str(), 1, l_Imu.velocity[i]);
+        encoder_.updateValue("Accelerometer", 1, std::string(&Axis[i]).c_str(),
+                             l_Imu.acceleration[i]);
+        encoder_.updateValue("AngularVelocitySensor", 1,
+                             std::string(&Axis[i]).c_str(), l_Imu.velocity[i]);
     }
     const struct Package *pack = encoder_.encodePackage();
     ecal_ptr_->send("Sensor/read", pack->buf, pack->len);

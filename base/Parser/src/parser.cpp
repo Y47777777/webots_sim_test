@@ -45,6 +45,7 @@ int InputDecoder::loadConfig(const char *path) {
                  ch_ele != nullptr; ch_ele = ch_ele->NextSiblingElement()) {
                 // // std::cout << ch_ele->Name() << std::endl;
                 std::string name(ch_ele->Name());
+                std::string function = "";
                 std::string whichFork;
                 int length = -1;
                 struct SpecialParam param;
@@ -65,16 +66,13 @@ int InputDecoder::loadConfig(const char *path) {
                         param.name = l_name;
                         param.value = ch_attr->Value();
                         param_list.push_back(param);
-                        if (param.name == "Function" &&
-                            (param.value == "P" || param.value == "Z")) {
-                            whichFork = param.value;
+                        if (param.name == "Function") {
+                            function = param.value;
                         }
                     }
                 }
-                if (name == "ForkDevice") {
-                    name += whichFork;
-                }
-                ad_ptr->create(name.c_str(), param_list, length);
+                ad_ptr->create(name.c_str(), function.c_str(), param_list,
+                               length);
                 param_list.clear();
                 if (name == "DataTail") {
                     isOver = true;
@@ -92,14 +90,15 @@ int InputDecoder::decodePackage(const struct Package *package) {
     return 0;
 }
 
-int InputDecoder::getValue(const char *key, double *output) {
+int InputDecoder::getValue(const char *key, double *output,
+                           const char *func_key) {
     int ret = 0;
     do {
         if (ad_ptr == nullptr) {
             ret = -1;
             break;
         }
-        int handle = ad_ptr->get(key);
+        int handle = ad_ptr->get(key, func_key);
         std::shared_ptr<class AcuratorModel> ptr = ad_ptr->get(handle);
         if (ptr->isNeedParsed()) {
             ptr->solveValue(output);
@@ -110,14 +109,15 @@ int InputDecoder::getValue(const char *key, double *output) {
     return ret;
 }
 
-int InputDecoder::getValue2(const char *key, void *output, int size) {
+int InputDecoder::getValue2(const char *key, void *output, int size,
+                            const char *func_key) {
     int ret = 0;
     do {
         if (ad_ptr == nullptr) {
             ret = -1;
             break;
         }
-        int handle = ad_ptr->get(key);
+        int handle = ad_ptr->get(key, func_key);
         std::shared_ptr<class AcuratorModel> ptr = ad_ptr->get(handle);
         int length = ptr->getLength();
         memcpy(output, ptr->getValue(), length);
@@ -125,14 +125,15 @@ int InputDecoder::getValue2(const char *key, void *output, int size) {
     return ret;
 }
 
-int InputDecoder::getSwitchValue(const char *key, int bits, bool *output) {
+int InputDecoder::getSwitchValue(const char *key, int bits, bool *output,
+                                 const char *func_key) {
     int ret = 0;
     do {
         if (ad_ptr == nullptr) {
             ret = -1;
             break;
         }
-        int handle = ad_ptr->get(key);
+        int handle = ad_ptr->get(key, func_key);
         std::shared_ptr<class AcuratorModel> ptr = ad_ptr->get(handle);
         const uint8_t *header = (const uint8_t *) ptr->getValue();
         int length = ptr->getLength();
@@ -179,6 +180,7 @@ int OutputEncoder::loadConfig(const char *path) {
                  ch_ele != nullptr; ch_ele = ch_ele->NextSiblingElement()) {
                 // std::cout << ch_ele->Name() << std::endl;
                 std::string name(ch_ele->Name());
+                std::string function = "";
                 std::string whichFork;
                 int length = -1;
                 struct SpecialParam param;
@@ -199,20 +201,13 @@ int OutputEncoder::loadConfig(const char *path) {
                         param.name = l_name;
                         param.value = ch_attr->Value();
                         param_list.push_back(param);
-                        if (param.name == "Function" &&
-                            (param.value == "P" || param.value == "Z" ||
-                             param.value == "Y" || param.value == "Z")) {
-                            // TODO: May be give RPMSensor --> M later
-                            whichFork = param.value;
+                        if (param.name == "Function") {
+                            function = param.value;
                         }
                     }
                 }
-                if (name == "ForkDisplacementSencer" ||
-                    name == "Accelerometer" ||
-                    name == "AngularVelocitySensor") {
-                    name += whichFork;
-                }
-                sd_ptr->create(name.c_str(), param_list, length);
+                sd_ptr->create(name.c_str(), function.c_str(), param_list,
+                               length);
                 param_list.clear();
                 if (name == "DataTail") {
                     isOver = true;
@@ -224,7 +219,8 @@ int OutputEncoder::loadConfig(const char *path) {
     return ret;
 }
 
-int OutputEncoder::updateValue(const char *key, int len, ...) {
+int OutputEncoder::updateValue(const char *key, int len, const char *func_key,
+                               ...) {
     int ret = 0;
     std::vector<double> calculated_input;
     std::vector<double> calculated_output;
@@ -235,13 +231,13 @@ int OutputEncoder::updateValue(const char *key, int len, ...) {
             break;
         }
         calculated_input.resize(len);
-        va_start(arg_ptr, len);
+        va_start(arg_ptr, func_key);
         for (int i = 0; i < len; ++i) {
             calculated_input[i] = va_arg(arg_ptr, double);
         }
         va_end(arg_ptr);
 
-        int handle = sd_ptr->get(key);
+        int handle = sd_ptr->get(key, func_key);
         std::shared_ptr<class SensorModel> ptr = sd_ptr->get(handle);
         if (ptr->isNeedParsed()) {
             ptr->solveValue(calculated_input, calculated_output);
@@ -252,7 +248,8 @@ int OutputEncoder::updateValue(const char *key, int len, ...) {
     return ret;
 }
 
-int OutputEncoder::updateSwitchValue(const char *key, int bits, bool value) {
+int OutputEncoder::updateSwitchValue(const char *key, int bits, bool value,
+                                     const char *func_key) {
     int ret = 0;
     struct UpdateValue ll_input = {.val = &value, .len = 1, .subId = bits};
     std::vector<struct UpdateValue *> l_input({&ll_input});
@@ -261,13 +258,14 @@ int OutputEncoder::updateSwitchValue(const char *key, int bits, bool value) {
             ret = -1;
             break;
         }
-        int handle = sd_ptr->get(key);
+        int handle = sd_ptr->get(key, func_key);
         std::shared_ptr<class SensorModel> ptr = sd_ptr->get(handle);
         ptr->setValue(l_input);
     } while (0);
     return ret;
 }
-int OutputEncoder::updateValue2(const char *key, const void *input, int size) {
+int OutputEncoder::updateValue2(const char *key, const void *input, int size,
+                                const char *func_key) {
     int ret = 0;
     struct UpdateValue ll_input = {.val = input, .len = size, .subId = 0};
     std::vector<struct UpdateValue *> l_input({&ll_input});
@@ -276,7 +274,7 @@ int OutputEncoder::updateValue2(const char *key, const void *input, int size) {
             ret = -1;
             break;
         }
-        int handle = sd_ptr->get(key);
+        int handle = sd_ptr->get(key, func_key);
         std::shared_ptr<class SensorModel> ptr = sd_ptr->get(handle);
         ptr->setValue(l_input);
     } while (0);

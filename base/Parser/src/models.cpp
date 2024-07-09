@@ -1,5 +1,5 @@
 #include <string.h>
-
+#include <sstream>
 #include <iostream>
 
 #include "models.hpp"
@@ -207,12 +207,12 @@ void SteeringDevice::solveValue(double *output) {
     return;
 }
 
-ForkDeviceZ::ForkDeviceZ() : CommonParsedValueModel() {}
+ForkDevice::ForkDevice() : CommonParsedValueModel() {}
 
-ForkDeviceZ::~ForkDeviceZ() {}
+ForkDevice::~ForkDevice() {}
 
-void ForkDeviceZ::config(const std::vector<struct SpecialParam> &param,
-                         int start_p, int length, bool is32bits) {
+void ForkDevice::config(const std::vector<struct SpecialParam> &param,
+                        int start_p, int length, bool is32bits) {
     start_p_ = start_p;
     length_ = 2;
     is32bits_ = false;
@@ -246,7 +246,7 @@ void ForkDeviceZ::config(const std::vector<struct SpecialParam> &param,
     }
 }
 
-void ForkDeviceZ::solveValue(double *output) {
+void ForkDevice::solveValue(double *output) {
     float input = getFloatValue();
     float t_input = input;
     float high, low;
@@ -270,26 +270,6 @@ void ForkDeviceZ::solveValue(double *output) {
         return;
     }
     *output = (double) (t_input - low) / high;
-    return;
-}
-
-ForkDeviceP::ForkDeviceP() : CommonParsedValueModel() {}
-
-ForkDeviceP::~ForkDeviceP() {}
-
-void ForkDeviceP::config(const std::vector<struct SpecialParam> &param,
-                         int start_p, int length, bool is32bits) {
-    start_p_ = start_p;
-    length_ = 2;
-    is32bits_ = false;
-    isSigned_ = true;
-    if (length != -1)
-        length_ = length;
-    end_p_ = start_p_ + length_ - 1;
-    isNeedParsed_ = false;
-}
-
-void ForkDeviceP::solveValue(double *output) {
     return;
 }
 
@@ -497,32 +477,6 @@ void SensorModel::SencerModelConfig() {
         for (int i = 0; i < length_; i++) { buf_[i] = 0x00; }
     }
 }
-
-// void SensorModel::solveValue(const std::vector<double>& input,
-// std::vector<double>& output){
-//     // Nothing to do with base model
-// }
-
-// int SensorModel::setValue(std::vector<struct UpdateValue*>& val){
-//     if(!is32bits_){
-//         if(isSigned_){
-//             const int16_t* l_val = (const int16_t*)(val[0]->val);
-//             to2BytesFromint16_t(l_val, buf_);
-//         }else{
-//             const uint16_t* l_val = (const uint16_t*)(val[0]->val);
-//             to2BytesFromuint16_t(l_val, buf_);
-//         }
-//     }else{
-//         if(isSigned_){
-//             const int32_t* l_val = (const int32_t*)(val[0]->val);
-//             to4BytesFromint32_t(l_val, buf_);
-//         }else{
-//             const uint32_t* l_val = (const uint32_t*)(val[0]->val);
-//             to4BytesFromuint32_t(l_val, buf_);
-//         }
-//     }
-//     return 0;
-// }
 
 std::string SensorModel::getType() {
     return type_;
@@ -804,37 +758,55 @@ void SDataIndex::solveValue(const std::vector<double> &input,
     return;
 }
 
-ForkDisplacementSencerZ::ForkDisplacementSencerZ()
-    : CommonParsedSencerModel() {}
+ForkDisplacementSencer::ForkDisplacementSencer() : CommonParsedSencerModel() {}
 
-ForkDisplacementSencerZ::~ForkDisplacementSencerZ() {}
+ForkDisplacementSencer::~ForkDisplacementSencer() {}
 
-void ForkDisplacementSencerZ::config(
+void ForkDisplacementSencer::config(
     const std::vector<struct SpecialParam> &param, int start_p, int length,
     bool is32bits, bool isSigned) {
     start_p_ = start_p;
     length_ = 2;
-    isSigned_ = false;
-    is32bits_ = false;
+    for (int i = 0; i < param.size(); i++) {
+        if (param.at(i).name == "Signed") {
+            std::istringstream(param.at(i).value) >> std::boolalpha >>
+                isSigned_;
+        } else if (param.at(i).name == "Is32Bit") {
+            std::istringstream(param.at(i).value) >> std::boolalpha >>
+                is32bits_;
+            length_ = 4;
+        }
+    }
     if (length != -1)
         length_ = length;
     end_p_ = start_p_ + length_ - 1;
     isNeedParsed_ = true;
     SensorModel::SencerModelConfig();
-    SensorModel::_setType(false);
+    SensorModel::_setType(isSigned_);
     for (auto &it : param) {
         extra_val_[it.name] = strtod(it.value.c_str(), nullptr);
     }
 }
 
-void ForkDisplacementSencerZ::solveValue(const std::vector<double> &input,
-                                         std::vector<double> &output) {
+void ForkDisplacementSencer::solveValue(const std::vector<double> &input,
+                                        std::vector<double> &output) {
     double magnification = extra_val_["Magnification"];
     double zero = extra_val_["Zero"];
     output.resize(1);
     output[0] = input[0] / magnification + zero;
-    uint16_t Z = (uint16_t) output[0];
-    to2BytesFromuint16_t(&Z, buf_);
+    if (!isSigned_ && !is32bits_) {
+        uint16_t Height = (uint16_t) output[0];
+        to2BytesFromuint16_t(&Height, buf_);
+    } else if (!isSigned_ && is32bits_) {
+        uint32_t Height = (uint32_t) output[0];
+        to4BytesFromuint32_t(&Height, buf_);
+    } else if (isSigned_ && !is32bits_) {
+        int16_t Height = (int16_t) output[0];
+        to2BytesFromint16_t(&Height, buf_);
+    } else {
+        int32_t Height = (int32_t) output[0];
+        to4BytesFromint32_t(&Height, buf_);
+    }
 }
 
 HeightCoder::HeightCoder() : CommonParsedSencerModel() {}
@@ -995,13 +967,13 @@ int SwitchSencer::setValue(const std::vector<struct UpdateValue *> &val) {
     return 0;
 }
 
-AccelerometerX::AccelerometerX() : CommonParsedSencerModel() {}
+Accelerometer::Accelerometer() : CommonParsedSencerModel() {}
 
-AccelerometerX::~AccelerometerX() {}
+Accelerometer::~Accelerometer() {}
 
-void AccelerometerX::config(const std::vector<struct SpecialParam> &param,
-                            int start_p, int length, bool is32bits,
-                            bool isSigned) {
+void Accelerometer::config(const std::vector<struct SpecialParam> &param,
+                           int start_p, int length, bool is32bits,
+                           bool isSigned) {
     start_p_ = start_p;
     length_ = 2;
     isSigned_ = true;
@@ -1017,85 +989,21 @@ void AccelerometerX::config(const std::vector<struct SpecialParam> &param,
     }
 }
 
-void AccelerometerX::solveValue(const std::vector<double> &input,
-                                std::vector<double> &output) {
+void Accelerometer::solveValue(const std::vector<double> &input,
+                               std::vector<double> &output) {
     double magnification = extra_val_["Magnification"];
     double zero = extra_val_["Zero"];
     output.resize(1);
     output[0] = input[0] / magnification + zero;
-    int16_t AccelerometerX = (int16_t) output[0];
-    to2BytesFromint16_t(&AccelerometerX, buf_);
+    int16_t Accelerometer = (int16_t) output[0];
+    to2BytesFromint16_t(&Accelerometer, buf_);
 }
 
-AccelerometerY::AccelerometerY() : CommonParsedSencerModel() {}
+AngularVelocitySensor::AngularVelocitySensor() : CommonParsedSencerModel() {}
 
-AccelerometerY::~AccelerometerY() {}
+AngularVelocitySensor::~AngularVelocitySensor() {}
 
-void AccelerometerY::config(const std::vector<struct SpecialParam> &param,
-                            int start_p, int length, bool is32bits,
-                            bool isSigned) {
-    start_p_ = start_p;
-    length_ = 2;
-    isSigned_ = true;
-    isNeedParsed_ = true;
-    if (length != -1)
-        length_ = length;
-    end_p_ = start_p_ + length_ - 1;
-    SensorModel::SencerModelConfig();
-    _setType(isSigned);
-    for (auto &it : param) {
-        if (it.name == "Zero" || it.name == "Magnification")
-            extra_val_[it.name] = strtod(it.value.c_str(), nullptr);
-    }
-}
-
-void AccelerometerY::solveValue(const std::vector<double> &input,
-                                std::vector<double> &output) {
-    double magnification = extra_val_["Magnification"];
-    double zero = extra_val_["Zero"];
-    output.resize(1);
-    output[0] = input[0] / magnification + zero;
-    int16_t AccelerometerY = (int16_t) output[0];
-    to2BytesFromint16_t(&AccelerometerY, buf_);
-}
-
-AccelerometerZ::AccelerometerZ() : CommonParsedSencerModel() {}
-
-AccelerometerZ::~AccelerometerZ() {}
-
-void AccelerometerZ::config(const std::vector<struct SpecialParam> &param,
-                            int start_p, int length, bool is32bits,
-                            bool isSigned) {
-    start_p_ = start_p;
-    length_ = 2;
-    isSigned_ = true;
-    isNeedParsed_ = true;
-    if (length != -1)
-        length_ = length;
-    end_p_ = start_p_ + length_ - 1;
-    SensorModel::SencerModelConfig();
-    _setType(isSigned);
-    for (auto &it : param) {
-        if (it.name == "Zero" || it.name == "Magnification")
-            extra_val_[it.name] = strtod(it.value.c_str(), nullptr);
-    }
-}
-
-void AccelerometerZ::solveValue(const std::vector<double> &input,
-                                std::vector<double> &output) {
-    double magnification = extra_val_["Magnification"];
-    double zero = extra_val_["Zero"];
-    output.resize(1);
-    output[0] = input[0] / magnification + zero;
-    int16_t AccelerometerZ = (int16_t) output[0];
-    to2BytesFromint16_t(&AccelerometerZ, buf_);
-}
-
-AngularVelocitySensorX::AngularVelocitySensorX() : CommonParsedSencerModel() {}
-
-AngularVelocitySensorX::~AngularVelocitySensorX() {}
-
-void AngularVelocitySensorX::config(
+void AngularVelocitySensor::config(
     const std::vector<struct SpecialParam> &param, int start_p, int length,
     bool is32bits, bool isSigned) {
     start_p_ = start_p;
@@ -1112,76 +1020,14 @@ void AngularVelocitySensorX::config(
     }
 }
 
-void AngularVelocitySensorX::solveValue(const std::vector<double> &input,
-                                        std::vector<double> &output) {
+void AngularVelocitySensor::solveValue(const std::vector<double> &input,
+                                       std::vector<double> &output) {
     double magnification = extra_val_["Magnification"];
     double zero = extra_val_["Zero"];
     output.resize(1);
     output[0] = input[0] / magnification + zero;
-    int16_t AngularVelocitySensorX = (int16_t) output[0];
-    to2BytesFromint16_t(&AngularVelocitySensorX, buf_);
-}
-
-AngularVelocitySensorY::AngularVelocitySensorY() : CommonParsedSencerModel() {}
-
-AngularVelocitySensorY::~AngularVelocitySensorY() {}
-
-void AngularVelocitySensorY::config(
-    const std::vector<struct SpecialParam> &param, int start_p, int length,
-    bool is32bits, bool isSigned) {
-    start_p_ = start_p;
-    length_ = 2;
-    isSigned_ = true;
-    isNeedParsed_ = true;
-    if (length != -1)
-        length_ = length;
-    end_p_ = start_p_ + length_ - 1;
-    SensorModel::SencerModelConfig();
-    for (auto &it : param) {
-        if (it.name == "Zero" || it.name == "Magnification")
-            extra_val_[it.name] = strtod(it.value.c_str(), nullptr);
-    }
-}
-
-void AngularVelocitySensorY::solveValue(const std::vector<double> &input,
-                                        std::vector<double> &output) {
-    double magnification = extra_val_["Magnification"];
-    double zero = extra_val_["Zero"];
-    output.resize(1);
-    output[0] = input[0] / magnification + zero;
-    int16_t AngularVelocitySensorY = (int16_t) output[0];
-    to2BytesFromint16_t(&AngularVelocitySensorY, buf_);
-}
-
-AngularVelocitySensorZ::AngularVelocitySensorZ() : CommonParsedSencerModel() {}
-
-AngularVelocitySensorZ::~AngularVelocitySensorZ() {}
-
-void AngularVelocitySensorZ::config(
-    const std::vector<struct SpecialParam> &param, int start_p, int length,
-    bool is32bits, bool isSigned) {
-    start_p_ = start_p;
-    length_ = 2;
-    isSigned_ = true;
-    isNeedParsed_ = true;
-    if (length != -1)
-        length_ = length;
-    end_p_ = start_p_ + length_ - 1;
-    SensorModel::SencerModelConfig();
-    for (auto &it : param) {
-        if (it.name == "Zero" || it.name == "Magnification")
-            extra_val_[it.name] = strtod(it.value.c_str(), nullptr);
-    }
-}
-
-void AngularVelocitySensorZ::solveValue(const std::vector<double> &input,
-                                        std::vector<double> &output) {
-    double magnification = extra_val_["Magnification"];
-    double zero = extra_val_["Zero"];
-    output.resize(1);
-    output[0] = input[0] / magnification + zero;
-    int16_t AngularVelocitySensorZ = (int16_t) output[0];
-    to2BytesFromint16_t(&AngularVelocitySensorZ, buf_);
+    int16_t AngularVelocitySensor = (int16_t) output[0];
+    to2BytesFromint16_t(&AngularVelocitySensor, buf_);
 }
 
 DataCRC::DataCRC() : CommonParsedSencerModel() {}

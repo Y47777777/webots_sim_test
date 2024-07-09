@@ -236,39 +236,45 @@ int main(void) {
     // printf("]\n");
 
     // TEST ST
-    InputDecoder decoder_st;
-    std::string path_decode_st = std::string(root_path) +
-                                 "/SimulateV2.0/workspace_dev/webots_ctrl/base/"
-                                 "Parser/example/Actuators_ST.config";
-    decoder_st.loadConfig(path_decode_st.c_str());
-    uint8_t sample_code_ST[] = {
-        // AA-00-00-00-00-FF-F1-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-E0-00-00-0
-        0xAA, 0x00, 0x00, 0x00, 0x00, 0x09, 0xA1, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xE0, 0x00, 0x00, 0x00, 0x00, 0x40,
-        0x00, 0x00, 0x00, 0xD1, 0x7B, 0x00, 0x0B, 0x7A, 0xC7, 0x7E, 0x7D, 0x55};
-    struct Package pack_st = {sample_code_ST, sizeof(sample_code_ST)};
-    // double nothing = 0;
-    // int16_t SteeringDevice = 0;
-    uint32_t dataIdx;
-    double realSteeringDevice = 0;
-    decoder_st.decodePackage(&pack_st);
-    printf("pack size = %ld\n", sizeof(sample_code_ST));
-    uint8_t switch_sensor[10] = {0xFF};
-    bool bit_set;
-    for (int i = 0; i < 10 * 8; i++) {
-        decoder_st.getSwitchValue("SwitchActuator", i, &bit_set);
-        // 00 00 00 E0 00 00 00 00 40 00
-        printf("%d --> %d\n", bit_set, i);
-    }
-    decoder_st.getValue("SteeringDevice", &realSteeringDevice);
-    printf("SteeringDevice = %f\n", realSteeringDevice);
-    decoder_st.getValue2("DataIndex", &dataIdx, 4);
-    printf("DataIndex = %d\n", dataIdx);
+    // InputDecoder decoder_st;
+    // std::string path_decode_st =
+    //     std::string(root_path) +
+    //     "/SimulateV2.0/simulation_world.weijian2/webots_ctrl/base/Parser/"
+    //     "example/Actuators_ST.config";
+    // decoder_st.loadConfig(path_decode_st.c_str());
+    // uint8_t sample_code_ST[] = {
+    //     //
+    //     AA-00-00-00-00-FF-F1-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-E0-00-00-0
+    //     0xAA, 0x00, 0x00, 0x00, 0x00, 0x09, 0xA1, 0x00, 0x00, 0x00, 0x00,
+    //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00,
+    //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xE0, 0x00, 0x00,
+    //     0x00, 0x00, 0x40, 0x00, 0x00, 0x00, 0xD1, 0x7B, 0x00, 0x0B, 0x7A,
+    //     0xC7, 0x7E, 0x7D, 0x55};
+    // struct Package pack_st = {sample_code_ST, sizeof(sample_code_ST)};
+    // // double nothing = 0;
+    // // int16_t SteeringDevice = 0;
+    // uint32_t dataIdx;
+    // double realSteeringDevice = 0;
+    // decoder_st.decodePackage(&pack_st);
+    // printf("pack size = %ld\n", sizeof(sample_code_ST));
+    // uint8_t switch_sensor[10] = {0xFF};
+    // bool bit_set;
+    // for (int i = 0; i < 10 * 8; i++) {
+    //     decoder_st.getSwitchValue("SwitchActuator", i, &bit_set);
+    //     // 00 00 00 E0 00 00 00 00 40 00
+    //     printf("%d --> %d\n", bit_set, i);
+    // }
+    // decoder_st.getValue("SteeringDevice", &realSteeringDevice);
+    // printf("SteeringDevice = %f\n", realSteeringDevice);
+    // decoder_st.getValue2("DataIndex", &dataIdx, 4);
+    // printf("DataIndex = %d\n", dataIdx);
     // printf("[");
-    // for (int i = 0; i < 1; i++) {
-    // printf("%.2X ", switch_sensor[i]); } printf("]\n"); printf("["); int
-    // counter = 0; int step = 0; for (int i = 0; i < 10 * 8; i++) {
+    // for (int i = 0; i < 1; i++) { printf("%.2X ", switch_sensor[i]); }
+    // printf("]\n");
+    // printf("[");
+    // int counter = 0;
+    // int step = 0;
+    // for (int i = 0; i < 10 * 8; i++) {
     //     printf("%d ", (switch_sensor[counter] >> (8 - step - 1)) & 0x01);
     //     step++;
     //     if (step == 8) {
@@ -277,74 +283,151 @@ int main(void) {
     //     }
     // }
     // printf("]\n");
-    // printf("SteeringDevice = %d realSteeringDevice = %f\n",
-    // SteeringDevice,
-    //        realSteeringDevice);
-    std::string path_st_encode = std::string(root_path) +
-                                 "/SimulateV2.0/workspace_dev/webots_ctrl/base/"
-                                 "Parser/example/Sencers_ST.config";
-    OutputEncoder encoder_st;
-    // std::vector<double> nullCalculatedInput;
-    // std::vector<UpdateValue *> nullDirectInput;
-    // std::vector<UpdateValue *> VelocityControlLevelInput;
-    // std::vector<UpdateValue *> SwitchSencerInput;
-    // std::vector<double> AccelerometerXInput;
-    // std::vector<double> AccelerometerYInput;
-    // std::vector<double> AccelerometerZInput;
-    // struct UpdateValue VelocityControl;
-    // std::vector<double> RPMSensorInput;
-    // struct UpdateValue RPMSensor;
-    // struct UpdateValue SwitchSencer[12];
-    uint8_t controlLevel = 0x40;
-    // uint8_t switchValueList[12] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    //                                0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-    double RMPValue = 779 * 0.0634;
-    double AX = 0.00762565;
+    // std::string path_st_encode =
+    //     std::string(root_path) +
+    //     "/SimulateV2.0/simulation_world.weijian2/webots_ctrl/base/Parser/"
+    //     "example/Sencers_ST.config";
+    // OutputEncoder encoder_st;
+    // // std::vector<double> nullCalculatedInput;
+    // // std::vector<UpdateValue *> nullDirectInput;
+    // // std::vector<UpdateValue *> VelocityControlLevelInput;
+    // // std::vector<UpdateValue *> SwitchSencerInput;
+    // // std::vector<double> AccelerometerXInput;
+    // // std::vector<double> AccelerometerYInput;
+    // // std::vector<double> AccelerometerZInput;
+    // // struct UpdateValue VelocityControl;
+    // // std::vector<double> RPMSensorInput;
+    // // struct UpdateValue RPMSensor;
+    // // struct UpdateValue SwitchSencer[12];
+    // uint8_t controlLevel = 0x40;
+    // // uint8_t switchValueList[12] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+    // //                                0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+    // double RMPValue = 779 * 0.0634;
+    // double AX = 0.00762565;
+    // double AY = 0.0344975;
+    // double AZ = 9.7804;
+    // double gyro = 3.14;
+    // uint32_t data_idx = 100;
+    // uint32_t ll_data_idx = 100;
+    // // VelocityControl.val = &controlLevel;
+    // // VelocityControl.len = 1;
+    // // VelocityControlLevelInput.push_back(&VelocityControl);
+    // // RPMSensorInput.push_back(RMPValue);
+    // // SwitchSencerInput.resize(12);
+    // // switchValueList[4] ^= 0x80;
+    // // switchValueList[4] ^= 0x40;
+    // // for (int i = 0; i < 12; i++) {
+    // //     SwitchSencer[i].val = &switchValueList[i];
+    // //     SwitchSencer[i].len = 1;
+    // //     SwitchSencer[i].subId = i;
+    // //     SwitchSencerInput[i] = &SwitchSencer[i];
+    // // }
+    // // AccelerometerXInput.push_back(AX);
+    // // AccelerometerYInput.push_back(AY);
+    // // AccelerometerZInput.push_back(AZ);
+    // // switchValueList[3] |= 0x00;
+    // // switchValueList[4] |= 0x00;
+    // encoder_st.loadConfig(path_st_encode.c_str());
+    // encoder_st.updateValue2("VelocityControlLevel", &controlLevel, 1);
+    // encoder_st.updateValue("Gyroscope", 1, "", gyro);
+    // encoder_st.updateValue("RPMSensor", 1, "", RMPValue);
+    // encoder_st.updateValue2("DataIndex", &ll_data_idx, 1);
+    // encoder_st.updateValue2("DataIndexReturn", &data_idx, 1);
+    // encoder_st.updateValue("RPMSensor", 1, "", RMPValue);
+    // for (int i = 0; i < 12 * 8; i++) {
+    //     if (i < 32 || i > 33)
+    //         encoder_st.updateSwitchValue("SwitchSencer", i, true);
+    //     else
+    //         encoder_st.updateSwitchValue("SwitchSencer", i, false);
+    // }
+    // // encoder_st.updateSwitchValue("SwitchSencer", 35, true);
+    // encoder_st.updateValue("Accelerometer", 1, "X", AX);
+    // encoder_st.updateValue("Accelerometer", 1, "Y", AY);
+    // encoder_st.updateValue("Accelerometer", 1, "Z", AZ);
+    // const Package *st_pack = encoder_st.encodePackage();
+    // printf("st_pack len = %d\n", st_pack->len);
+    // printf("[");
+    // for (int i = 0; i < st_pack->len; i++) { printf("%.2X ",
+    // st_pack->buf[i]); } printf("]\n");
+
+    // TEST VNE
+    InputDecoder decoder_vne;
+    std::string path_decode_vne =
+        std::string(root_path) +
+        "/SimulateV2.0/simulation_world.weijian2/webots_ctrl/base/Parser/"
+        "example/Actuators_VNE40_2.config";
+    printf("path_decode_vne = %s\n", path_decode_vne.c_str());
+    decoder_vne.loadConfig(path_decode_vne.c_str());
+    uint8_t sample_code_VNE[] = {
+        // AA-00-00-00-00-FF-F1-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-E0-00-00-0
+        0xAA, 0xFF, 0xFF, 0x00, 0x00, 0x09, 0xA1, 0x00, 0x00, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xE0, 0x00, 0x00,
+        0x00, 0x00, 0x40, 0x00, 0x00, 0x00, 0xD1, 0x7B, 0x00, 0x0B, 0x7A,
+        0xC7, 0x00, 0x00, 0x00, 0x00, 0x7E, 0x7D, 0x55};
+    struct Package pack_vne = {sample_code_VNE, sizeof(sample_code_VNE)};
+    // double nothing = 0;
+    // int16_t SteeringDevice = 0;
+    // uint32_t dataIdx;
+    double realSteeringDeviceL = 0;
+    double realSteeringDeviceR = 0;
+    double realMoveDevices = 0;
+    uint32_t vne_dataIdx = 0;
+    decoder_vne.decodePackage(&pack_vne);
+    printf("pack size = %ld\n", sizeof(sample_code_VNE));
+    // uint8_t switch_sensor[10] = {0xFF};
+    // bool bit_set;
+    // for (int i = 0; i < 10 * 8; i++) {
+    //     decoder_vne.getSwitchValue("SwitchActuator", i, &bit_set);
+    //     // 00 00 00 E0 00 00 00 00 40 00
+    //     printf("%d --> %d\n", bit_set, i);
+    // }
+    decoder_vne.getValue("MoveDevice", &realMoveDevices);  // steer wheel
+    printf("MoveDevice = %f\n", realMoveDevices);
+    decoder_vne.getValue("SteeringDevice", &realSteeringDeviceL, "LF");
+    printf("SteeringDeviceL = %f\n", realSteeringDeviceL);
+    decoder_vne.getValue("SteeringDevice", &realSteeringDeviceR, "RF");
+    printf("SteeringDeviceR = %f\n", realSteeringDeviceR);
+    decoder_vne.getValue2("DataIndex", &vne_dataIdx, 4);
+    printf("DataIndex = %d\n", vne_dataIdx);
+
+    OutputEncoder encoder_vne;
+    std::string path_encoder_vne =
+        std::string(root_path) +
+        "/SimulateV2.0/simulation_world.weijian2/webots_ctrl/base/Parser/"
+        "example/Sencers_VNE40_2.config";
+    printf("path_encode_vne = %s\n", path_encoder_vne.c_str());
+    encoder_vne.loadConfig(path_encoder_vne.c_str());
+    double steeringAngle = 1.57;
+    // double AX = 0.00762565;
+    double AX = 9.7804;
     double AY = 0.0344975;
     double AZ = 9.7804;
     double gyro = 3.14;
     uint32_t data_idx = 100;
     uint32_t ll_data_idx = 100;
-    // VelocityControl.val = &controlLevel;
-    // VelocityControl.len = 1;
-    // VelocityControlLevelInput.push_back(&VelocityControl);
-    // RPMSensorInput.push_back(RMPValue);
-    // SwitchSencerInput.resize(12);
-    // switchValueList[4] ^= 0x80;
-    // switchValueList[4] ^= 0x40;
-    // for (int i = 0; i < 12; i++) {
-    //     SwitchSencer[i].val = &switchValueList[i];
-    //     SwitchSencer[i].len = 1;
-    //     SwitchSencer[i].subId = i;
-    //     SwitchSencerInput[i] = &SwitchSencer[i];
-    // }
-    // AccelerometerXInput.push_back(AX);
-    // AccelerometerYInput.push_back(AY);
-    // AccelerometerZInput.push_back(AZ);
-    // switchValueList[3] |= 0x00;
-    // switchValueList[4] |= 0x00;
-    encoder_st.loadConfig(path_st_encode.c_str());
-    encoder_st.updateValue2("VelocityControlLevel", &controlLevel, 1);
-    encoder_st.updateValue("Gyroscope", 1, gyro);
-    encoder_st.updateValue("RPMSensor", 1, RMPValue);
-    encoder_st.updateValue2("DataIndex", &ll_data_idx, 1);
-    encoder_st.updateValue2("DataIndexReturn", &data_idx, 1);
-    encoder_st.updateValue("RPMSensor", 1, RMPValue);
-    for (int i = 0; i < 12 * 8; i++) {
-        if (i < 32 || i > 33)
-            encoder_st.updateSwitchValue("SwitchSencer", i, true);
-        else
-            encoder_st.updateSwitchValue("SwitchSencer", i, false);
-    }
-    // encoder_st.updateSwitchValue("SwitchSencer", 35, true);
-    encoder_st.updateValue("AccelerometerX", 1, AX);
-    encoder_st.updateValue("AccelerometerY", 1, AY);
-    encoder_st.updateValue("AccelerometerZ", 1, AZ);
-    const Package *st_pack = encoder_st.encodePackage();
-    printf("st_pack len = %d\n", st_pack->len);
+    double forkZ = 1.56;
+    double forkC = 0.1;
+    double forkY = 0.2;
+    double forkP = 0.3;
+    double MoveWheel = 10;
+    encoder_vne.updateValue2("DataIndex", &ll_data_idx, 1);
+    encoder_vne.updateValue2("DataIndexReturn", &data_idx, 1);
+    encoder_vne.updateValue("WheelCoder", 2, "", MoveWheel, MoveWheel);
+    encoder_vne.updateValue("IncrementalSteeringCoder", 1, "LF", steeringAngle);
+    encoder_vne.updateValue("IncrementalSteeringCoder", 1, "RF", steeringAngle);
+    encoder_vne.updateValue("Accelerometer", 1, "X", AX);
+    encoder_vne.updateValue("Accelerometer", 1, "Y", AY);
+    encoder_vne.updateValue("Accelerometer", 1, "Z", AZ);
+    encoder_vne.updateValue("ForkDisplacementSencer", 1, "Y", forkY);
+    encoder_vne.updateValue("ForkDisplacementSencer", 1, "C", forkC);
+    encoder_vne.updateValue("ForkDisplacementSencer", 1, "P", forkP);
+    encoder_vne.updateValue("HeightCoder", 1, "", forkZ);
+    const Package *vne_pack = encoder_vne.encodePackage();
     printf("[");
-    for (int i = 0; i < st_pack->len; i++) { printf("%.2X ", st_pack->buf[i]); }
+    for (int i = 0; i < vne_pack->len; i++) {
+        printf("%.2X ", vne_pack->buf[i]);
+    }
     printf("]\n");
-
     return 0;
 }
