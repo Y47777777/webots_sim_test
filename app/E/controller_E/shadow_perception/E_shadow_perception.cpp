@@ -34,7 +34,7 @@ std::shared_ptr<ReflectorChecker> ReflectorChecker::instance_ptr_ = nullptr;
 std::string slam_3_webots_topic = "webots/Lidar/.57/PointCloud";
 std::string perception_webots_topic = "webots/Lidar/.100/PointCloud";
 
-AGVController::AGVController() : BaseController("webots_shadow_lidar") {
+AGVController::AGVController() : BaseController("webots_shadow_perception") {
     // Sensor
     slam_3_ptr_ = std::make_shared<WLidar>("slam_3", 100);
     slam_3_ptr_->setSimulationNRLS("mid360.csv");
