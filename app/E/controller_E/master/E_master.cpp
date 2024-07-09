@@ -43,7 +43,7 @@ AGVController::AGVController() : BaseController("webots_master") {
     l_ptr_ = std::make_shared<WWheel>("", "", "", "RS", "BRPS");
     r_ptr_ = std::make_shared<WWheel>("", "", "", "RS", "BLPS");
     pose_ptr_ = std::make_shared<WPose>("RobotNode");
-    // lidar_pose_ptr_ = std::make_shared<WLidar>("mid360Per", 100, false);
+    lidar_pose_ptr_ = std::make_shared<WLidar>("perception", 100, false);
     transfer_ptr_ = std::make_shared<WTransfer>();
 
     v_while_spin_.push_back(bind(&WBase::spin, stree_ptr_));
@@ -90,13 +90,16 @@ void AGVController::manualSetState(const std::map<std::string, double> &msg) {
 
 void AGVController::manualGetState(std::map<std::string, double> &msg) {
     msg["steer_speed"] = stree_ptr_->getSpeed();
-    msg["steer_yaw"] = stree_ptr_->getMotorYaw();
+    msg["steer_yaw"] = stree_ptr_->getMotorYaw()
+    ;
     msg["fork_speed"] = fork_ptr_->getVelocityValue();
     msg["forkY_speed"] = forkY_ptr_->getVelocityValue();
     msg["forkP_speed"] = forkP_ptr_->getVelocityValue();
+
     msg["fork_height"] = fork_ptr_->getSenosorValue();
     msg["forkY_height"] = forkY_ptr_->getSenosorValue();
     msg["forkP_height"] = forkP_ptr_->getSenosorValue();
+
     msg["real_speed"] = 0;
     // TODO: fork_speed real_speed
 }
@@ -104,13 +107,13 @@ void AGVController::manualGetState(std::map<std::string, double> &msg) {
 void AGVController::whileSpin() {
     /* 主循环 在super_->step()后*/
     // 发送至svc
-    // pubSerialSpin();
+    pubSerialSpin();
 
     // 移动感知激光
-    // movePerLidarSpin();
+    movePerLidarSpin();
 
     // 发送至shadow
-    // pubRobotPoseSpin();
+    pubRobotPoseSpin();
 
     // 休眠一下
     Timer::getInstance()->sleep<microseconds>(10);

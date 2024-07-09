@@ -203,9 +203,9 @@ class WLidar : public WBase {
 
         // TODO: 要改到master上
         if (values < 0.214) {
-            translation[2] = tf_translation_[2];
+            translation[2] = tf_translation_[2] - values;
         } else {
-            translation[2] = tf_translation_[2] + (values - 0.214);
+            translation[2] = tf_translation_[2] - (0.214);
         }
 
         translation_ptr_->setSFVec3f(translation);
