@@ -34,14 +34,28 @@ typedef struct WTransferNode {
     double tran_set[3] = {0, 0, 0};
     double rota_set[4] = {0, 0, 0, 0};
 
+    double tran_world[3] = {0, 0, 0};
+    double tran_world_last[3] = {0, 0, 0};
+
     Field *rotation_f_ptr_ = nullptr;
     Field *translation_f_ptr_ = nullptr;
+
+    Node* node_ptr_ = nullptr;
+
+    void initWorldPosi(const double* t){
+        for(int i = 0;i<3;++i){
+            tran_world[i] = t[i];
+            tran_world_last[i] = t[i];
+        }
+    }
 };
 
 class WTransfer : public WBase {
    public:
     WTransfer() : WBase() {
         root_ = super_->getRoot();
+
+        robot_ = super_->getFromDef("RobotNode");
 
         // get all node
         getChildNode(root_);
@@ -51,9 +65,13 @@ class WTransfer : public WBase {
 
     void getTransfer(sim_data_flow::MTransfer &tanfer_msgs) {
         std::shared_lock<std::shared_mutex> lock(rw_mutex_);
-
+        static uint64_t seq = 0;
         tanfer_msgs.clear_map();
-        for (auto it = m_tanfer_.begin(); it != m_tanfer_.end(); ++it) {
+        tanfer_msgs.set_seq(seq++);
+        if(m_updated_trans_.empty()){
+            return ;
+        }
+        for (auto it = m_updated_trans_.begin(); it != m_updated_trans_.end(); ++it) {
             auto ptr = tanfer_msgs.add_map();
             ptr->set_name(it->first);
 
@@ -67,19 +85,21 @@ class WTransfer : public WBase {
             ptr->mutable_rotation()->set_w(it->second.rotation[3]);
 
         }
+        m_updated_trans_.clear();
     }
 
     void setTransfer(const sim_data_flow::MTransfer &msgs) {
         std::shared_lock<std::shared_mutex> lock(rw_mutex_);
 
         set_flag = true;
+        m_updated_trans_.clear();
         for (int i = 0; i < msgs.map().size(); i++) {
             std::string name = msgs.map().at(i).name();
             if (m_tanfer_.find(name) == m_tanfer_.end()) {
                 LOG_INFO("can`t find %s", name.c_str());
                 return;
             }
-
+            
             m_tanfer_[name].tran_set[0] = msgs.map().at(i).translation().x();
             m_tanfer_[name].tran_set[1] = msgs.map().at(i).translation().y();
             m_tanfer_[name].tran_set[2] = msgs.map().at(i).translation().z();
@@ -88,31 +108,55 @@ class WTransfer : public WBase {
             m_tanfer_[name].rota_set[1] = msgs.map().at(i).rotation().y();
             m_tanfer_[name].rota_set[2] = msgs.map().at(i).rotation().z();
             m_tanfer_[name].rota_set[3] = msgs.map().at(i).rotation().w();
+            m_updated_trans_.insert(std::make_pair(name,m_tanfer_[name]));
         }
     }
 
     void spin() {
         std::unique_lock<std::shared_mutex> lock(rw_mutex_);
-
+        const float POSI_THRESHOLD = 0.001;
+        const float BASE_RANGE = 3;
         if (set_flag) {
             // 写入(shadow)
-            for (auto it = m_tanfer_.begin(); it != m_tanfer_.end(); ++it) {
+            for (auto it = m_updated_trans_.begin(); it != m_updated_trans_.end(); ++it) {
                 Field *tran_ptr = it->second.translation_f_ptr_;
                 Field *rota_ptr = it->second.rotation_f_ptr_;
 
                 tran_ptr->setSFVec3f(it->second.tran_set);
                 rota_ptr->setSFRotation(it->second.rota_set);
             }
+            m_updated_trans_.clear();
         } else {
             // 读出(master)
+            decltype(m_updated_trans_) tmp_trans;
+            const double * robot_tran = robot_->getPosition();
             for (auto it = m_tanfer_.begin(); it != m_tanfer_.end(); ++it) {
-                const double *tran =
-                    it->second.translation_f_ptr_->getSFVec3f();
-                const double *rota =
-                    it->second.rotation_f_ptr_->getSFRotation();
 
-                memcpy(it->second.translation, tran, sizeof((*tran)) * 3);
-                memcpy(it->second.rotation, rota, sizeof((*rota)) * 4);
+                auto last_posi = 
+                            it->second.tran_world;
+                if(std::abs(robot_tran[0] - last_posi[0])<=BASE_RANGE
+                   &&std::abs(robot_tran[1] - last_posi[1])<=BASE_RANGE){// 在车体周围
+                    auto curr_posi = 
+                              it->second.node_ptr_->getPosition();
+
+                    if(std::abs(curr_posi[0] - last_posi[0])>=POSI_THRESHOLD
+                       ||std::abs(curr_posi[1] - last_posi[1])>=POSI_THRESHOLD
+                       ||std::abs(curr_posi[2] - last_posi[2])>=POSI_THRESHOLD){// 坐标是否发生变化
+                        auto curr_tran = it->second.translation_f_ptr_->getSFVec3f();
+                        auto curr_rota = it->second.rotation_f_ptr_->getSFRotation();
+
+                        memcpy(it->second.translation, curr_tran, sizeof((*curr_tran)) * 3);
+                        memcpy(it->second.rotation, curr_rota, sizeof((*curr_rota)) * 4);
+                        memcpy(it->second.tran_world,curr_posi,sizeof(*curr_posi)*3);
+                        auto tmp = *it;
+                        tmp_trans.insert(tmp);
+                    }
+                }
+            }
+            if(!tmp_trans.empty()){// 非空则更新，否则等get清理;
+                                    //避免卡顿后停止移动最新的pose无法更新
+                m_updated_trans_.clear();
+                m_updated_trans_ = tmp_trans;
             }
         }
     }
@@ -156,16 +200,23 @@ class WTransfer : public WBase {
             }
 
             std::string name = name_field->getSFString();
-            if (name != "Robot") {
+            if (name.compare("Robot") != 0) {
                 WTransferNode tran(rotation_ptr_, translation_ptr_);
+                tran.initWorldPosi(this_ptr->getPosition());
+                tran.node_ptr_ = this_ptr;
                 m_tanfer_.insert(std::pair<std::string, WTransferNode>(name, tran));
+                v_transfer_.push_back(tran);
                 LOG_INFO("creat tran %s", name.c_str());
             }
         }
     }
 
     Node *root_ = nullptr;
+    Node *robot_ = nullptr;
     std::map<std::string, WTransferNode> m_tanfer_;
+    // master for pub,shadow for sub
+    std::map<std::string, WTransferNode> m_updated_trans_;
+    std::vector<WTransferNode> v_transfer_;
     bool set_flag = false;
 };
 

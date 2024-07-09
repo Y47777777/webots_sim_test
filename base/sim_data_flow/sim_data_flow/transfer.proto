@@ -16,4 +16,5 @@ message Transfer {
 message MTransfer
 {
     repeated Transfer map = 1;
+    uint64 seq = 2;
 }
