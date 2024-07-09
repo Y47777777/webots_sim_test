@@ -47,6 +47,7 @@ class AGVController : public BaseController {
     std::shared_ptr<WWheel> r_ptr_;
     std::shared_ptr<WFork> fork_ptr_;
     std::shared_ptr<WFork> forkY_ptr_;
+    std::shared_ptr<WFork> forkP_ptr_;
     std::shared_ptr<WPose> pose_ptr_;
     std::shared_ptr<WLidar> lidar_pose_ptr_;
     std::shared_ptr<WTransfer> transfer_ptr_;

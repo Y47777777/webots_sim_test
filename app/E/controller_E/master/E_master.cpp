@@ -35,6 +35,7 @@ AGVController::AGVController() : BaseController("webots_master") {
     imu_ptr_ = std::make_shared<WImu>("inertial unit", "gyro", "accelerometer");
     fork_ptr_ = std::make_shared<WFork>("fork height motor", "ForkZAxis");
     forkY_ptr_ = std::make_shared<WFork>("YMotor", "ForkYAxis", "YSensor");
+    forkP_ptr_ = std::make_shared<WFork>("PMotor", "ForkPAxis", "PSensor");
     stree_ptr_ =
         std::make_shared<WWheel>("FL", "SteerWheel", "SteerSolidL", "FLWheel");
     stree2_ptr_ =
@@ -51,6 +52,7 @@ AGVController::AGVController() : BaseController("webots_master") {
     v_while_spin_.push_back(bind(&WBase::spin, r_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, fork_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, forkY_ptr_));
+    v_while_spin_.push_back(bind(&WBase::spin, forkP_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, imu_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, pose_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, transfer_ptr_));
@@ -71,17 +73,18 @@ void AGVController::manualSetState(const std::map<std::string, double> &msg) {
     static double steer_yaw = 0;
     static double fork_speed = 0;
     static double forkY_speed = 0;
+    static double forkP_speed = 0;
     if (isManual_) {
         steer_speed = msg.at("steer_speed");
         steer_yaw = msg.at("steer_yaw");
         fork_speed = msg.at("fork_speed");
         forkY_speed = msg.at("forkY_speed");
-        std::cout << "forkY_speed = " << forkY_speed
-                  << ", fork_speed = " << fork_speed << std::endl;
+        forkP_speed = msg.at("forkP_speed");
         stree_ptr_->setSpeed(steer_speed, steer_yaw);
         stree2_ptr_->setSpeed(steer_speed, steer_yaw);
         fork_ptr_->setVelocity(fork_speed);
         forkY_ptr_->setVelocity(forkY_speed);
+        forkP_ptr_->setVelocity(forkP_speed);
     }
 }
 
@@ -90,8 +93,10 @@ void AGVController::manualGetState(std::map<std::string, double> &msg) {
     msg["steer_yaw"] = stree_ptr_->getMotorYaw();
     msg["fork_speed"] = fork_ptr_->getVelocityValue();
     msg["forkY_speed"] = forkY_ptr_->getVelocityValue();
+    msg["forkP_speed"] = forkP_ptr_->getVelocityValue();
     msg["fork_height"] = fork_ptr_->getSenosorValue();
     msg["forkY_height"] = forkY_ptr_->getSenosorValue();
+    msg["forkP_height"] = forkP_ptr_->getSenosorValue();
     msg["real_speed"] = 0;
     // TODO: fork_speed real_speed
 }

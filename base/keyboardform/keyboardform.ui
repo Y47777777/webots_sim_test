@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>321</width>
-    <height>387</height>
+    <width>445</width>
+    <height>515</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -49,6 +49,13 @@
           </widget>
          </item>
          <item>
+          <widget class="QLabel" name="label_forkPSpeed">
+           <property name="text">
+            <string>forkPSpeed:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
           <widget class="QLabel" name="label_forkYSpeed">
            <property name="text">
             <string>forkYSpeed:</string>
@@ -66,6 +73,13 @@
           <widget class="QLabel" name="label_forkHeight">
            <property name="text">
             <string>ForkHeight:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_forkPHeight">
+           <property name="text">
+            <string>forkPHeight:</string>
            </property>
           </widget>
          </item>
@@ -102,6 +116,13 @@
           </widget>
          </item>
          <item>
+          <widget class="QLabel" name="label_forkPSpeed_value">
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item>
           <widget class="QLabel" name="label_forkYSpeed_value">
            <property name="text">
             <string/>
@@ -117,6 +138,13 @@
          </item>
          <item>
           <widget class="QLabel" name="label_forkHeight_value">
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_forkPHeight_value">
            <property name="text">
             <string/>
            </property>
@@ -237,6 +265,31 @@
           </spacer>
          </item>
         </layout>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_7">
+       <item>
+        <widget class="QPushButton" name="pushButton_liftPUp">
+         <property name="text">
+          <string>LiftPUp</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushButton_liftPDown">
+         <property name="text">
+          <string>LiftPDown</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushButton_liftPStop">
+         <property name="text">
+          <string>LiftPStop</string>
+         </property>
+        </widget>
        </item>
       </layout>
      </item>

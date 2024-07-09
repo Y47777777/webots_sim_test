@@ -38,6 +38,9 @@ class KeyboardForm : public QWidget {
     void on_pushButton_liftYLeft_clicked();
     void on_pushButton_liftYRight_clicked();
     void on_pushButton_liftYStop_clicked();
+    void on_pushButton_liftPDown_clicked();
+    void on_pushButton_liftPUp_clicked();
+    void on_pushButton_liftPStop_clicked();
     void setStatus();
 
    private:
@@ -49,6 +52,8 @@ class KeyboardForm : public QWidget {
         double fork_height = 0;
         double forkY_speed = 0;
         double forkY_height = 0;
+        double forkP_speed = 0;
+        double forkP_height = 0;
         double real_speed = 0;
     };
     ManualState manual_state_;
