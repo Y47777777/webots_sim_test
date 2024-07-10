@@ -28,7 +28,7 @@ using namespace webots;
 
 const double FRONT_WHEELBASE = 1.69;  // 前后轮间距
 const double FRONT_TREAD = 1.2;       // 前轮间距
-const double REAR_TREAD = 1.4;        // 后轮间距
+const double REAR_TREAD = 0.85;       // 后轮间距
 
 // 计算tan角度
 inline double CalcTan(double len, double yaw) {
@@ -44,21 +44,31 @@ inline double CalcAngle(double tangent) {
 void computeSteeringAndDrive(double v, double yaw, double &steer_l,
                              double &steer_r, double &driver_L,
                              double &driver_R) {
-    // 计算转向角度
-    double tan_yaw = std::tan(yaw);
-    steer_l = std::atan(FRONT_WHEELBASE /
-                        (FRONT_WHEELBASE / tan_yaw - FRONT_TREAD / 2));
-    steer_r = std::atan(FRONT_WHEELBASE /
-                        (FRONT_TREAD / 2 + FRONT_WHEELBASE / tan_yaw));
-
-    // 计算对应的各驱动轮的速度
-    double radius_c = FRONT_WHEELBASE / std::abs(tan_yaw);
-    double radius_l =
-        std::sqrt(pow(radius_c - FRONT_TREAD / 2, 2) + pow(FRONT_WHEELBASE, 2));
-    double radius_r =
-        std::sqrt(pow(radius_c + FRONT_TREAD / 2, 2) + pow(FRONT_WHEELBASE, 2));
-    driver_L = v * radius_l / radius_c;
-    driver_R = v * radius_r / radius_c;
+    if ((1.57 - std::fabs(yaw)) < 0.001) {
+        double diff = std::atan(0.5 * REAR_TREAD / FRONT_WHEELBASE);
+        steer_r = 1.57 - diff;
+        steer_l = -1.57 + diff;
+        driver_L = v * 0.5 * FRONT_TREAD / FRONT_WHEELBASE;
+        driver_R = -driver_L;
+        if (yaw > 0) {
+            std::swap(driver_L, driver_R);
+        }
+    } else {
+        // 计算转向角度
+        double tan_yaw = std::tan(yaw);
+        steer_l = std::atan(FRONT_WHEELBASE /
+                            (FRONT_WHEELBASE / tan_yaw - FRONT_TREAD / 2));
+        steer_r = std::atan(FRONT_WHEELBASE /
+                            (FRONT_TREAD / 2 + FRONT_WHEELBASE / tan_yaw));
+        // 计算对应的各驱动轮的速度
+        double radius_c = FRONT_WHEELBASE / std::abs(tan_yaw);
+        double radius_l = std::sqrt(pow(radius_c - FRONT_TREAD / 2, 2) +
+                                    pow(FRONT_WHEELBASE, 2));
+        double radius_r = std::sqrt(pow(radius_c + FRONT_TREAD / 2, 2) +
+                                    pow(FRONT_WHEELBASE, 2));
+        driver_L = v * radius_l / radius_c;
+        driver_R = v * radius_r / radius_c;
+    }
 }
 
 // 函数2：计算内侧驱动轮的转速
@@ -145,10 +155,31 @@ void AGVController::manualSetState(const std::map<std::string, double> &msg) {
         // } else {
         //     r_ptr_->setVelocity(steer_speed);
         // }
+
         double r_yaw, l_yaw;
         double r_v, l_v;
 
         computeSteeringAndDrive(steer_speed, steer_yaw, l_yaw, r_yaw, l_v, r_v);
+
+        // std::cout << "steer_speed = " << steer_speed
+        //           << ", steer_yaw = " << steer_yaw << ", l_yaw = " << l_yaw
+        //           << ", r_yaw = " << r_yaw << ", l_v = " << l_v
+        //           << ", r_v = " << r_v << std::endl;
+        // double l_speed = 0;
+        // double r_speed = 0;
+        // bool flag = false;
+        // if ((l_yaw < 0)) {
+        //     flag = true;
+        //     l_speed = computeInsideWheelSpeed(l_yaw, r_yaw, r_v, flag);
+        //     r_speed = r_v;
+        // } else {
+        //     r_speed = computeInsideWheelSpeed(l_yaw, r_yaw, l_v, flag);
+        //     l_speed = l_v;
+        // }
+
+        // std::cout << "l_yaw = " << l_yaw << ", r_yaw = " << r_yaw
+        //           << ", l_speed = " << l_speed << ", r_speed = " << r_speed
+        //           << ", trigger = " << flag << std::endl;
 
         streeR_ptr_->setYaw(r_yaw);
         streeL_ptr_->setYaw(l_yaw);
@@ -235,12 +266,27 @@ void AGVController::subEMsgCallBack(const char *topic_name,
         sim_data_flow::EMsgDown payload;
         payload.ParseFromArray(data->buf, data->size);
 
-        streeR_ptr_->setSpeed(payload.steering_speed(),
-                              payload.steering_theta());
+        double l_theta = payload.steering_theta_l();
+        double r_theta = payload.steering_theta_r();
+        double speed = payload.steering_speed();
+        double l_speed = 0;
+        double r_speed = 0;
+        bool isTurnLeft = false;
+        if ((l_theta < 0)) {
+            isTurnLeft = true;
+            l_speed =
+                computeInsideWheelSpeed(l_theta, r_theta, speed, isTurnLeft);
+            r_speed = speed;
+        } else {
+            r_speed =
+                computeInsideWheelSpeed(l_theta, r_theta, speed, isTurnLeft);
+            l_speed = speed;
+        }
 
-                              
-        streeL_ptr_->setSpeed(payload.steering_speed(),
-                              payload.steering_theta());
+        streeL_ptr_->setYaw(l_theta);
+        streeR_ptr_->setYaw(r_theta);
+        l_ptr_->setVelocity(l_speed);
+        r_ptr_->setVelocity(r_speed);
 
         fork_ptr_->setVelocity(payload.forkspeedz());
         fork_ptr_->setVelocity(payload.forkspeedy());
@@ -255,9 +301,8 @@ void AGVController::pubSerialSpin() {
     payload.set_forkposey(forkY_ptr_->getSenosorValue());
     payload.set_forkposep(forkP_ptr_->getSenosorValue());
 
-    // payload.set_steerposition(streeR_ptr_->getSenosorValue());
-    payload.set_steering_theta(streeR_ptr_->getMotorYaw());
-    payload.set_steering_theta(streeL_ptr_->getMotorYaw());
+    payload.set_steering_theta_l(streeL_ptr_->getMotorYaw());
+    payload.set_steering_theta_r(streeR_ptr_->getMotorYaw());
 
     payload.set_l_wheel(l_ptr_->getWheelArcLength());
     payload.set_r_wheel(r_ptr_->getWheelArcLength());

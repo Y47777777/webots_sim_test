@@ -71,17 +71,22 @@ void SVCMaster::pubEMsgsToWebots() {
     double ForkDeviceZ;
     double ForkDeviceY;
     double ForkDeviceP;
-    double SteeringDevice;
+    double SteeringDeviceL;
+    double SteeringDeviceR;
     double MoveDevice;
 
-    decoder_.getValue("MoveDevice", &MoveDevice);          // steer wheel
-    decoder_.getValue("SteeringDevice", &SteeringDevice);  // steer yaw
-    decoder_.getValue("ForkDevice", &ForkDeviceZ, "Z");    // fork Speed
+    decoder_.getValue("MoveDevice", &MoveDevice);  // steer wheel
+    decoder_.getValue("SteeringDevice", &SteeringDeviceL,
+                      "LF");  // steer yaw LF
+    decoder_.getValue("SteeringDevice", &SteeringDeviceR,
+                      "RF");                             // steer yaw RF
+    decoder_.getValue("ForkDevice", &ForkDeviceZ, "Z");  // fork Speed
     decoder_.getValue("ForkDevice", &ForkDeviceY, "Y");
     decoder_.getValue("ForkDevice", &ForkDeviceY, "Z");
 
     msg_to_webots_.set_steering_speed(MoveDevice);
-    msg_to_webots_.set_steering_theta(SteeringDevice);
+    msg_to_webots_.set_steering_theta_l(SteeringDeviceL);
+    msg_to_webots_.set_steering_theta_r(SteeringDeviceR);
     msg_to_webots_.set_forkspeedz(ForkDeviceZ);
     msg_to_webots_.set_forkspeedy(ForkDeviceY);
     msg_to_webots_.set_forkspeedp(ForkDeviceP);
@@ -103,9 +108,9 @@ void SVCMaster::pubUpStream() {
     foxglove::Imu *imu = msg_from_webots_.mutable_imu();
     // 数据转换
     encoder_.updateValue("IncrementalSteeringCoder", 1, "LF",
-                         msg_from_webots_.steering_theta());
+                         msg_from_webots_.steering_theta_l());
     encoder_.updateValue("IncrementalSteeringCoder", 1, "RF",
-                         msg_from_webots_.steering_theta());
+                         msg_from_webots_.steering_theta_r());
     encoder_.updateValue("Gyroscope", 1, "", msg_from_webots_.gyroscope());
     encoder_.updateValue("HeightCoder", 1, "", msg_from_webots_.forkposez());
     encoder_.updateValue("ForkDisplacementSencer", 1, "Z",
