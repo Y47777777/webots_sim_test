@@ -20,15 +20,46 @@
 namespace VNSim {
 using namespace webots;
 
-// TODO: 完善局部碰撞
+typedef struct WCollisionNode {
+    WCollisionNode(Node *node_p = nullptr, Field *physics = nullptr,
+                   Field *bounding = nullptr) {
+        node_ptr_ = node_p;
+        physics_ptr_ = physics;
+        bounding_ptr_ = bounding;
+    }
+
+    bool still_around_robot_ = false;
+
+    std::string physics_str_;
+    std::string bounding_str_;
+
+    double tran_world[3] = {0, 0, 0};
+    double tran_world_last[3] = {0, 0, 0};
+
+    Node *node_ptr_ = nullptr;
+    Field *physics_ptr_ = nullptr;
+    Field *bounding_ptr_ = nullptr;
+
+    void initWorldPosi(const double *t) {
+        for (int i = 0; i < 3; ++i) {
+            tran_world[i] = t[i];
+            tran_world_last[i] = t[i];
+        }
+    }
+};
+
 class WCollision : public WBase {
    public:
-    WCollision() : WBase() {
+    WCollision(bool is_shadow = true) : WBase() {
+        is_shadow_ = is_shadow;
         root_ = super_->getRoot();
+        robot_ = super_->getFromDef("RobotNode");
 
         // get all node
         getChildNode(root_);
-        
+
+        // LOG_INFO("");
+        std::cout << "creat map size " << m_node_.size();
     }
     ~WCollision() {}
 
@@ -36,6 +67,13 @@ class WCollision : public WBase {
     void getChildNode(Node *this_ptr) {
         if (this_ptr == nullptr) {
             return;
+        }
+
+        if (is_shadow_ == false) {
+            auto node_type = this_ptr->getBaseTypeName();
+            if (node_type.compare("Robot") == 0) {
+                return;
+            }
         }
 
         Field *children = this_ptr->getField("children");
@@ -60,21 +98,105 @@ class WCollision : public WBase {
             getChildNode(endPoint);
         }
 
-        Field *bounding_object = this_ptr->getField("boundingObject");
-        if (bounding_object != nullptr) {
-            bounding_object->removeSF();
-        }
-        Field *physics = this_ptr->getField("physics");
-        if (physics != nullptr) {
-            physics->removeSF();
-            this_ptr->resetPhysics();
+        if (is_shadow_) {
+            // shadow 删除所有碰撞属性,物理属性
+            Field *bounding_object = this_ptr->getField("boundingObject");
+            if (bounding_object != nullptr) {
+                bounding_object->removeSF();
+            }
+            Field *physics = this_ptr->getField("physics");
+            if (physics != nullptr) {
+                physics->removeSF();
+                this_ptr->resetPhysics();
+            }
+        } else {
+            Field *physics = this_ptr->getField("physics");
+            Field *bounding_object = this_ptr->getField("boundingObject");
+
+            if (bounding_object != nullptr && physics != nullptr) {
+                Node *bounding_node = bounding_object->getSFNode();
+                Node *physics_node = physics->getSFNode();
+
+                if (bounding_node != nullptr && physics_node != nullptr) {
+                    WCollisionNode node(this_ptr, physics, bounding_object);
+                    node.initWorldPosi(this_ptr->getPosition());
+
+                    node.physics_str_ = physics_node->exportString();
+                    node.bounding_str_ = bounding_node->exportString();
+
+                    // 记录当前节点物理属性
+                    m_node_.insert(std::make_pair(idx_, node));
+                    idx_++;
+
+                    // bounding_object->removeSF();
+                    physics->removeSF();
+                    this_ptr->resetPhysics();
+                }
+            }
         }
     }
 
-    void spin() {}
+    void spin() {
+        const double *robot_tran = robot_->getPosition();
+        const float BASE_RANGE = 3;
+        const float POSI_THRESHOLD = 0.001;
+
+        for (auto it = m_node_.begin(); it != m_node_.end(); ++it) {
+            it->second.still_around_robot_ = false;
+            const double *node_tran = it->second.tran_world;
+            if (std::abs(robot_tran[0] - node_tran[0]) <= BASE_RANGE &&
+                std::abs(robot_tran[1] - node_tran[1]) <= BASE_RANGE) {
+                // 判断是否发生位移
+                const double *cur_pose = it->second.node_ptr_->getPosition();
+                if (std::abs(cur_pose[0] - node_tran[0]) >= POSI_THRESHOLD ||
+                    std::abs(cur_pose[1] - node_tran[1]) >= POSI_THRESHOLD ||
+                    std::abs(cur_pose[2] - node_tran[2]) >= POSI_THRESHOLD) {
+                    // 世界坐标是否发生变化
+                    memcpy(it->second.tran_world, cur_pose,
+                           sizeof(*cur_pose) * 3);
+                }
+
+                // 不在open list 中的添加节点
+                if (m_open_list_.find(it->first) == m_open_list_.end()) {
+                    if (it->second.physics_ptr_->getSFNode() == nullptr) {
+                        it->second.physics_ptr_->importSFNodeFromString(
+                            it->second.physics_str_);
+
+                        LOG_INFO("add idx %d", it->first);
+                    }
+                    // if (it->second.bounding_ptr_->getSFNode() == nullptr) {
+                    //     it->second.bounding_ptr_->importSFNodeFromString(
+                    //         it->second.bounding_str_);
+                    // }
+                    m_open_list_[it->first] = &it->second;
+                }
+                it->second.still_around_robot_ = true;
+            }
+        }
+
+        for (auto it = m_open_list_.begin(); it != m_open_list_.end();) {
+            WCollisionNode *node_ptr = it->second;
+            if (node_ptr->still_around_robot_ == false) {
+                // node_ptr->bounding_ptr_->removeSF();
+                node_ptr->physics_ptr_->removeSF();
+                node_ptr->node_ptr_->resetPhysics();
+                it = m_open_list_.erase(it);  // erase returns the next iterator
+
+                LOG_INFO("delete idx %d", it->first);
+            } else {
+                ++it;
+            }
+        }
+    }
 
    private:
     Node *root_ = nullptr;
+    Node *robot_ = nullptr;
+    uint64_t idx_ = 0;
+    bool is_shadow_ = true;
+
+    std::map<uint64_t, WCollisionNode> m_node_;
+    std::map<uint64_t, WCollisionNode *> m_open_list_;
 };
 
 }  // namespace VNSim

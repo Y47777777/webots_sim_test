@@ -124,6 +124,7 @@ AGVController::AGVController() : BaseController("webots_master") {
     pose_ptr_ = std::make_shared<WPose>("RobotNode");
     lidar_pose_ptr_ = std::make_shared<WLidar>("perception", 100, false);
     transfer_ptr_ = std::make_shared<WTransfer>();
+    collision_ptr_ = std::make_shared<WCollision>(false);
 
     v_while_spin_.push_back(bind(&WBase::spin, streeR_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, streeL_ptr_));
@@ -135,6 +136,7 @@ AGVController::AGVController() : BaseController("webots_master") {
     v_while_spin_.push_back(bind(&WBase::spin, imu_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, pose_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, transfer_ptr_));
+    v_while_spin_.push_back(bind(&WBase::spin, collision_ptr_));
 
     // pub
     ecal_ptr_->addEcal("webot/E_msg");

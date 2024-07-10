@@ -76,7 +76,7 @@ class BaseController : public QThread {
         Timer copy_elapsed_;
         while (supervisor_->step(step_duration_) != -1) {
             uint32_t els = elapsed_timer_.elapsed<std::chrono::milliseconds>();
-            if (els > 20) {
+            if (els > 15) {
                 LOG_INFO("step elapsed = %u ms, BAD\n", els);
             }
 
@@ -103,7 +103,7 @@ class BaseController : public QThread {
             
             uint32_t copy_spend =
                 copy_elapsed_.elapsed<std::chrono::milliseconds>();
-            if (copy_spend > 7) {
+            if (copy_spend > 6) {
                 LOG_INFO("while spend = %d ms,  BAD\n", copy_spend);
             }
 

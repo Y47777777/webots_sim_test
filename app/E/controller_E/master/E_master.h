@@ -19,6 +19,7 @@
 #include "webots_device/w_imu.h"
 #include "webots_device/w_pose.h"
 #include "webots_device/w_transfer.h"
+#include "webots_device/w_collision.h"
 
 namespace VNSim {
 
@@ -51,6 +52,7 @@ class AGVController : public BaseController {
     std::shared_ptr<WPose> pose_ptr_;
     std::shared_ptr<WLidar> lidar_pose_ptr_;
     std::shared_ptr<WTransfer> transfer_ptr_;
+    std::shared_ptr<WCollision> collision_ptr_;
 
    public:
     void subEMsgCallBack(const char *topic_name,
