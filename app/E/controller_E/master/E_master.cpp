@@ -27,8 +27,8 @@ using namespace VNSim;
 using namespace webots;
 
 const double FRONT_WHEELBASE = 1.69;  // 前后轮间距
-const double FRONT_TREAD = 1.2;       // 前轮间距
-const double REAR_TREAD = 0.85;       // 后轮间距
+const double FRONT_TREAD = 0.85;      // 定向轮间距
+const double REAR_TREAD = 1.2;        // 驱动轮间距
 
 // 计算tan角度
 inline double CalcTan(double len, double yaw) {
@@ -44,7 +44,7 @@ inline double CalcAngle(double tangent) {
 void computeSteeringAndDrive(double v, double yaw, double &steer_l,
                              double &steer_r, double &driver_L,
                              double &driver_R) {
-    if ((1.57 - std::fabs(yaw)) < 0.001) {
+    if (fabs(1.57 - std::fabs(yaw)) < 0.001) {
         double diff = std::atan(0.5 * REAR_TREAD / FRONT_WHEELBASE);
         steer_r = 1.57 - diff;
         steer_l = -1.57 + diff;
@@ -53,6 +53,11 @@ void computeSteeringAndDrive(double v, double yaw, double &steer_l,
         if (yaw > 0) {
             std::swap(driver_L, driver_R);
         }
+    } else if (fabs(0 - yaw) < 0.001) {
+        steer_l = 0;
+        steer_r = 0;
+        driver_L = v;
+        driver_R = v;
     } else {
         // 计算转向角度
         double tan_yaw = std::tan(yaw);
@@ -60,14 +65,23 @@ void computeSteeringAndDrive(double v, double yaw, double &steer_l,
                             (FRONT_WHEELBASE / tan_yaw - FRONT_TREAD / 2));
         steer_r = std::atan(FRONT_WHEELBASE /
                             (FRONT_TREAD / 2 + FRONT_WHEELBASE / tan_yaw));
+
         // 计算对应的各驱动轮的速度
         double radius_c = FRONT_WHEELBASE / std::abs(tan_yaw);
         double radius_l = std::sqrt(pow(radius_c - FRONT_TREAD / 2, 2) +
                                     pow(FRONT_WHEELBASE, 2));
         double radius_r = std::sqrt(pow(radius_c + FRONT_TREAD / 2, 2) +
                                     pow(FRONT_WHEELBASE, 2));
+
         driver_L = v * radius_l / radius_c;
         driver_R = v * radius_r / radius_c;
+        if (radius_c <= FRONT_WHEELBASE) {
+            if (yaw > 0) {
+                driver_L = -driver_L;
+            } else {
+                driver_R = -driver_R;
+            }
+        }
     }
 }
 
@@ -145,17 +159,6 @@ void AGVController::manualSetState(const std::map<std::string, double> &msg) {
         fork_speed = msg.at("fork_speed");
         forkY_speed = msg.at("forkY_speed");
         forkP_speed = msg.at("forkP_speed");
-
-        // streeR_ptr_->setYaw(steer_yaw);
-        // streeL_ptr_->setYaw(steer_yaw);
-
-        // if (steer_yaw > 0) {
-        //     l_ptr_->setVelocity(steer_speed);
-
-        // } else {
-        //     r_ptr_->setVelocity(steer_speed);
-        // }
-
         double r_yaw, l_yaw;
         double r_v, l_v;
 

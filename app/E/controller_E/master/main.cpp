@@ -13,12 +13,10 @@ int main(int argc, char *argv[]) {
     LOG_INFO("log init...");
     QApplication a(argc, argv);
     // init ctrl
-    printf("1\n");
     std::shared_ptr<BaseController> ctrl_ptr =
         std::make_shared<AGVController>();
-    printf("2\n");
+
     ctrl_ptr->start();
-    printf("3\n");
 
     QObject::connect(ctrl_ptr.get(), SIGNAL(finished()), &a, SLOT(quit()));
 
@@ -27,8 +25,8 @@ int main(int argc, char *argv[]) {
     f.show();
 
     a.exec();
-    // LOG_INFO("try stop svc_P");
-    // system("killall svc_E");
+    LOG_INFO("try stop svc_E");
+    system("killall svc_E");
 
     return 0;
 }

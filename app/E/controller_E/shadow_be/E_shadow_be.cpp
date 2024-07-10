@@ -35,7 +35,7 @@ std::string HAP_webots_topic = "webots/Lidar/.200/PointCloud";
 
 AGVController::AGVController() : BaseController("webots_shadow_be") {
     // Sensor
-    HAP_ptr_ = std::make_shared<WLidar>("HAP", 50);
+    HAP_ptr_ = std::make_shared<WLidar>("HAP", 100);
     HAP_ptr_->setSimulationNRLS("HAP.csv", HAP_ONCE_CLOUD_SIZE);
 
     // 机器人位姿
