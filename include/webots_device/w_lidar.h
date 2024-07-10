@@ -42,7 +42,8 @@ class WLidar : public WBase {
      * @param[in] pose_name   lidar_name 外层pose
      * @param[in] frequency   ladir 频率 (ms)
      */
-    WLidar(std::string lidar_name, int frequency = 100, bool enable = true)
+    WLidar(std::string lidar_name, int frequency = 100, bool enable = true,
+           double connecting_rod = 0.241)
         : WBase() {
         // creat lidar
         {
@@ -96,10 +97,12 @@ class WLidar : public WBase {
 
             LOG_INFO("pose translation %.3f, %.3f, %.3f", tf_translation_[0],
                      tf_translation_[1], tf_translation_[2]);
+
+            connecting_rod_ = connecting_rod;
         }
 
         // 设置雷达数据生成其实步数，间隔雷达数据
-        // TODO: +1 为错步发送
+        // FIXME: +1 为错步发送
         start_step_ = super_->getStepCnt();
         super_->step(step_duration_);
         data_is_ready_ = false;
@@ -201,11 +204,10 @@ class WLidar : public WBase {
         }
         double translation[3] = {tf_translation_[0], tf_translation_[1]};
 
-        // TODO: 要改到master上
-        if (values < 0.214) {
+        if (values < connecting_rod_) {
             translation[2] = tf_translation_[2] - values;
         } else {
-            translation[2] = tf_translation_[2] - (0.214);
+            translation[2] = tf_translation_[2] - (connecting_rod_);
         }
 
         translation_ptr_->setSFVec3f(translation);
@@ -320,6 +322,9 @@ class WLidar : public WBase {
 
     int start_point_ = 0;  // 开始拷贝数据的 层
     int end_point_ = 0;    //
+
+    // 雷达移动连杆长度
+    double connecting_rod_ = 0.241;
 };
 
 // for (int i = start_layer; i < end_layer; i++) {
