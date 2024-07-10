@@ -103,7 +103,7 @@ class BaseController : public QThread {
             
             uint32_t copy_spend =
                 copy_elapsed_.elapsed<std::chrono::milliseconds>();
-            if (copy_spend > 3) {
+            if (copy_spend > 7) {
                 LOG_INFO("while spend = %d ms,  BAD\n", copy_spend);
             }
 
