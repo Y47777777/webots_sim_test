@@ -37,11 +37,11 @@ AGVController::AGVController() : BaseController("webots_master") {
     forkY_ptr_ = std::make_shared<WFork>("YMotor", "ForkYAxis", "YSensor");
     forkP_ptr_ = std::make_shared<WFork>("PMotor", "ForkPAxis", "PSensor");
     stree_ptr_ =
-        std::make_shared<WWheel>("FL", "SteerWheel", "SteerSolidL", "FLWheel");
+        std::make_shared<WWheel>("", "SteerWheelR", "SteerSolidL", "FLWheel");
     stree2_ptr_ =
-        std::make_shared<WWheel>("FR", "SteerWheel", "SteerSolidR", "FLWheel");
-    l_ptr_ = std::make_shared<WWheel>("", "", "", "RS", "BRPS");
-    r_ptr_ = std::make_shared<WWheel>("", "", "", "RS", "BLPS");
+        std::make_shared<WWheel>("", "SteerWheelL", "SteerSolidR", "FLWheel");
+    l_ptr_ = std::make_shared<WWheel>("FL", "", "", "RS", "");
+    r_ptr_ = std::make_shared<WWheel>("FR", "", "", "RS", "");
     pose_ptr_ = std::make_shared<WPose>("RobotNode");
     lidar_pose_ptr_ = std::make_shared<WLidar>("perception", 100, false);
     transfer_ptr_ = std::make_shared<WTransfer>();
@@ -80,8 +80,18 @@ void AGVController::manualSetState(const std::map<std::string, double> &msg) {
         fork_speed = msg.at("fork_speed");
         forkY_speed = msg.at("forkY_speed");
         forkP_speed = msg.at("forkP_speed");
-        stree_ptr_->setSpeed(steer_speed, steer_yaw);
-        stree2_ptr_->setSpeed(steer_speed, steer_yaw);
+
+        stree_ptr_->setYaw(steer_yaw);
+        stree2_ptr_->setYaw(steer_yaw);
+
+        if (steer_yaw > 0) {
+            l_ptr_->setVelocity(steer_speed);
+            
+        } else {
+            r_ptr_->setVelocity(steer_speed);
+
+        }
+
         fork_ptr_->setVelocity(fork_speed);
         forkY_ptr_->setVelocity(forkY_speed);
         forkP_ptr_->setVelocity(forkP_speed);
@@ -89,9 +99,8 @@ void AGVController::manualSetState(const std::map<std::string, double> &msg) {
 }
 
 void AGVController::manualGetState(std::map<std::string, double> &msg) {
-    msg["steer_speed"] = stree_ptr_->getSpeed();
-    msg["steer_yaw"] = stree_ptr_->getMotorYaw()
-    ;
+    msg["steer_speed"] = l_ptr_->getSpeed();
+    msg["steer_yaw"] = stree_ptr_->getMotorYaw();
     msg["fork_speed"] = fork_ptr_->getVelocityValue();
     msg["forkY_speed"] = forkY_ptr_->getVelocityValue();
     msg["forkP_speed"] = forkP_ptr_->getVelocityValue();
