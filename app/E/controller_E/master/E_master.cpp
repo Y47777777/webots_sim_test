@@ -26,6 +26,61 @@
 using namespace VNSim;
 using namespace webots;
 
+const double FRONT_WHEELBASE = 1.69;  // 前后轮间距
+const double FRONT_TREAD = 1.2;       // 前轮间距
+const double REAR_TREAD = 1.4;        // 后轮间距
+
+// 计算tan角度
+inline double CalcTan(double len, double yaw) {
+    return len * std::tan(yaw);
+}
+
+// 计算角度
+inline double CalcAngle(double tangent) {
+    return std::atan(tangent);
+}
+
+// 函数1：计算转向角和驱动轮速度
+void computeSteeringAndDrive(double v, double yaw, double &steer_l,
+                             double &steer_r, double &driver_L,
+                             double &driver_R) {
+    // 计算转向角度
+    double tan_yaw = std::tan(yaw);
+    steer_l = std::atan(FRONT_WHEELBASE /
+                        (FRONT_WHEELBASE / tan_yaw - FRONT_TREAD / 2));
+    steer_r = std::atan(FRONT_WHEELBASE /
+                        (FRONT_TREAD / 2 + FRONT_WHEELBASE / tan_yaw));
+
+    // 计算对应的各驱动轮的速度
+    double radius_c = FRONT_WHEELBASE / std::abs(tan_yaw);
+    double radius_l =
+        std::sqrt(pow(radius_c - FRONT_TREAD / 2, 2) + pow(FRONT_WHEELBASE, 2));
+    double radius_r =
+        std::sqrt(pow(radius_c + FRONT_TREAD / 2, 2) + pow(FRONT_WHEELBASE, 2));
+    driver_L = v * radius_l / radius_c;
+    driver_R = v * radius_r / radius_c;
+}
+
+// 函数2：计算内侧驱动轮的转速
+double computeInsideWheelSpeed(double steer_l, double steer_r,
+                               double outside_wheel_speed, bool turn_left) {
+    double radius_c =
+        FRONT_WHEELBASE / std::tan(std::abs(turn_left ? steer_l : steer_r));
+    double radius_i, radius_o;
+    if (turn_left) {
+        radius_i = std::sqrt(pow(radius_c - REAR_TREAD / 2, 2) +
+                             pow(FRONT_WHEELBASE, 2));
+        radius_o = std::sqrt(pow(radius_c + REAR_TREAD / 2, 2) +
+                             pow(FRONT_WHEELBASE, 2));
+    } else {
+        radius_i = std::sqrt(pow(radius_c + REAR_TREAD / 2, 2) +
+                             pow(FRONT_WHEELBASE, 2));
+        radius_o = std::sqrt(pow(radius_c - REAR_TREAD / 2, 2) +
+                             pow(FRONT_WHEELBASE, 2));
+    }
+    return outside_wheel_speed * radius_i / radius_o;
+}
+
 // TODO: 构造的位置要想想
 std::shared_ptr<Timer> Timer::instance_ptr_ = nullptr;
 std::shared_ptr<EcalWrapper> EcalWrapper::instance_ptr_ = nullptr;
@@ -36,9 +91,9 @@ AGVController::AGVController() : BaseController("webots_master") {
     fork_ptr_ = std::make_shared<WFork>("fork height motor", "ForkZAxis");
     forkY_ptr_ = std::make_shared<WFork>("YMotor", "ForkYAxis", "YSensor");
     forkP_ptr_ = std::make_shared<WFork>("PMotor", "ForkPAxis", "PSensor");
-    stree_ptr_ =
+    streeR_ptr_ =
         std::make_shared<WWheel>("", "SteerWheelR", "SteerSolidL", "FLWheel");
-    stree2_ptr_ =
+    streeL_ptr_ =
         std::make_shared<WWheel>("", "SteerWheelL", "SteerSolidR", "FLWheel");
     l_ptr_ = std::make_shared<WWheel>("FL", "", "", "RS", "");
     r_ptr_ = std::make_shared<WWheel>("FR", "", "", "RS", "");
@@ -46,8 +101,8 @@ AGVController::AGVController() : BaseController("webots_master") {
     lidar_pose_ptr_ = std::make_shared<WLidar>("perception", 100, false);
     transfer_ptr_ = std::make_shared<WTransfer>();
 
-    v_while_spin_.push_back(bind(&WBase::spin, stree_ptr_));
-    v_while_spin_.push_back(bind(&WBase::spin, stree2_ptr_));
+    v_while_spin_.push_back(bind(&WBase::spin, streeR_ptr_));
+    v_while_spin_.push_back(bind(&WBase::spin, streeL_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, l_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, r_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, fork_ptr_));
@@ -81,16 +136,24 @@ void AGVController::manualSetState(const std::map<std::string, double> &msg) {
         forkY_speed = msg.at("forkY_speed");
         forkP_speed = msg.at("forkP_speed");
 
-        stree_ptr_->setYaw(steer_yaw);
-        stree2_ptr_->setYaw(steer_yaw);
+        // streeR_ptr_->setYaw(steer_yaw);
+        // streeL_ptr_->setYaw(steer_yaw);
 
-        if (steer_yaw > 0) {
-            l_ptr_->setVelocity(steer_speed);
-            
-        } else {
-            r_ptr_->setVelocity(steer_speed);
+        // if (steer_yaw > 0) {
+        //     l_ptr_->setVelocity(steer_speed);
 
-        }
+        // } else {
+        //     r_ptr_->setVelocity(steer_speed);
+        // }
+        double r_yaw, l_yaw;
+        double r_v, l_v;
+
+        computeSteeringAndDrive(steer_speed, steer_yaw, l_yaw, r_yaw, l_v, r_v);
+
+        streeR_ptr_->setYaw(r_yaw);
+        streeL_ptr_->setYaw(l_yaw);
+        l_ptr_->setVelocity(l_v);
+        r_ptr_->setVelocity(r_v);
 
         fork_ptr_->setVelocity(fork_speed);
         forkY_ptr_->setVelocity(forkY_speed);
@@ -100,7 +163,7 @@ void AGVController::manualSetState(const std::map<std::string, double> &msg) {
 
 void AGVController::manualGetState(std::map<std::string, double> &msg) {
     msg["steer_speed"] = l_ptr_->getSpeed();
-    msg["steer_yaw"] = stree_ptr_->getMotorYaw();
+    msg["steer_yaw"] = streeR_ptr_->getMotorYaw();
     msg["fork_speed"] = fork_ptr_->getVelocityValue();
     msg["forkY_speed"] = forkY_ptr_->getVelocityValue();
     msg["forkP_speed"] = forkP_ptr_->getVelocityValue();
@@ -171,10 +234,14 @@ void AGVController::subEMsgCallBack(const char *topic_name,
     if (!isManual_) {
         sim_data_flow::EMsgDown payload;
         payload.ParseFromArray(data->buf, data->size);
-        stree_ptr_->setSpeed(payload.steering_speed(),
-                             payload.steering_theta());
-        stree2_ptr_->setSpeed(payload.steering_speed(),
+
+        streeR_ptr_->setSpeed(payload.steering_speed(),
                               payload.steering_theta());
+
+                              
+        streeL_ptr_->setSpeed(payload.steering_speed(),
+                              payload.steering_theta());
+
         fork_ptr_->setVelocity(payload.forkspeedz());
         fork_ptr_->setVelocity(payload.forkspeedy());
         forkP_ptr_->setVelocity(payload.forkspeedp());
@@ -187,10 +254,14 @@ void AGVController::pubSerialSpin() {
     payload.set_forkposez(fork_ptr_->getSenosorValue());
     payload.set_forkposey(forkY_ptr_->getSenosorValue());
     payload.set_forkposep(forkP_ptr_->getSenosorValue());
-    payload.set_steerposition(stree_ptr_->getSenosorValue());
+
+    // payload.set_steerposition(streeR_ptr_->getSenosorValue());
+    payload.set_steering_theta(streeR_ptr_->getMotorYaw());
+    payload.set_steering_theta(streeL_ptr_->getMotorYaw());
+
     payload.set_l_wheel(l_ptr_->getWheelArcLength());
     payload.set_r_wheel(r_ptr_->getWheelArcLength());
-    payload.set_steering_theta(stree_ptr_->getMotorYaw());
+
     payload.set_gyroscope(imu_ptr_->getInertialYaw());
 
     foxglove::Imu *imu = payload.mutable_imu();

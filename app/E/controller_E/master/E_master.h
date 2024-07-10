@@ -41,8 +41,8 @@ class AGVController : public BaseController {
 
    private:
     std::shared_ptr<WImu> imu_ptr_;
-    std::shared_ptr<WWheel> stree_ptr_;
-    std::shared_ptr<WWheel> stree2_ptr_;
+    std::shared_ptr<WWheel> streeR_ptr_;
+    std::shared_ptr<WWheel> streeL_ptr_;
     std::shared_ptr<WWheel> l_ptr_;
     std::shared_ptr<WWheel> r_ptr_;
     std::shared_ptr<WFork> fork_ptr_;
