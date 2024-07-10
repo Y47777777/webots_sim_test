@@ -8,7 +8,7 @@ package sim_data_flow;
 
 message Transfer {
     // 单点
-    string name = 1;
+    int32 nodeId = 1;
     foxglove.Vector3  translation = 2;
     foxglove.Quaternion rotation = 3;
 }

@@ -23,7 +23,8 @@ namespace VNSim {
 using namespace webots;
 
 typedef struct WTransferNode {
-    WTransferNode(Field *rotation_p = nullptr, Field *translation_p = nullptr) {
+    WTransferNode(Node* node_p = nullptr,Field *rotation_p = nullptr, Field *translation_p = nullptr) {
+        node_ptr_ = node_p;
         rotation_f_ptr_ = rotation_p;
         translation_f_ptr_ = translation_p;
     }
@@ -57,6 +58,8 @@ class WTransfer : public WBase {
 
         robot_ = super_->getFromDef("RobotNode");
 
+        idx = 0;
+
         // get all node
         getChildNode(root_);
 
@@ -73,7 +76,7 @@ class WTransfer : public WBase {
         }
         for (auto it = m_updated_trans_.begin(); it != m_updated_trans_.end(); ++it) {
             auto ptr = tanfer_msgs.add_map();
-            ptr->set_name(it->first);
+            ptr->set_nodeid(it->first);
 
             ptr->mutable_translation()->set_x(it->second.translation[0]);
             ptr->mutable_translation()->set_y(it->second.translation[1]);
@@ -94,21 +97,21 @@ class WTransfer : public WBase {
         set_flag = true;
         m_updated_trans_.clear();
         for (int i = 0; i < msgs.map().size(); i++) {
-            std::string name = msgs.map().at(i).name();
-            if (m_tanfer_.find(name) == m_tanfer_.end()) {
-                LOG_INFO("can`t find %s", name.c_str());
+            auto node_id = msgs.map().at(i).nodeid();
+            if (m_tanfer_.find(node_id) == m_tanfer_.end()) {
+                LOG_INFO("can`t find %d", node_id);
                 return;
             }
             
-            m_tanfer_[name].tran_set[0] = msgs.map().at(i).translation().x();
-            m_tanfer_[name].tran_set[1] = msgs.map().at(i).translation().y();
-            m_tanfer_[name].tran_set[2] = msgs.map().at(i).translation().z();
+            m_tanfer_[node_id].tran_set[0] = msgs.map().at(i).translation().x();
+            m_tanfer_[node_id].tran_set[1] = msgs.map().at(i).translation().y();
+            m_tanfer_[node_id].tran_set[2] = msgs.map().at(i).translation().z();
 
-            m_tanfer_[name].rota_set[0] = msgs.map().at(i).rotation().x();
-            m_tanfer_[name].rota_set[1] = msgs.map().at(i).rotation().y();
-            m_tanfer_[name].rota_set[2] = msgs.map().at(i).rotation().z();
-            m_tanfer_[name].rota_set[3] = msgs.map().at(i).rotation().w();
-            m_updated_trans_.insert(std::make_pair(name,m_tanfer_[name]));
+            m_tanfer_[node_id].rota_set[0] = msgs.map().at(i).rotation().x();
+            m_tanfer_[node_id].rota_set[1] = msgs.map().at(i).rotation().y();
+            m_tanfer_[node_id].rota_set[2] = msgs.map().at(i).rotation().z();
+            m_tanfer_[node_id].rota_set[3] = msgs.map().at(i).rotation().w();
+            m_updated_trans_.insert(std::make_pair(node_id,m_tanfer_[node_id]));
         }
     }
 
@@ -138,10 +141,11 @@ class WTransfer : public WBase {
                    &&std::abs(robot_tran[1] - last_posi[1])<=BASE_RANGE){// 在车体周围
                     auto curr_posi = 
                               it->second.node_ptr_->getPosition();
-
                     if(std::abs(curr_posi[0] - last_posi[0])>=POSI_THRESHOLD
                        ||std::abs(curr_posi[1] - last_posi[1])>=POSI_THRESHOLD
-                       ||std::abs(curr_posi[2] - last_posi[2])>=POSI_THRESHOLD){// 坐标是否发生变化
+                       ||std::abs(curr_posi[2] - last_posi[2])>=POSI_THRESHOLD){// 世界坐标是否发生变化
+                       
+                       // 可判断局部坐标是否变化进一步减少数据量(移动Pose的情况)
                         auto curr_tran = it->second.translation_f_ptr_->getSFVec3f();
                         auto curr_rota = it->second.rotation_f_ptr_->getSFRotation();
 
@@ -166,7 +170,6 @@ class WTransfer : public WBase {
         if (this_ptr == nullptr) {
             return;
         }
-
         Field *children = this_ptr->getField("children");
         if (children != nullptr) {
             int cnt = children->getCount();
@@ -194,29 +197,28 @@ class WTransfer : public WBase {
         Field *translation_ptr_ = this_ptr->getField("translation");
 
         if (rotation_ptr_ != nullptr && translation_ptr_ != nullptr) {
-            auto name_field = this_ptr->getField("name");
-            if (name_field == nullptr) {
-                return;
-            }
-
-            std::string name = name_field->getSFString();
-            if (name.compare("Robot") != 0) {
-                WTransferNode tran(rotation_ptr_, translation_ptr_);
+            auto node_type = this_ptr->getBaseTypeName();
+            
+            if (node_type.compare("Robot") != 0) {
+                WTransferNode tran(this_ptr,rotation_ptr_, translation_ptr_);
                 tran.initWorldPosi(this_ptr->getPosition());
-                tran.node_ptr_ = this_ptr;
-                m_tanfer_.insert(std::pair<std::string, WTransferNode>(name, tran));
-                v_transfer_.push_back(tran);
-                LOG_INFO("creat tran %s", name.c_str());
+
+                auto tmp_pair = std::make_pair(idx++,tran);
+
+                m_tanfer_.insert(tmp_pair);
+                m_updated_trans_.insert(tmp_pair);// 初始化更新
+                LOG_INFO("creat tran %d", idx);
             }
         }
     }
 
     Node *root_ = nullptr;
     Node *robot_ = nullptr;
-    std::map<std::string, WTransferNode> m_tanfer_;
+    std::map<int32_t, WTransferNode> m_tanfer_;
     // master for pub,shadow for sub
-    std::map<std::string, WTransferNode> m_updated_trans_;
-    std::vector<WTransferNode> v_transfer_;
+    std::map<int32_t, WTransferNode> m_updated_trans_;
+    // idx specify node id
+    int32_t idx = 0;
     bool set_flag = false;
 };
 
