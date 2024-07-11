@@ -6,4 +6,5 @@ include/keyboardform
 include/logvn
 include/geometry
 include/Parser
+.vscode
 
