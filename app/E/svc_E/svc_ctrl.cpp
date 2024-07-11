@@ -112,13 +112,12 @@ void SVCMaster::pubUpStream() {
     encoder_.updateValue("IncrementalSteeringCoder", 1, "RF",
                          msg_from_webots_.steering_theta_r());
     encoder_.updateValue("Gyroscope", 1, "", msg_from_webots_.gyroscope());
-    encoder_.updateValue("HeightCoder", 1, "", msg_from_webots_.forkposez());
-    encoder_.updateValue("ForkDisplacementSencer", 1, "Z",
-                         msg_from_webots_.forkposez());
+    encoder_.updateValue("ForkDisplacementSencer", 1, "C", 0.0);
     encoder_.updateValue("ForkDisplacementSencer", 1, "Y",
                          msg_from_webots_.forkposey());
     encoder_.updateValue("ForkDisplacementSencer", 1, "P",
                          msg_from_webots_.forkposep());
+    encoder_.updateValue("HeightCoder", 1, "", msg_from_webots_.forkposez());
     encoder_.updateValue2("DataIndex", &dataidx_upload_, sizeof(uint32_t));
 
     uint16_t battery_device = 100;
