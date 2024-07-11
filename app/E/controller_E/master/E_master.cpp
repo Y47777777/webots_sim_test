@@ -60,8 +60,6 @@ void computeSteeringAndDrive(double v, double yaw, double &steer_l,
             steer_r -= M_PI;
         }
 
-        std::cout << "back_radius_c = " << back_radius_c << std::endl;
-
         double back_radius_r = back_radius_c + (REAR_TREAD / 2);
         double back_radius_l = back_radius_c - (REAR_TREAD / 2);
 
@@ -69,6 +67,12 @@ void computeSteeringAndDrive(double v, double yaw, double &steer_l,
 
         driver_l = w * back_radius_l;
         driver_r = w * back_radius_r;
+
+        // std::cout << "11 back_radius_c = " << back_radius_c
+        //           << "  back_radius_l = " << back_radius_l
+        //           << "  back_radius_r = " << back_radius_r << std::endl;
+
+        // std::cout << "yaw " << yaw << " v " << v << std::endl;
     }
 }
 
@@ -76,11 +80,18 @@ void computeSteeringAndDrive(double v, double yaw, double &steer_l,
 double computeInsideWheelSpeed(double steer_l, double steer_r,
                                double outside_wheel_speed) {
     double steer_c = (steer_l + steer_r) / 2;
-    double back_radius_c = WHEELBASE / tan(steer_c);
+    if (fabs(steer_c) < 0.001) {
+        return outside_wheel_speed;
+    }
+
+    double back_radius_c1 = (WHEELBASE / tan(steer_l)) + (FRONT_TREAD / 2);
+    double back_radius_c2 = (WHEELBASE / tan(steer_r)) - (FRONT_TREAD / 2);
+    double back_radius_c = (back_radius_c1 + back_radius_c2) / 2;
+
     double back_radius_l = back_radius_c - (REAR_TREAD / 2);
     double back_radius_r = back_radius_c + (REAR_TREAD / 2);
 
-    if (steer_c > 0) {
+    if (steer_c < 0) {
         double driver_r = outside_wheel_speed;
         double w = driver_r / back_radius_r;
         return (w * back_radius_l);
@@ -152,27 +163,6 @@ void AGVController::manualSetState(const std::map<std::string, double> &msg) {
         double r_v, l_v;
 
         computeSteeringAndDrive(steer_speed, steer_yaw, l_yaw, r_yaw, l_v, r_v);
-
-        std::cout << "steer_speed = " << steer_speed
-                  << ", steer_yaw = " << steer_yaw << ", l_yaw = " << l_yaw
-                  << ", r_yaw = " << r_yaw << ", l_v = " << l_v
-                  << ", r_v = " << r_v << std::endl;
-        // double l_speed = 0;
-        // double r_speed = 0;
-        // bool flag = false;
-        // if ((l_yaw < 0)) {
-        //     flag = true;
-        //     l_speed = computeInsideWheelSpeed(l_yaw, r_yaw, r_v, flag);
-        //     r_speed = r_v;
-        // } else {
-        //     r_speed = computeInsideWheelSpeed(l_yaw, r_yaw, l_v, flag);
-        //     l_speed = l_v;
-        // }
-
-        // std::cout << "l_yaw = " << l_yaw << ", r_yaw = " << r_yaw
-        //           << ", l_speed = " << l_speed << ", r_speed = " << r_speed
-        //           << ", trigger = " << flag << std::endl;
-
         streeR_ptr_->setYaw(r_yaw);
         streeL_ptr_->setYaw(l_yaw);
         l_ptr_->setVelocity(l_v);
@@ -185,8 +175,12 @@ void AGVController::manualSetState(const std::map<std::string, double> &msg) {
 }
 
 void AGVController::manualGetState(std::map<std::string, double> &msg) {
+    double steer_c =
+        (streeR_ptr_->getMotorYaw() + streeL_ptr_->getMotorYaw()) / 2;
+
+    msg["steer_speed_r"] = r_ptr_->getSpeed();
     msg["steer_speed"] = l_ptr_->getSpeed();
-    msg["steer_yaw"] = streeR_ptr_->getMotorYaw();
+    msg["steer_yaw"] = steer_c;
     msg["fork_speed"] = fork_ptr_->getVelocityValue();
     msg["forkY_speed"] = forkY_ptr_->getVelocityValue();
     msg["forkP_speed"] = forkP_ptr_->getVelocityValue();

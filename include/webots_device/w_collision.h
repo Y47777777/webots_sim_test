@@ -58,8 +58,7 @@ class WCollision : public WBase {
         // get all node
         getChildNode(root_);
 
-        // LOG_INFO("");
-        std::cout << "creat map size " << m_node_.size();
+        LOG_INFO("creat map size %d", m_node_.size());
     }
     ~WCollision() {}
 
