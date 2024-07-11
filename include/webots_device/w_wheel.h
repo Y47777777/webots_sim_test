@@ -117,8 +117,8 @@ class WWheel : public WBase {
 
     void setYaw(double yaw) {
         std::shared_lock<std::shared_mutex> lock(rw_mutex_);
-        yaw = yaw > PI / 2 ? PI / 2 : yaw;
-        yaw = yaw < -PI / 2 ? -PI / 2 : yaw;
+        // yaw = yaw > PI / 2 ? PI / 2 : yaw;
+        // yaw = yaw < -PI / 2 ? -PI / 2 : yaw;
 
         set_yaw_rotation_[3] = yaw;
     }

@@ -26,9 +26,9 @@
 using namespace VNSim;
 using namespace webots;
 
-const double FRONT_WHEELBASE = 1.69;  // 前后轮间距
-const double FRONT_TREAD = 0.85;      // 定向轮间距
-const double REAR_TREAD = 1.2;        // 驱动轮间距
+const double WHEELBASE = 1.69;    // 前后轮间距
+const double FRONT_TREAD = 0.85;  // 定向轮间距
+const double REAR_TREAD = 1.2;    // 驱动轮间距
 
 // 计算tan角度
 inline double CalcTan(double len, double yaw) {
@@ -42,67 +42,54 @@ inline double CalcAngle(double tangent) {
 
 // 函数1：计算转向角和驱动轮速度
 void computeSteeringAndDrive(double v, double yaw, double &steer_l,
-                             double &steer_r, double &driver_L,
-                             double &driver_R) {
-    if (fabs(1.57 - std::fabs(yaw)) < 0.001) {
-        double diff = std::atan(0.5 * REAR_TREAD / FRONT_WHEELBASE);
-        steer_r = 1.57 - diff;
-        steer_l = -1.57 + diff;
-        driver_L = v * 0.5 * FRONT_TREAD / FRONT_WHEELBASE;
-        driver_R = -driver_L;
-        if (yaw > 0) {
-            std::swap(driver_L, driver_R);
-        }
-    } else if (fabs(0 - yaw) < 0.001) {
+                             double &steer_r, double &driver_l,
+                             double &driver_r) {
+    if (fabs(0 - yaw) < 0.001) {
         steer_l = 0;
         steer_r = 0;
-        driver_L = v;
-        driver_R = v;
+        driver_l = v;
+        driver_r = v;
     } else {
         // 计算转向角度
-        double tan_yaw = std::tan(yaw);
-        steer_l = std::atan(FRONT_WHEELBASE /
-                            (FRONT_WHEELBASE / tan_yaw - FRONT_TREAD / 2));
-        steer_r = std::atan(FRONT_WHEELBASE /
-                            (FRONT_TREAD / 2 + FRONT_WHEELBASE / tan_yaw));
-
-        // 计算对应的各驱动轮的速度
-        double radius_c = FRONT_WHEELBASE / std::abs(tan_yaw);
-        double radius_l = std::sqrt(pow(radius_c - FRONT_TREAD / 2, 2) +
-                                    pow(FRONT_WHEELBASE, 2));
-        double radius_r = std::sqrt(pow(radius_c + FRONT_TREAD / 2, 2) +
-                                    pow(FRONT_WHEELBASE, 2));
-
-        driver_L = v * radius_l / radius_c;
-        driver_R = v * radius_r / radius_c;
-        if (radius_c <= FRONT_WHEELBASE) {
-            if (yaw > 0) {
-                driver_L = -driver_L;
-            } else {
-                driver_R = -driver_R;
-            }
+        double back_radius_c = WHEELBASE / tan(yaw);
+        double front_radius_c = WHEELBASE / sin(yaw);
+        steer_l = atan2(WHEELBASE, back_radius_c - (FRONT_TREAD / 2));
+        steer_r = atan2(WHEELBASE, back_radius_c + (FRONT_TREAD / 2));
+        if (yaw < 0) {
+            steer_l -= M_PI;
+            steer_r -= M_PI;
         }
+
+        std::cout << "back_radius_c = " << back_radius_c << std::endl;
+
+        double back_radius_r = back_radius_c + (REAR_TREAD / 2);
+        double back_radius_l = back_radius_c - (REAR_TREAD / 2);
+
+        double w = v / front_radius_c;
+
+        driver_l = w * back_radius_l;
+        driver_r = w * back_radius_r;
     }
 }
 
 // 函数2：计算内侧驱动轮的转速
 double computeInsideWheelSpeed(double steer_l, double steer_r,
-                               double outside_wheel_speed, bool turn_left) {
-    double radius_c =
-        FRONT_WHEELBASE / std::tan(std::abs(turn_left ? steer_l : steer_r));
-    double radius_i, radius_o;
-    if (turn_left) {
-        radius_i = std::sqrt(pow(radius_c - REAR_TREAD / 2, 2) +
-                             pow(FRONT_WHEELBASE, 2));
-        radius_o = std::sqrt(pow(radius_c + REAR_TREAD / 2, 2) +
-                             pow(FRONT_WHEELBASE, 2));
+                               double outside_wheel_speed) {
+    double steer_c = (steer_l + steer_r) / 2;
+    double back_radius_c = WHEELBASE / tan(steer_c);
+    double back_radius_l = back_radius_c - (REAR_TREAD / 2);
+    double back_radius_r = back_radius_c + (REAR_TREAD / 2);
+
+    if (steer_c > 0) {
+        double driver_r = outside_wheel_speed;
+        double w = driver_r / back_radius_r;
+        return (w * back_radius_l);
+
     } else {
-        radius_i = std::sqrt(pow(radius_c + REAR_TREAD / 2, 2) +
-                             pow(FRONT_WHEELBASE, 2));
-        radius_o = std::sqrt(pow(radius_c - REAR_TREAD / 2, 2) +
-                             pow(FRONT_WHEELBASE, 2));
+        double driver_l = outside_wheel_speed;
+        double w = driver_l / back_radius_l;
+        return (w * back_radius_r);
     }
-    return outside_wheel_speed * radius_i / radius_o;
 }
 
 // TODO: 构造的位置要想想
@@ -166,10 +153,10 @@ void AGVController::manualSetState(const std::map<std::string, double> &msg) {
 
         computeSteeringAndDrive(steer_speed, steer_yaw, l_yaw, r_yaw, l_v, r_v);
 
-        // std::cout << "steer_speed = " << steer_speed
-        //           << ", steer_yaw = " << steer_yaw << ", l_yaw = " << l_yaw
-        //           << ", r_yaw = " << r_yaw << ", l_v = " << l_v
-        //           << ", r_v = " << r_v << std::endl;
+        std::cout << "steer_speed = " << steer_speed
+                  << ", steer_yaw = " << steer_yaw << ", l_yaw = " << l_yaw
+                  << ", r_yaw = " << r_yaw << ", l_v = " << l_v
+                  << ", r_v = " << r_v << std::endl;
         // double l_speed = 0;
         // double r_speed = 0;
         // bool flag = false;
@@ -276,15 +263,12 @@ void AGVController::subEMsgCallBack(const char *topic_name,
         double speed = payload.steering_speed();
         double l_speed = 0;
         double r_speed = 0;
-        bool isTurnLeft = false;
+
         if ((l_theta < 0)) {
-            isTurnLeft = true;
-            l_speed =
-                computeInsideWheelSpeed(l_theta, r_theta, speed, isTurnLeft);
+            l_speed = computeInsideWheelSpeed(l_theta, r_theta, speed);
             r_speed = speed;
         } else {
-            r_speed =
-                computeInsideWheelSpeed(l_theta, r_theta, speed, isTurnLeft);
+            r_speed = computeInsideWheelSpeed(l_theta, r_theta, speed);
             l_speed = speed;
         }
 
