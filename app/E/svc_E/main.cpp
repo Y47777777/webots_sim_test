@@ -24,12 +24,10 @@ int main(int argc, char *argv[]) {
     g_Logger.initLog("../../plugins/log_config/general_svc.ini");
     LOG_INFO("start svc_ST");
 
-    std::shared_ptr<BaseSvc> serial_service =
-        std::make_shared<SVCMaster>();
-    serial_service->init(true, "svc_P");
+    std::shared_ptr<BaseSvc> serial_service = std::make_shared<SVCMaster>();
+    serial_service->init(true, "svc_E");
 
-    std::shared_ptr<BaseSvc> lidar_service =
-        std::make_shared<SVCShadow>();
+    std::shared_ptr<BaseSvc> lidar_service = std::make_shared<SVCShadow>();
     lidar_service->init(false, "lidar");
 
     bool flag = true;
