@@ -774,7 +774,8 @@ void ForkDisplacementSencer::config(
         } else if (param.at(i).name == "Is32Bit") {
             std::istringstream(param.at(i).value) >> std::boolalpha >>
                 is32bits_;
-            length_ = 4;
+            if (is32bits_)
+                length_ = 4;
         }
     }
     if (length != -1)
