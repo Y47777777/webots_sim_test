@@ -205,9 +205,9 @@ class WLidar : public WBase {
         double translation[3] = {tf_translation_[0], tf_translation_[1]};
 
         if (values < connecting_rod_) {
-            translation[2] = tf_translation_[2] - values;
+            translation[2] = 0 - values;
         } else {
-            translation[2] = tf_translation_[2] - (connecting_rod_);
+            translation[2] = 0 - (connecting_rod_);
         }
 
         translation_ptr_->setSFVec3f(translation);
