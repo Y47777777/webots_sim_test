@@ -114,7 +114,7 @@ AGVController::AGVController() : BaseController("webots_master") {
     forkY_ptr_ = std::make_shared<WFork>("YMotor", "ForkYAxis", "YSensor");
     forkP_ptr_ = std::make_shared<WFork>("PMotor", "ForkPAxis", "PSensor");
     forkCL_ptr_ = std::make_shared<WFork>("CLMotor", "ForkCLAxis", "CSensor");
-    forkCR_ptr_ = std::make_shared<WFork>("CRMotor", "ForkCRAxis");
+    forkCR_ptr_ = std::make_shared<WFork>("", "ForkCRAxis", "", "", true);
     streeR_ptr_ =
         std::make_shared<WWheel>("", "SteerWheelR", "SteerSolidL", "FLWheel");
     streeL_ptr_ =
@@ -178,7 +178,7 @@ void AGVController::manualSetState(const std::map<std::string, double> &msg) {
         forkY_ptr_->setVelocity(forkY_speed);
         forkP_ptr_->setVelocity(forkP_speed);
         forkCL_ptr_->setVelocity(forkC_speed);
-        forkCR_ptr_->setVelocity(forkC_speed);
+        // forkCR_ptr_->setVelocity(forkC_speed);
     }
 }
 
@@ -210,6 +210,9 @@ void AGVController::whileSpin() {
     // 移动感知激光
     movePerLidarSpin();
 
+    // 右货叉C轴随动
+    moveShadowForkSpin();
+
     // 发送至shadow
     pubRobotPoseSpin();
 
@@ -224,6 +227,11 @@ void AGVController::movePerLidarSpin() {
     // TODO: 激光随动
     lidar_pose_ptr_->moveLidar(fork_z);
     // LOG_INFO("fork :%.2f", fork_z);
+}
+
+void AGVController::moveShadowForkSpin() {
+    double forkC = forkCL_ptr_->getSenosorValue();
+    forkCR_ptr_->setShadowPos(forkC);
 }
 
 void AGVController::pubTransferSpin() {

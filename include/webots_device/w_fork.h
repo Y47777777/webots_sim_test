@@ -33,9 +33,11 @@ class WFork : public WBase {
      * @param[in] break_name        break 如果有motor 可输入为空
      */
     WFork(std::string fork_motor_name = "", std::string solid_name = "",
-          std::string sensor_name = "", std::string brake_name = "")
+          std::string sensor_name = "", std::string brake_name = "",
+          bool isNeedShadowMove = false)
         : WBase() {
         // creat fork
+        isShadowMove_ = isNeedShadowMove;
         motor_ = super_->getMotor(fork_motor_name);
         if (motor_ != nullptr) {
             motor_->setPosition(INFINITY);
@@ -47,10 +49,13 @@ class WFork : public WBase {
         // creat node
         Node *node = super_->getFromDef(solid_name);
         if (node != nullptr) {
-            webots::Field *translation_ptr_ = node->getField("translation");
-            webots::Field *rotation_ptr_ = node->getField("rotation");
+            translation_ptr_ = node->getField("translation");
+            rotation_ptr_ = node->getField("rotation");
 
             // TODO: 如果需要添加再修改
+            if (isNeedShadowMove) {
+                translation_ptr_->setSFVec3f(shadowPos);
+            }
         }
 
         // creat pose sensor
@@ -89,6 +94,17 @@ class WFork : public WBase {
     void setVelocity(double v) {
         std::shared_lock<std::shared_mutex> lock(rw_mutex_);
         speed_ = v;
+    }
+
+    /**
+     * @brief Set Shadow Position
+     *
+     * @param[in] y Y pos
+     */
+    void setShadowPos(double y) {
+        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+        shadowPos[1] = y;
+        translation_ptr_->setSFVec3f(shadowPos);
     }
 
     /**
@@ -142,7 +158,8 @@ class WFork : public WBase {
     Field *translation_ptr_ = nullptr;
 
     std::vector<double> init_pose_ = {0, 0, 0};
-
+    bool isShadowMove_ = false;
+    double shadowPos[3] = {0, 0, 0};
     double pos_sensor_value_ = 0;
     double speed_ = 0;
 };
