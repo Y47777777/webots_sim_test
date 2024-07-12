@@ -63,6 +63,13 @@
           </widget>
          </item>
          <item>
+          <widget class="QLabel" name="label_forkCSpeed">
+           <property name="text">
+            <string>forkCSpeed:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
           <widget class="QLabel" name="label_forkYHeight">
            <property name="text">
             <string>forkYHeight:</string>
@@ -80,6 +87,13 @@
           <widget class="QLabel" name="label_forkPHeight">
            <property name="text">
             <string>forkPHeight:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_forkCHeight">
+           <property name="text">
+            <string>forkCHeight:</string>
            </property>
           </widget>
          </item>
@@ -130,6 +144,13 @@
           </widget>
          </item>
          <item>
+          <widget class="QLabel" name="label_forkCSpeed_value">
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item>
           <widget class="QLabel" name="label_forkYHeight_value">
            <property name="text">
             <string/>
@@ -145,6 +166,13 @@
          </item>
          <item>
           <widget class="QLabel" name="label_forkPHeight_value">
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_forkCHeight_value">
            <property name="text">
             <string/>
            </property>
@@ -265,6 +293,31 @@
           </spacer>
          </item>
         </layout>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_4">
+       <item>
+        <widget class="QPushButton" name="pushButton_liftCOpen">
+         <property name="text">
+          <string>LiftCOpen</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushButton_liftCClose">
+         <property name="text">
+          <string>LiftCClose</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushButton_liftCStop">
+         <property name="text">
+          <string>LiftCStop</string>
+         </property>
+        </widget>
        </item>
       </layout>
      </item>
