@@ -82,7 +82,7 @@ void SVCMaster::pubEMsgsToWebots() {
                       "RF");                             // steer yaw RF
     decoder_.getValue("ForkDevice", &ForkDeviceZ, "Z");  // fork Speed
     decoder_.getValue("ForkDevice", &ForkDeviceY, "Y");
-    decoder_.getValue("ForkDevice", &ForkDeviceY, "Z");
+    decoder_.getValue("ForkDevice", &ForkDeviceP, "P");
 
     msg_to_webots_.set_steering_speed(MoveDevice);
     msg_to_webots_.set_steering_theta_l(SteeringDeviceL);
@@ -127,6 +127,7 @@ void SVCMaster::pubUpStream() {
     static double wheel_coder_r = 0;
     wheel_coder_l += msg_from_webots_.l_wheel() * 0.5;
     wheel_coder_r += msg_from_webots_.r_wheel() * 0.5;
+    // LOG_INFO("l_wheel_msg = %lf r_wheel_msg = %lf, wheel_l = %lf, wheel_r = %lf\n", msg_from_webots_.l_wheel(), msg_from_webots_.r_wheel(), wheel_coder_l, wheel_coder_r);
     encoder_.updateValue("WheelCoder", 2, "", wheel_coder_l, wheel_coder_r);
     encoder_.updateValue("AngularVelocitySensor", 1, "X",
                          imu->angular_velocity().x());

@@ -26,9 +26,9 @@
 using namespace VNSim;
 using namespace webots;
 
-const double WHEELBASE = 1.69;    // 前后轮间距
-const double FRONT_TREAD = 0.85;  // 定向轮间距
-const double REAR_TREAD = 1.2;    // 驱动轮间距
+const double WHEELBASE = 1.7;     // 前后轮间距
+const double FRONT_TREAD = 0.78;  // 定向轮间距
+const double REAR_TREAD = 1.1;    // 驱动轮间距
 
 // 计算tan角度
 inline double CalcTan(double len, double yaw) {
@@ -67,12 +67,6 @@ void computeSteeringAndDrive(double v, double yaw, double &steer_l,
 
         driver_l = w * back_radius_l;
         driver_r = w * back_radius_r;
-
-        // std::cout << "11 back_radius_c = " << back_radius_c
-        //           << "  back_radius_l = " << back_radius_l
-        //           << "  back_radius_r = " << back_radius_r << std::endl;
-
-        // std::cout << "yaw " << yaw << " v " << v << std::endl;
     }
 }
 
@@ -88,19 +82,27 @@ double computeInsideWheelSpeed(double steer_l, double steer_r,
     double back_radius_c2 = (WHEELBASE / tan(steer_r)) - (FRONT_TREAD / 2);
     double back_radius_c = (back_radius_c1 + back_radius_c2) / 2;
 
+    // std::cout << "11 back_radius_c1 = " << back_radius_c1
+    //           << "  back_radius_c2 = " << back_radius_c2
+    //           << "  back_radius_c = " << back_radius_c << std::endl;
+
     double back_radius_l = back_radius_c - (REAR_TREAD / 2);
     double back_radius_r = back_radius_c + (REAR_TREAD / 2);
 
-    if (steer_c < 0) {
-        double driver_r = outside_wheel_speed;
-        double w = driver_r / back_radius_r;
-        return (w * back_radius_l);
+    // std::cout << "22 back_radius_l = " << back_radius_l
+    //           << "  back_radius_r = " << back_radius_r << std::endl;
+
+    double inner_speed = 0;
+    if (steer_c > 0) {
+        double w = outside_wheel_speed / back_radius_r;
+        inner_speed = (w * back_radius_l);
 
     } else {
-        double driver_l = outside_wheel_speed;
-        double w = driver_l / back_radius_l;
-        return (w * back_radius_r);
+        double w = outside_wheel_speed / back_radius_l;
+        inner_speed = (w * back_radius_r);
     }
+
+    return inner_speed;
 }
 
 // TODO: 构造的位置要想想
@@ -163,6 +165,24 @@ void AGVController::manualSetState(const std::map<std::string, double> &msg) {
         double r_v, l_v;
 
         computeSteeringAndDrive(steer_speed, steer_yaw, l_yaw, r_yaw, l_v, r_v);
+
+        // double l_speed = 0;
+        // double r_speed = 0;
+        // std::cout << "v: " << steer_speed << " yaw " << steer_yaw <<
+        // std::endl;
+
+        // std::cout << "1 l_yaw: " << l_yaw << " r_yaw " << r_yaw << "l_v" << l_v
+        //           << "r_v" << r_v << std::endl;
+
+        // if ((steer_yaw < 0)) {
+        //     r_v = computeInsideWheelSpeed(l_yaw, r_yaw, l_v);
+        //     // r_speed = r_v;
+        // } else {
+        //     l_v = computeInsideWheelSpeed(l_yaw, r_yaw, r_v);
+        //     // l_speed = l_v;
+        // }
+ 
+
         streeR_ptr_->setYaw(r_yaw);
         streeL_ptr_->setYaw(l_yaw);
         l_ptr_->setVelocity(l_v);
@@ -258,13 +278,15 @@ void AGVController::subEMsgCallBack(const char *topic_name,
         double l_speed = 0;
         double r_speed = 0;
 
-        if ((l_theta < 0)) {
+        if ((l_theta > 0)) {
             l_speed = computeInsideWheelSpeed(l_theta, r_theta, speed);
             r_speed = speed;
         } else {
             r_speed = computeInsideWheelSpeed(l_theta, r_theta, speed);
             l_speed = speed;
         }
+        // LOG_INFO("L l_yaw: %lf, r_yaw = %lf , l_v = %lf r_v = %lf", l_theta,
+            //          r_theta, l_speed, r_speed);
 
         streeL_ptr_->setYaw(l_theta);
         streeR_ptr_->setYaw(r_theta);
@@ -272,7 +294,7 @@ void AGVController::subEMsgCallBack(const char *topic_name,
         r_ptr_->setVelocity(r_speed);
 
         fork_ptr_->setVelocity(payload.forkspeedz());
-        fork_ptr_->setVelocity(payload.forkspeedy());
+        forkY_ptr_->setVelocity(payload.forkspeedy());
         forkP_ptr_->setVelocity(payload.forkspeedp());
     }
 }
