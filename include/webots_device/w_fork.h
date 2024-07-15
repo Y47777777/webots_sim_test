@@ -37,13 +37,14 @@ class WFork : public WBase {
           double high_bound = 0.0, double low_bound = 0.0)
         : WBase() {
         // creat fork
-        high_bound_ = high_bound;
-        low_bound_ = low_bound;
         motor_ = super_->getMotor(fork_motor_name);
         if (motor_ != nullptr) {
+            // user should set model +- 0.1 for (minStop, minStart, minPosition,
+            // maxPosition)
+            high_bound_ = motor_->getMaxPosition() - 0.1;
+            low_bound_ = motor_->getMinPosition() + 0.1;
             motor_->setPosition(INFINITY);
             motor_->setVelocity(0);
-
             LOG_INFO("creat fork: %s", fork_motor_name.c_str());
         }
 
@@ -126,10 +127,11 @@ class WFork : public WBase {
         // set speed
         if (motor_ != nullptr) {
             int bound = -1;
-            if (pos_sensor_value_ > high_bound_) {
+            // 0.0002 is a value to allow forks stop just around bounding value
+            if (pos_sensor_value_ > (high_bound_ + 0.0002)) {
                 bound = 0;
             }
-            if (pos_sensor_value_ < low_bound_) {
+            if (pos_sensor_value_ < (low_bound_ - 0.0002)) {
                 bound = 1;
             }
             if ((fabs(speed_) < 0.001)) {
