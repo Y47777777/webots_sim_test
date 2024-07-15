@@ -122,15 +122,27 @@ class WFork : public WBase {
 
         // set speed
         if (motor_ != nullptr) {
-            if (brake_ != nullptr) {
-                if (fabs(speed_) < 0.01) {
-                    brake_->setDampingConstant(MAXFLOAT);
-                } else {
-                    brake_->setDampingConstant(0);
-                }
-            }
+            if ((fabs(speed_) < 0.001)) {
+                // NOTE(FIX ME): pos_sensor_value_ should be larger than
+                // 0.0001 to trigger as none 0
 
-            motor_->setVelocity(speed_);
+                // if (fabs(last_pos_ - pos_sensor_value_) > 0.01) {
+                //     motor_->setPosition(last_pos_);
+                //     motor_->setVelocity(0.01);
+                // } else {
+                //     motor_->setPosition(INFINITY);
+                //     motor_->setVelocity(0);
+                // }
+
+                motor_->setPosition(last_pos_);
+                motor_->setVelocity(0.01);
+                brake_->setDampingConstant(1000);
+            } else {
+                brake_->setDampingConstant(0);
+                motor_->setPosition(INFINITY);
+                motor_->setVelocity(speed_);
+                last_pos_ = pos_sensor_value_;
+            }
         }
     };
 
@@ -140,10 +152,10 @@ class WFork : public WBase {
     PositionSensor *position_sensor_ = nullptr;
     Field *rotation_ptr_ = nullptr;
     Field *translation_ptr_ = nullptr;
-
     std::vector<double> init_pose_ = {0, 0, 0};
-
+    double min_pos_ = 0;
     double pos_sensor_value_ = 0;
+    double last_pos_ = 0.0;
     double speed_ = 0;
 };
 
