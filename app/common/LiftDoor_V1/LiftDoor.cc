@@ -17,7 +17,6 @@ int main(){
         }else if(cust.compare("open") == 0){
             door->setVelocity(1);
         }
-        std::cout<<cust<<std::endl;
     }
     
     return 0;

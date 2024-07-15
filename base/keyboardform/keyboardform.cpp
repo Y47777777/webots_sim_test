@@ -199,6 +199,12 @@ void KeyboardForm::on_pushButton_liftPStop_clicked() {
     sendMsg();
 }
 
+void KeyboardForm::on_pushButton_refresh_clicked()
+{
+    manual_state_.refresh_world = true;
+    sendMsg();
+}
+
 void KeyboardForm::sendMsg() {
     if (model_ptr_ == nullptr) {
         return;
@@ -213,6 +219,11 @@ void KeyboardForm::sendMsg() {
     msg["forkP_speed"] = manual_state_.forkP_speed;
     msg["forkP_height"] = manual_state_.forkP_height;
     msg["real_speed"] = manual_state_.real_speed;
+    
+    if(manual_state_.refresh_world){
+        msg["refresh_world"] = 0;
+        manual_state_.refresh_world = false;
+    }
     model_ptr_->manualSetState(msg);
 }
 

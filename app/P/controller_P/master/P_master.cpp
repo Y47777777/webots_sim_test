@@ -41,6 +41,7 @@ AGVController::AGVController() : BaseController("webots_master") {
     pose_ptr_ = std::make_shared<WPose>("RobotNode");
     lidar_pose_ptr_ = std::make_shared<WLidar>("mid360Per", 100, false);
     transfer_ptr_ = std::make_shared<WTransfer>();
+    liftdoor_ptr_ = std::make_shared<WLiftDoor>(false);
 
     v_while_spin_.push_back(bind(&WBase::spin, stree_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, l_ptr_));
@@ -49,11 +50,13 @@ AGVController::AGVController() : BaseController("webots_master") {
     v_while_spin_.push_back(bind(&WBase::spin, imu_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, pose_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, transfer_ptr_));
+    v_while_spin_.push_back(bind(&WBase::spin, liftdoor_ptr_));
 
     // pub
     ecal_ptr_->addEcal("webot/P_msg");
     ecal_ptr_->addEcal("webot/transfer");
     ecal_ptr_->addEcal("webot/pose");
+    ecal_ptr_->addEcal("webot/liftdoor");
 
     // sub
     ecal_ptr_->addEcal("svc/P_msg",
@@ -65,10 +68,14 @@ void AGVController::manualSetState(const std::map<std::string, double> &msg) {
     static double steer_speed = 0;
     static double steer_yaw = 0;
     static double fork_speed = 0;
+    if(msg.find("refresh_world") != msg.end()){
+            transfer_ptr_->noticeAll();
+    }
     if (isManual_) {
         steer_speed = msg.at("steer_speed");
         steer_yaw = msg.at("steer_yaw");
         fork_speed = msg.at("fork_speed");
+        
         stree_ptr_->setSpeed(steer_speed, steer_yaw);
         fork_ptr_->setVelocity(fork_speed);
     }
@@ -97,6 +104,8 @@ void AGVController::whileSpin() {
     // 休眠一下
     Timer::getInstance()->sleep<microseconds>(10);
     pubTransferSpin();
+
+    pubLiftDoorTag();
 }
 
 void AGVController::movePerLidarSpin() {
@@ -168,4 +177,14 @@ void AGVController::pubSerialSpin() {
     uint8_t buf[payload.ByteSize()];
     payload.SerializePartialToArray(buf, payload.ByteSize());
     ecal_ptr_->send("webot/P_msg", buf, payload.ByteSize());
+}
+
+void VNSim::AGVController::pubLiftDoorTag()
+{
+    sim_data_flow::MTransfer payload;
+    liftdoor_ptr_->getTag(payload);
+
+    uint8_t buf[payload.ByteSize()];
+    payload.SerializePartialToArray(buf, payload.ByteSize());
+    ecal_ptr_->send("webot/liftdoor", buf, payload.ByteSize());
 }

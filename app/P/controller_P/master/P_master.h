@@ -19,6 +19,7 @@
 #include "webots_device/w_imu.h"
 #include "webots_device/w_pose.h"
 #include "webots_device/w_transfer.h"
+#include "webots_device/w_liftdoor.h"
 
 namespace VNSim {
 
@@ -38,6 +39,7 @@ class AGVController : public BaseController {
     void pubTransferSpin();
     void pubRobotPoseSpin();
     void movePerLidarSpin();
+    void pubLiftDoorTag();
 
    private:
     std::shared_ptr<WImu> imu_ptr_;
@@ -48,6 +50,7 @@ class AGVController : public BaseController {
     std::shared_ptr<WPose> pose_ptr_;
     std::shared_ptr<WLidar> lidar_pose_ptr_;
     std::shared_ptr<WTransfer> transfer_ptr_;
+    std::shared_ptr<WLiftDoor> liftdoor_ptr_;
 
    public:
     void subPMsgCallBack(const char *topic_name,

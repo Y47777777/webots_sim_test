@@ -11,6 +11,8 @@ message Transfer {
     int32 nodeId = 1;
     foxglove.Vector3  translation = 2;
     foxglove.Quaternion rotation = 3;
+    // LiftDoor
+    bool doorTag = 4;
 }
   
 message MTransfer

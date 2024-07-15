@@ -45,6 +45,9 @@ AGVController::AGVController() : BaseController("webots_shadow_lidar") {
     // 机器人位姿
     pose_ptr_ = std::make_shared<WPose>("RobotNode");
     transfer_ptr_ = std::make_shared<WTransfer>();
+    
+    // 升降门
+    liftdoor_ptr_ = std::make_shared<WLiftDoor>(true);
 
     // 删除所有物理属性，碰撞属性
     collision_ptr_ = std::make_shared<WCollision>();
@@ -64,6 +67,7 @@ AGVController::AGVController() : BaseController("webots_shadow_lidar") {
     v_while_spin_.push_back(bind(&WBase::spin, slam_2_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, pose_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, transfer_ptr_));
+    v_while_spin_.push_back(bind(&WBase::spin, liftdoor_ptr_));
 
     // creat publish
     ecal_ptr_->addEcal(slam_1_webots_topic.c_str());
@@ -110,6 +114,12 @@ void AGVController::transferCallBack(const char *topic_name,
     transfer_ptr_->setTransfer(transfer);
 }
 
+void VNSim::AGVController::liftdoorCallBack(const char * topic_name, const eCAL::SReceiveCallbackData * data)
+{
+    sim_data_flow::MTransfer transfer;
+    transfer.ParseFromArray(data->buf, data->size);
+    liftdoor_ptr_->setTag(transfer);
+}
 
 void AGVController::Slam1ReportSpin() {
     LOG_INFO("Slam1ReportSpin start\n");

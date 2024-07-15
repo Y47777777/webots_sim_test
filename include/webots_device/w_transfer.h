@@ -66,6 +66,11 @@ class WTransfer : public WBase {
         LOG_INFO("size of tran map %d", m_tanfer_.size());
     }
 
+    void noticeAll(){
+        std::unique_lock<std::shared_mutex> lock(rw_mutex_);
+        send_all = true;
+    }
+
     void getTransfer(sim_data_flow::MTransfer &tanfer_msgs) {
         std::shared_lock<std::shared_mutex> lock(rw_mutex_);
         static uint64_t seq = 0;
@@ -137,11 +142,15 @@ class WTransfer : public WBase {
 
                 auto last_posi = 
                             it->second.tran_world;
-                if(std::abs(robot_tran[0] - last_posi[0])<=BASE_RANGE
-                   &&std::abs(robot_tran[1] - last_posi[1])<=BASE_RANGE){// 在车体周围
-                    auto curr_posi = 
+                // 以下判断逻辑只为优化自动任务时master和shadow间的transform同步
+                // 手动移动需手动同步或者手动使用refreshworld按钮
+                if(send_all
+                    ||(std::abs(robot_tran[0] - last_posi[0])<=BASE_RANGE
+                    &&std::abs(robot_tran[1] - last_posi[1])<=BASE_RANGE)){// 在车体周围
+                        auto curr_posi = 
                               it->second.node_ptr_->getPosition();
-                    if(std::abs(curr_posi[0] - last_posi[0])>=POSI_THRESHOLD
+                    if(send_all
+                       ||std::abs(curr_posi[0] - last_posi[0])>=POSI_THRESHOLD
                        ||std::abs(curr_posi[1] - last_posi[1])>=POSI_THRESHOLD
                        ||std::abs(curr_posi[2] - last_posi[2])>=POSI_THRESHOLD){// 世界坐标是否发生变化
                        
@@ -157,6 +166,7 @@ class WTransfer : public WBase {
                     }
                 }
             }
+            send_all = false;
             if(!tmp_trans.empty()){// 非空则更新，否则等get清理;
                                     //避免卡顿后停止移动最新的pose无法更新
                 m_updated_trans_.clear();
@@ -197,7 +207,7 @@ class WTransfer : public WBase {
         Field *translation_ptr_ = this_ptr->getField("translation");
 
         if (rotation_ptr_ != nullptr && translation_ptr_ != nullptr) {
-            auto node_type = this_ptr->getBaseTypeName();
+            auto node_type = this_ptr->getTypeName();
             
             if (node_type.compare("Robot") != 0) {
                 WTransferNode tran(this_ptr,rotation_ptr_, translation_ptr_);
@@ -219,6 +229,7 @@ class WTransfer : public WBase {
     std::map<int32_t, WTransferNode> m_updated_trans_;
     // idx specify node id
     int32_t idx = 0;
+    bool send_all = false;
     bool set_flag = false;
 };
 

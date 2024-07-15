@@ -56,6 +56,9 @@ AGVController::AGVController() : BaseController("webots_shadow_lidar") {
     pose_ptr_ = std::make_shared<WPose>("RobotNode");
     transfer_ptr_ = std::make_shared<WTransfer>();
 
+    // 升降门
+    liftdoor_ptr_ = std::make_shared<WLiftDoor>(true);
+
     // 删除所有物理属性，碰撞属性
     collision_ptr_ = std::make_shared<WCollision>();
 
@@ -78,6 +81,7 @@ AGVController::AGVController() : BaseController("webots_shadow_lidar") {
     // v_while_spin_.push_back(bind(&WBase::spin, mid360_perception_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, pose_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, transfer_ptr_));
+    v_while_spin_.push_back(bind(&WBase::spin, liftdoor_ptr_));
 
     // creat publish
     // ecal_ptr_->addEcal(BP_webots_topic.c_str());
@@ -93,7 +97,9 @@ AGVController::AGVController() : BaseController("webots_shadow_lidar") {
     ecal_ptr_->addEcal("webot/transfer",
                        std::bind(&AGVController::transferCallBack, this,
                                  std::placeholders::_1, std::placeholders::_2));
-
+    ecal_ptr_->addEcal("webot/liftdoor",
+                       std::bind(&AGVController::liftdoorCallBack,this,
+                                 std::placeholders::_1, std::placeholders::_2));
     // 创建线程
     // m_thread_.insert(std::pair<std::string, std::thread>(
     //     "bp_report", std::bind(&AGVController::BpReportSpin, this)));
@@ -146,6 +152,13 @@ void AGVController::Mid360TwoReportSpin() {
     while (!webotsExited_) {
         sendPointCloud(MID360Two_webots_topic, mid360Two_ptr_);
     }
+}
+
+void VNSim::AGVController::liftdoorCallBack(const char * topic_name, const eCAL::SReceiveCallbackData * data)
+{
+    sim_data_flow::MTransfer transfer;
+    transfer.ParseFromArray(data->buf, data->size);
+    liftdoor_ptr_->setTag(transfer);
 }
 
 void AGVController::Mid360PerceptionReportSpin() {
