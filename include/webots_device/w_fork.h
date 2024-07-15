@@ -33,9 +33,12 @@ class WFork : public WBase {
      * @param[in] break_name        break 如果有motor 可输入为空
      */
     WFork(std::string fork_motor_name = "", std::string solid_name = "",
-          std::string sensor_name = "", std::string brake_name = "")
+          std::string sensor_name = "", std::string brake_name = "",
+          double high_bound = 0.0, double low_bound = 0.0)
         : WBase() {
         // creat fork
+        high_bound_ = high_bound;
+        low_bound_ = low_bound;
         motor_ = super_->getMotor(fork_motor_name);
         if (motor_ != nullptr) {
             motor_->setPosition(INFINITY);
@@ -122,19 +125,25 @@ class WFork : public WBase {
 
         // set speed
         if (motor_ != nullptr) {
+            int bound = -1;
+            if (pos_sensor_value_ > high_bound_) {
+                bound = 0;
+            }
+            if (pos_sensor_value_ < low_bound_) {
+                bound = 1;
+            }
             if ((fabs(speed_) < 0.001)) {
-                // NOTE(FIX ME): pos_sensor_value_ should be larger than
-                // 0.0001 to trigger as none 0
-
-                // if (fabs(last_pos_ - pos_sensor_value_) > 0.01) {
-                //     motor_->setPosition(last_pos_);
-                //     motor_->setVelocity(0.01);
-                // } else {
-                //     motor_->setPosition(INFINITY);
-                //     motor_->setVelocity(0);
-                // }
-
                 motor_->setPosition(last_pos_);
+                motor_->setVelocity(0.01);
+                brake_->setDampingConstant(1000);
+            } else if ((speed_ > 0.001) && (bound == 0)) {
+                // high bound
+                motor_->setPosition(high_bound_);
+                motor_->setVelocity(0.01);
+                brake_->setDampingConstant(1000);
+            } else if ((speed_ < -0.001) && (bound == 1)) {
+                // high bound
+                motor_->setPosition(low_bound_);
                 motor_->setVelocity(0.01);
                 brake_->setDampingConstant(1000);
             } else {
@@ -144,7 +153,7 @@ class WFork : public WBase {
                 last_pos_ = pos_sensor_value_;
             }
         }
-    };
+    }
 
    private:
     Brake *brake_ = nullptr;
@@ -157,6 +166,8 @@ class WFork : public WBase {
     double pos_sensor_value_ = 0;
     double last_pos_ = 0.0;
     double speed_ = 0;
-};
+    double high_bound_ = 0;
+    double low_bound_ = 0;
+};  // namespace VNSim
 
 }  // namespace VNSim

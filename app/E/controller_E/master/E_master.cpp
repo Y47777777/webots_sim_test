@@ -112,9 +112,12 @@ std::shared_ptr<ReflectorChecker> ReflectorChecker::instance_ptr_ = nullptr;
 
 AGVController::AGVController() : BaseController("webots_master") {
     imu_ptr_ = std::make_shared<WImu>("inertial unit", "gyro", "accelerometer");
-    fork_ptr_ = std::make_shared<WFork>("fork height motor", "ForkZAxis");
-    forkY_ptr_ = std::make_shared<WFork>("YMotor", "ForkYAxis", "YSensor");
-    forkP_ptr_ = std::make_shared<WFork>("PMotor", "ForkPAxis", "PSensor");
+    fork_ptr_ = std::make_shared<WFork>("fork height motor", "ForkZAxis",
+                                        "fork height", "", 3.0, 0.0);
+    forkY_ptr_ = std::make_shared<WFork>("YMotor", "ForkYAxis", "YSensor", "",
+                                         0.2, -0.2);
+    forkP_ptr_ = std::make_shared<WFork>("PMotor", "ForkPAxis", "PSensor", "",
+                                         0.2, -0.2);
     streeR_ptr_ =
         std::make_shared<WWheel>("", "SteerWheelR", "SteerSolidL", "FLWheel");
     streeL_ptr_ =
@@ -158,8 +161,8 @@ void AGVController::manualSetState(const std::map<std::string, double> &msg) {
     static double fork_speed = 0;
     static double forkY_speed = 0;
     static double forkP_speed = 0;
-    if(msg.find("refresh_world") != msg.end()){
-            transfer_ptr_->noticeAll();
+    if (msg.find("refresh_world") != msg.end()) {
+        transfer_ptr_->noticeAll();
     }
     if (isManual_) {
         steer_speed = msg.at("steer_speed");
@@ -167,7 +170,7 @@ void AGVController::manualSetState(const std::map<std::string, double> &msg) {
         fork_speed = msg.at("fork_speed");
         forkY_speed = msg.at("forkY_speed");
         forkP_speed = msg.at("forkP_speed");
-        
+
         double r_yaw, l_yaw;
         double r_v, l_v;
 
@@ -178,7 +181,8 @@ void AGVController::manualSetState(const std::map<std::string, double> &msg) {
         // std::cout << "v: " << steer_speed << " yaw " << steer_yaw <<
         // std::endl;
 
-        // std::cout << "1 l_yaw: " << l_yaw << " r_yaw " << r_yaw << "l_v" << l_v
+        // std::cout << "1 l_yaw: " << l_yaw << " r_yaw " << r_yaw << "l_v" <<
+        // l_v
         //           << "r_v" << r_v << std::endl;
 
         // if ((steer_yaw < 0)) {
@@ -188,7 +192,6 @@ void AGVController::manualSetState(const std::map<std::string, double> &msg) {
         //     l_v = computeInsideWheelSpeed(l_yaw, r_yaw, r_v);
         //     // l_speed = l_v;
         // }
- 
 
         streeR_ptr_->setYaw(r_yaw);
         streeL_ptr_->setYaw(l_yaw);
@@ -295,7 +298,7 @@ void AGVController::subEMsgCallBack(const char *topic_name,
             l_speed = speed;
         }
         // LOG_INFO("L l_yaw: %lf, r_yaw = %lf , l_v = %lf r_v = %lf", l_theta,
-            //          r_theta, l_speed, r_speed);
+        //          r_theta, l_speed, r_speed);
 
         streeL_ptr_->setYaw(l_theta);
         streeR_ptr_->setYaw(r_theta);
@@ -336,8 +339,7 @@ void AGVController::pubSerialSpin() {
     ecal_ptr_->send("webot/E_msg", buf, payload.ByteSize());
 }
 
-void VNSim::AGVController::pubLiftDoorTag()
-{
+void VNSim::AGVController::pubLiftDoorTag() {
     sim_data_flow::MTransfer payload;
     liftdoor_ptr_->getTag(payload);
 
