@@ -66,7 +66,10 @@ class WLiftDoor : public WBase {
         for(auto& itr : msgs.map()){
             auto node_id = itr.nodeid();
             auto tag = itr.doortag();
-            m_liftdoor_[node_id].open_ = tag;
+            if(m_liftdoor_[node_id].open_ != tag)
+                m_liftdoor_[node_id].open_ = tag;
+            else
+                continue;
             m_liftdoor_updated_.insert(std::make_pair(node_id,m_liftdoor_[node_id]));
         }
     }
@@ -97,7 +100,8 @@ class WLiftDoor : public WBase {
                     if(std::abs(p[0] - position[0])<=BASE_RANGE&&
                         std::abs(p[1] - position[1])<=BASE_RANGE){// 判断当前是否在车周围
                         auto custom_val = itr.customdata_f_ptr_->getSFString();
-                        itr.customdata_f_ptr_->setSFString("open");// 目前只设置靠近开启
+                        itr.customdata_f_ptr_->setSFString("open");
+                        itr.open_ = true;
 
                         memcpy(itr.position,node_posi,sizeof(*node_posi)*3);
                         m_liftdoor_updated_.insert(std::make_pair(id,itr));
