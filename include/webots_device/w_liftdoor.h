@@ -62,7 +62,6 @@ class WLiftDoor : public WBase {
     void setTag(const sim_data_flow::MTransfer &msgs) {
         std::shared_lock<std::shared_mutex> lock(rw_mutex_);
 
-        std::cout<<"set tag : "<<msgs.map().size()<<std::endl;
         m_liftdoor_updated_.clear();
         for(auto& itr : msgs.map()){
             auto node_id = itr.nodeid();
@@ -97,9 +96,10 @@ class WLiftDoor : public WBase {
                     auto node_posi = itr.node_ptr_->getPosition();
                     if(std::abs(p[0] - position[0])<=BASE_RANGE&&
                         std::abs(p[1] - position[1])<=BASE_RANGE){// 判断当前是否在车周围
-                        itr.customdata_f_ptr_->setSFString("open");
+                        auto custom_val = itr.customdata_f_ptr_->getSFString();
+                        itr.customdata_f_ptr_->setSFString("open");// 目前只设置靠近开启
+
                         memcpy(itr.position,node_posi,sizeof(*node_posi)*3);
-                        itr.open_ = true;
                         m_liftdoor_updated_.insert(std::make_pair(id,itr));
                    }
                 }
@@ -122,7 +122,8 @@ class WLiftDoor : public WBase {
                 WNodeInfo temp(node,field);
                 auto position = node->getPosition();
                 memcpy(temp.position,position,sizeof(*position)*3);
-                auto pair = std::make_pair(node->getId(),temp);
+                auto id = node->getId();
+                auto pair = std::make_pair(id,temp);
                 m_liftdoor_.insert(pair);
                 m_liftdoor_updated_.insert(pair);// 初始化
             }
