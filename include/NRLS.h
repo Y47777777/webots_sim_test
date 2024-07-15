@@ -96,6 +96,9 @@ class NRLS {
 
             int min_layer = MAXFLOAT;
             int max_layer = 0;
+
+            int min_index = MAXFLOAT;
+            int max_index = 0;
             // 建立查找表
             for (auto &t : fb_list_) {
                 t.layer_count = std::round(
@@ -103,22 +106,44 @@ class NRLS {
                 t.pc_idx = std::round((t.horizon_angle - horizontal_origin) *
                                       sim_hor_res);
 
-                // 防止溢出
-                if (t.pc_idx == input.horizontalResolution) {
-                    t.pc_idx--;
-                }
-
+                // 记录最大最小值
                 if (min_layer > t.layer_count) {
                     min_layer = t.layer_count;
                 }
                 if (max_layer < t.layer_count) {
                     max_layer = t.layer_count;
                 }
+                if (min_index > t.pc_idx) {
+                    min_index = t.pc_idx;
+                }
+                if (max_index < t.pc_idx) {
+                    max_index = t.pc_idx;
+                }
+
+                // 防止溢出
+                if (t.pc_idx < 0) {
+                    t.pc_idx = 0;
+                }
+
+                if (t.pc_idx >= input.horizontalResolution) {
+                    t.pc_idx = input.horizontalResolution - 1;
+                }
+
+                if (t.layer_count < 0) {
+                    t.layer_count = 0;
+                }
+
+                if (t.layer_count >= input.numberOfLayers) {
+                    t.layer_count = input.numberOfLayers - 1;
+                }
             }
 
             list_iter_ = fb_list_.begin();
             LOG_INFO("fb_list_  size %d", fb_list_.size());
             LOG_INFO("min layer %d,max %d", min_layer, max_layer);
+            LOG_INFO("min index %d,max %d", min_index, max_index);
+            LOG_INFO("horizontal %d, vertial %d ", input.horizontalResolution, input.numberOfLayers);
+            
         } while (0);
         return ret;
     }
@@ -144,15 +169,15 @@ class NRLS {
             }
 
             if (list_iter_->layer_count < 0 || list_iter_->pc_idx < 0) {
+                // LOG_INFO("layers %d, list_iter_->layer_count, %d",        layers, list_iter_->layer_count);
+                // LOG_INFO("size_of_each_layer %d, list_iter_->pc_idx, %d", size_of_each_layer, list_iter_->pc_idx);
                 continue;
             }
 
             if (list_iter_->layer_count >= layers ||
                 list_iter_->pc_idx >= size_of_each_layer) {
-                LOG_INFO("layers %d, size_of_each_layer, %d", layers,
-                         size_of_each_layer);
-                LOG_INFO("list_iter_->pc_idx %d, list_iter_->layer_count, %d",
-                         list_iter_->pc_idx, list_iter_->layer_count);
+                // LOG_INFO("layers %d, list_iter_->layer_count, %d",        layers, list_iter_->layer_count);
+                // LOG_INFO("size_of_each_layer %d, list_iter_->pc_idx, %d", size_of_each_layer, list_iter_->pc_idx);
                 continue;
             }
 
@@ -170,13 +195,6 @@ class NRLS {
                 point->set_time(cur_ptr->time);
                 point->set_layer_id(cur_ptr->layer_id);
                 point->set_intensity(150);
-                // TODO:要修改位置
-                // if (ReflectorChecker::getInstance()->checkInReflector(
-                //         lidar_name, point)) {
-                //     point->set_intensity(200);
-                // } else {
-                //     point->set_intensity(150);
-                // }
             }
         }
     }
