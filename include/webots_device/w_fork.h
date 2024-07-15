@@ -33,8 +33,7 @@ class WFork : public WBase {
      * @param[in] break_name        break 如果有motor 可输入为空
      */
     WFork(std::string fork_motor_name = "", std::string solid_name = "",
-          std::string sensor_name = "", std::string brake_name = "",
-          double high_bound = 0.0, double low_bound = 0.0)
+          std::string sensor_name = "", std::string brake_name = "")
         : WBase() {
         // creat fork
         motor_ = super_->getMotor(fork_motor_name);

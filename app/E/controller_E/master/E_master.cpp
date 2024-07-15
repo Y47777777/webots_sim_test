@@ -113,11 +113,9 @@ std::shared_ptr<ReflectorChecker> ReflectorChecker::instance_ptr_ = nullptr;
 AGVController::AGVController() : BaseController("webots_master") {
     imu_ptr_ = std::make_shared<WImu>("inertial unit", "gyro", "accelerometer");
     fork_ptr_ = std::make_shared<WFork>("fork height motor", "ForkZAxis",
-                                        "fork height", "", 3.0, 0.0);
-    forkY_ptr_ = std::make_shared<WFork>("YMotor", "ForkYAxis", "YSensor", "",
-                                         0.2, -0.2);
-    forkP_ptr_ = std::make_shared<WFork>("PMotor", "ForkPAxis", "PSensor", "",
-                                         0.2, -0.2);
+                                        "fork height");
+    forkY_ptr_ = std::make_shared<WFork>("YMotor", "ForkYAxis", "YSensor");
+    forkP_ptr_ = std::make_shared<WFork>("PMotor", "ForkPAxis", "PSensor");
     streeR_ptr_ =
         std::make_shared<WWheel>("", "SteerWheelR", "SteerSolidL", "FLWheel");
     streeL_ptr_ =
