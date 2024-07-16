@@ -206,19 +206,27 @@ class WFork : public WBase {
             if ((fabs(speed) < 0.001)) {
                 motor_->setPosition(last_pos_);
                 motor_->setVelocity(0.01);
-                brake_->setDampingConstant(1000);
+                if (brake_ != nullptr) {
+                    brake_->setDampingConstant(1000);
+                }
             } else if ((speed > 0.001) && (bound == 0)) {
                 // high bound
                 motor_->setPosition(high_bound_);
                 motor_->setVelocity(0.01);
-                brake_->setDampingConstant(1000);
+                if (brake_ != nullptr) {
+                    brake_->setDampingConstant(1000);
+                }
             } else if ((speed < -0.001) && (bound == 1)) {
                 // high bound
                 motor_->setPosition(low_bound_);
                 motor_->setVelocity(0.01);
-                brake_->setDampingConstant(1000);
+                if (brake_ != nullptr) {
+                    brake_->setDampingConstant(1000);
+                }
             } else {
-                brake_->setDampingConstant(0);
+                if (brake_ != nullptr) {
+                    brake_->setDampingConstant(0);
+                }
                 motor_->setPosition(INFINITY);
                 motor_->setVelocity(speed);
                 last_pos_ = pos_sensor_value_;
