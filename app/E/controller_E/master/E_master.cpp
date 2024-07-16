@@ -196,9 +196,9 @@ void AGVController::manualSetState(const std::map<std::string, double> &msg) {
         l_ptr_->setVelocity(l_v);
         r_ptr_->setVelocity(r_v);
 
-        fork_ptr_->setVelocity(fork_speed);
-        forkY_ptr_->setVelocity(forkY_speed);
-        forkP_ptr_->setVelocity(forkP_speed);
+        fork_ptr_->setVelocityAll(fork_speed);
+        forkY_ptr_->setVelocityAll(forkY_speed);
+        forkP_ptr_->setVelocityAll(forkP_speed);
     }
 }
 
