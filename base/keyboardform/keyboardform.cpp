@@ -237,6 +237,11 @@ void KeyboardForm::on_pushButton_refresh_clicked() {
     sendMsg();
 }
 
+void KeyboardForm::on_pushButton_reset_steer_clicked() {
+    manual_state_.steer_yaw = 0;
+    sendMsg();
+}
+
 void KeyboardForm::sendMsg() {
     if (model_ptr_ == nullptr) {
         return;

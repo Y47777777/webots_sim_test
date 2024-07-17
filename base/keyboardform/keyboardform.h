@@ -45,6 +45,7 @@ class KeyboardForm : public QWidget {
     void on_pushButton_liftCClose_clicked();
     void on_pushButton_liftCStop_clicked();
     void on_pushButton_refresh_clicked();
+    void on_pushButton_reset_steer_clicked();
     void setStatus();
 
    private:
