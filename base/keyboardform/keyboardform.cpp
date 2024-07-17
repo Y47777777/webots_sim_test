@@ -66,6 +66,16 @@ void KeyboardForm::setStatus() {
             QString::number(msg["forkP_height"]));
     }
 
+    if (msg.find("forkC_speed") != msg.end()) {
+        ui->label_forkCSpeed_value->setText(
+            QString::number(msg["forkC_speed"]));
+    }
+
+    if (msg.find("forkC_height") != msg.end()) {
+        ui->label_forkCHeight_value->setText(
+            QString::number(msg["forkC_height"]));
+    }
+
     if (msg.find("real_speed") != msg.end()) {
         ui->label_realspeed_value->setText(QString::number(msg["real_speed"]));
     }
@@ -199,8 +209,30 @@ void KeyboardForm::on_pushButton_liftPStop_clicked() {
     sendMsg();
 }
 
-void KeyboardForm::on_pushButton_refresh_clicked()
-{
+void KeyboardForm::on_pushButton_liftCOpen_clicked() {
+    double c_value = manual_state_.forkC_speed;
+    if (c_value < 1) {
+        c_value += 0.01;
+    }
+    manual_state_.forkC_speed = c_value;
+    sendMsg();
+}
+
+void KeyboardForm::on_pushButton_liftCClose_clicked() {
+    double c_value = manual_state_.forkC_speed;
+    if (c_value > -1) {
+        c_value -= 0.01;
+    }
+    manual_state_.forkC_speed = c_value;
+    sendMsg();
+}
+
+void KeyboardForm::on_pushButton_liftCStop_clicked() {
+    manual_state_.forkC_speed = 0;
+    sendMsg();
+}
+
+void KeyboardForm::on_pushButton_refresh_clicked() {
     manual_state_.refresh_world = true;
     sendMsg();
 }
@@ -218,9 +250,11 @@ void KeyboardForm::sendMsg() {
     msg["forkY_height"] = manual_state_.forkY_height;
     msg["forkP_speed"] = manual_state_.forkP_speed;
     msg["forkP_height"] = manual_state_.forkP_height;
+    msg["forkC_speed"] = manual_state_.forkC_speed;
+    msg["forkC_height"] = manual_state_.forkC_height;
     msg["real_speed"] = manual_state_.real_speed;
-    
-    if(manual_state_.refresh_world){
+
+    if (manual_state_.refresh_world) {
         msg["refresh_world"] = 0;
         manual_state_.refresh_world = false;
     }

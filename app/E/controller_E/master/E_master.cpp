@@ -116,6 +116,8 @@ AGVController::AGVController() : BaseController("webots_master") {
                                         "fork height");
     forkY_ptr_ = std::make_shared<WFork>("YMotor", "ForkYAxis", "YSensor");
     forkP_ptr_ = std::make_shared<WFork>("PMotor", "ForkPAxis", "PSensor");
+    forkCL_ptr_ = std::make_shared<WFork>("CLMotor", "ForkCLAxis", "CSensor");
+    forkCR_ptr_ = std::make_shared<WFork>("", "ForkCRAxis", "", "", true);
     streeR_ptr_ =
         std::make_shared<WWheel>("", "SteerWheelR", "SteerSolidL", "FLWheel");
     streeL_ptr_ =
@@ -135,6 +137,8 @@ AGVController::AGVController() : BaseController("webots_master") {
     v_while_spin_.push_back(bind(&WBase::spin, fork_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, forkY_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, forkP_ptr_));
+    v_while_spin_.push_back(bind(&WBase::spin, forkCL_ptr_));
+    v_while_spin_.push_back(bind(&WBase::spin, forkCR_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, imu_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, pose_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, transfer_ptr_));
@@ -159,6 +163,7 @@ void AGVController::manualSetState(const std::map<std::string, double> &msg) {
     static double fork_speed = 0;
     static double forkY_speed = 0;
     static double forkP_speed = 0;
+    static double forkC_speed = 0;
     if (msg.find("refresh_world") != msg.end()) {
         transfer_ptr_->noticeAll();
     }
@@ -168,7 +173,7 @@ void AGVController::manualSetState(const std::map<std::string, double> &msg) {
         fork_speed = msg.at("fork_speed");
         forkY_speed = msg.at("forkY_speed");
         forkP_speed = msg.at("forkP_speed");
-
+        forkC_speed = msg.at("forkC_speed");
         double r_yaw, l_yaw;
         double r_v, l_v;
 
@@ -199,6 +204,8 @@ void AGVController::manualSetState(const std::map<std::string, double> &msg) {
         fork_ptr_->setVelocity(fork_speed);
         forkY_ptr_->setVelocity(forkY_speed);
         forkP_ptr_->setVelocity(forkP_speed);
+        forkCL_ptr_->setVelocity(forkC_speed);
+        // forkCR_ptr_->setVelocity(forkC_speed);
     }
 }
 
@@ -212,10 +219,11 @@ void AGVController::manualGetState(std::map<std::string, double> &msg) {
     msg["fork_speed"] = fork_ptr_->getVelocityValue();
     msg["forkY_speed"] = forkY_ptr_->getVelocityValue();
     msg["forkP_speed"] = forkP_ptr_->getVelocityValue();
-
+    msg["forkC_speed"] = forkCL_ptr_->getVelocityValue();
     msg["fork_height"] = fork_ptr_->getSenosorValue();
     msg["forkY_height"] = forkY_ptr_->getSenosorValue();
     msg["forkP_height"] = forkP_ptr_->getSenosorValue();
+    msg["forkC_height"] = forkCL_ptr_->getSenosorValue();
 
     msg["real_speed"] = 0;
     // TODO: fork_speed real_speed
@@ -228,6 +236,9 @@ void AGVController::whileSpin() {
 
     // 移动感知激光
     movePerLidarSpin();
+
+    // 右货叉C轴随动
+    moveShadowForkSpin();
 
     // 发送至shadow
     pubRobotPoseSpin();
@@ -245,6 +256,11 @@ void AGVController::movePerLidarSpin() {
     // TODO: 激光随动
     lidar_pose_ptr_->moveLidar(fork_z);
     // LOG_INFO("fork :%.2f", fork_z);
+}
+
+void AGVController::moveShadowForkSpin() {
+    double forkC = forkCL_ptr_->getSenosorValue();
+    forkCR_ptr_->setShadowPos(forkC);
 }
 
 void AGVController::pubTransferSpin() {
@@ -306,6 +322,8 @@ void AGVController::subEMsgCallBack(const char *topic_name,
         fork_ptr_->setVelocity(payload.forkspeedz());
         forkY_ptr_->setVelocity(payload.forkspeedy());
         forkP_ptr_->setVelocity(payload.forkspeedp());
+        forkCL_ptr_->setVelocity(payload.forkspeedc());
+        forkCR_ptr_->setVelocity(payload.forkspeedc());
     }
 }
 
@@ -315,6 +333,7 @@ void AGVController::pubSerialSpin() {
     payload.set_forkposez(fork_ptr_->getSenosorValue());
     payload.set_forkposey(forkY_ptr_->getSenosorValue());
     payload.set_forkposep(forkP_ptr_->getSenosorValue());
+    payload.set_forkposec(forkCL_ptr_->getSenosorValue());
 
     payload.set_steering_theta_l(streeL_ptr_->getMotorYaw());
     payload.set_steering_theta_r(streeR_ptr_->getMotorYaw());

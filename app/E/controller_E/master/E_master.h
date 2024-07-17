@@ -41,6 +41,7 @@ class AGVController : public BaseController {
     void pubRobotPoseSpin();
     void movePerLidarSpin();
     void pubLiftDoorTag();
+    void moveShadowForkSpin();
 
    private:
     std::shared_ptr<WImu> imu_ptr_;
@@ -51,6 +52,8 @@ class AGVController : public BaseController {
     std::shared_ptr<WFork> fork_ptr_;
     std::shared_ptr<WFork> forkY_ptr_;
     std::shared_ptr<WFork> forkP_ptr_;
+    std::shared_ptr<WFork> forkCL_ptr_;
+    std::shared_ptr<WFork> forkCR_ptr_;
     std::shared_ptr<WPose> pose_ptr_;
     std::shared_ptr<WLidar> lidar_pose_ptr_;
     std::shared_ptr<WTransfer> transfer_ptr_;
