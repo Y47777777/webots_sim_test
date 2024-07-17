@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.14)
 
-project(E_fork_forks LANGUAGES CXX)
+project(E_four_forks LANGUAGES CXX)
 
 # set(CMAKE_AUTOUIC ON)
 # set(CMAKE_AUTOMOC ON)

@@ -29,6 +29,7 @@ using namespace webots;
 const double WHEELBASE = 1.7;     // 前后轮间距
 const double FRONT_TREAD = 0.78;  // 定向轮间距
 const double REAR_TREAD = 1.1;    // 驱动轮间距
+const double FOLLOW_START = 0.1;
 
 // 计算tan角度
 inline double CalcTan(double len, double yaw) {
@@ -116,8 +117,10 @@ AGVController::AGVController() : BaseController("webots_master") {
                                         "fork height");
     forkY_ptr_ = std::make_shared<WFork>("YMotor", "ForkYAxis", "YSensor");
     forkP_ptr_ = std::make_shared<WFork>("PMotor", "ForkPAxis", "PSensor");
-    forkCL_ptr_ = std::make_shared<WFork>("CLMotor", "ForkCLAxis", "CSensor");
-    forkCR_ptr_ = std::make_shared<WFork>("", "ForkCRAxis", "", "", true);
+    forkCLF1_ptr_ = std::make_shared<WFork>("CLMotor", "LF1", "CSensor");
+    forkCLF2_ptr_ = std::make_shared<WFork>("", "LF2_M", "", "", true);
+    forkCRF1_ptr_ = std::make_shared<WFork>("", "RF1_M", "", "", true);
+    forkCRF2_ptr_ = std::make_shared<WFork>("", "RF2_M", "", "", true);
     streeR_ptr_ =
         std::make_shared<WWheel>("", "SteerWheelR", "SteerSolidL", "FLWheel");
     streeL_ptr_ =
@@ -137,8 +140,7 @@ AGVController::AGVController() : BaseController("webots_master") {
     v_while_spin_.push_back(bind(&WBase::spin, fork_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, forkY_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, forkP_ptr_));
-    v_while_spin_.push_back(bind(&WBase::spin, forkCL_ptr_));
-    v_while_spin_.push_back(bind(&WBase::spin, forkCR_ptr_));
+    v_while_spin_.push_back(bind(&WBase::spin, forkCLF1_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, imu_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, pose_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, transfer_ptr_));
@@ -204,8 +206,7 @@ void AGVController::manualSetState(const std::map<std::string, double> &msg) {
         fork_ptr_->setVelocity(fork_speed);
         forkY_ptr_->setVelocity(forkY_speed);
         forkP_ptr_->setVelocity(forkP_speed);
-        forkCL_ptr_->setVelocity(forkC_speed);
-        // forkCR_ptr_->setVelocity(forkC_speed);
+        forkCLF1_ptr_->setVelocity(forkC_speed);
     }
 }
 
@@ -219,11 +220,11 @@ void AGVController::manualGetState(std::map<std::string, double> &msg) {
     msg["fork_speed"] = fork_ptr_->getVelocityValue();
     msg["forkY_speed"] = forkY_ptr_->getVelocityValue();
     msg["forkP_speed"] = forkP_ptr_->getVelocityValue();
-    msg["forkC_speed"] = forkCL_ptr_->getVelocityValue();
+    msg["forkC_speed"] = forkCLF1_ptr_->getVelocityValue();
     msg["fork_height"] = fork_ptr_->getSenosorValue();
     msg["forkY_height"] = forkY_ptr_->getSenosorValue();
     msg["forkP_height"] = forkP_ptr_->getSenosorValue();
-    msg["forkC_height"] = forkCL_ptr_->getSenosorValue();
+    msg["forkC_height"] = forkCLF1_ptr_->getSenosorValue();
 
     msg["real_speed"] = 0;
     // TODO: fork_speed real_speed
@@ -259,8 +260,13 @@ void AGVController::movePerLidarSpin() {
 }
 
 void AGVController::moveShadowForkSpin() {
-    double forkC = forkCL_ptr_->getSenosorValue();
-    forkCR_ptr_->setShadowPos(forkC);
+    double forkC = forkCLF1_ptr_->getSenosorValue();
+    double forkCSpeed = forkCLF1_ptr_->getVelocityValue();
+    forkCRF1_ptr_->setShadowPos(forkC);
+    if (fabs(forkC) > FOLLOW_START) {
+        forkCLF2_ptr_->setShadowPos(-(fabs(forkC) - FOLLOW_START));
+        forkCRF2_ptr_->setShadowPos((fabs(forkC) - FOLLOW_START));
+    }
 }
 
 void AGVController::pubTransferSpin() {
@@ -322,8 +328,7 @@ void AGVController::subEMsgCallBack(const char *topic_name,
         fork_ptr_->setVelocity(payload.forkspeedz());
         forkY_ptr_->setVelocity(payload.forkspeedy());
         forkP_ptr_->setVelocity(payload.forkspeedp());
-        forkCL_ptr_->setVelocity(payload.forkspeedc());
-        forkCR_ptr_->setVelocity(payload.forkspeedc());
+        forkCLF1_ptr_->setVelocity(payload.forkspeedc());
     }
 }
 
@@ -333,7 +338,7 @@ void AGVController::pubSerialSpin() {
     payload.set_forkposez(fork_ptr_->getSenosorValue());
     payload.set_forkposey(forkY_ptr_->getSenosorValue());
     payload.set_forkposep(forkP_ptr_->getSenosorValue());
-    payload.set_forkposec(forkCL_ptr_->getSenosorValue());
+    payload.set_forkposec(forkCLF1_ptr_->getSenosorValue());
 
     payload.set_steering_theta_l(streeL_ptr_->getMotorYaw());
     payload.set_steering_theta_r(streeR_ptr_->getMotorYaw());
