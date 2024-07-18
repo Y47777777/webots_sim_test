@@ -75,6 +75,9 @@ class WFork : public WBase {
                 position_sensor_->enable(5);
                 LOG_INFO("creat fork:%s  fork sensor :%s",
                          fork_motor_name.c_str(), sensor_name.c_str());
+                super_->step(step_duration_);
+                pos_sensor_value_ = position_sensor_->getValue();
+                last_pos_ = pos_sensor_value_;
             }
         }
 
