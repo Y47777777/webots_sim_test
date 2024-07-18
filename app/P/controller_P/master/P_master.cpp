@@ -77,7 +77,7 @@ void AGVController::manualSetState(const std::map<std::string, double> &msg) {
         fork_speed = msg.at("fork_speed");
         
         stree_ptr_->setSpeed(steer_speed, steer_yaw);
-        fork_ptr_->setVelocity(fork_speed);
+        fork_ptr_->setVelocityAll(fork_speed);
     }
 }
 

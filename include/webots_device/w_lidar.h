@@ -41,6 +41,7 @@ class WLidar : public WBase {
      * @param[in] lidar_name  webots 下 lidar名字
      * @param[in] pose_name   lidar_name 外层pose
      * @param[in] frequency   ladir 频率 (ms)
+     * @param[in] connecting_rod   连杆长度
      */
     WLidar(std::string lidar_name, int frequency = 100, bool enable = true,
            double connecting_rod = 0.241)

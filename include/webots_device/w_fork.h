@@ -209,14 +209,14 @@ class WFork : public WBase {
                 if (brake_ != nullptr) {
                     brake_->setDampingConstant(1000);
                 }
-            } else if ((speed > 0.001) && (bound == 0)) {
+            } else if ((speed > 0) && (bound == 0)) {
                 // high bound
                 motor_->setPosition(high_bound_);
                 motor_->setVelocity(0.01);
                 if (brake_ != nullptr) {
                     brake_->setDampingConstant(1000);
                 }
-            } else if ((speed < -0.001) && (bound == 1)) {
+            } else if ((speed < 0) && (bound == 1)) {
                 // high bound
                 motor_->setPosition(low_bound_);
                 motor_->setVelocity(0.01);
