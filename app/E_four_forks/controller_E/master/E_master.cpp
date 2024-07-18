@@ -29,7 +29,7 @@ using namespace webots;
 const double WHEELBASE = 1.7;     // 前后轮间距
 const double FRONT_TREAD = 0.78;  // 定向轮间距
 const double REAR_TREAD = 1.1;    // 驱动轮间距
-const double FOLLOW_START = 0.1;
+const double FOLLOW_START = 0.4;
 
 // 计算tan角度
 inline double CalcTan(double len, double yaw) {
@@ -203,10 +203,10 @@ void AGVController::manualSetState(const std::map<std::string, double> &msg) {
         l_ptr_->setVelocity(l_v);
         r_ptr_->setVelocity(r_v);
 
-        fork_ptr_->setVelocity(fork_speed);
-        forkY_ptr_->setVelocity(forkY_speed);
-        forkP_ptr_->setVelocity(forkP_speed);
-        forkCLF1_ptr_->setVelocity(forkC_speed);
+        fork_ptr_->setVelocityAll(fork_speed);
+        forkY_ptr_->setVelocityAll(forkY_speed);
+        forkP_ptr_->setVelocityAll(forkP_speed);
+        forkCLF1_ptr_->setVelocityAll(forkC_speed);
     }
 }
 
@@ -227,7 +227,6 @@ void AGVController::manualGetState(std::map<std::string, double> &msg) {
     msg["forkC_height"] = forkCLF1_ptr_->getSenosorValue();
 
     msg["real_speed"] = 0;
-    // TODO: fork_speed real_speed
 }
 
 void AGVController::whileSpin() {
