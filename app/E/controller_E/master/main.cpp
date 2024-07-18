@@ -11,6 +11,9 @@ int main(int argc, char *argv[]) {
     g_Logger.initLog("../../plugins/log_config/webots_master.ini");
 
     LOG_INFO("log init...");
+    LOG_INFO("try start svc_E");
+    system("./../svc_E/svc_E &");
+
     QApplication a(argc, argv);
     // init ctrl
     std::shared_ptr<BaseController> ctrl_ptr =
