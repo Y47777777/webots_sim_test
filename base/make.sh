@@ -1,4 +1,9 @@
 #!/bin/sh
+SIMULATION_LIB_DIR=../../../simulation_world/webots/libraries
+if [ ! -d ${SIMULATION_LIB_DIR} ]; then
+	echo "create SIMULATION_LIB_DIR=${SIMULATION_LIB_DIR}"
+	mkdir -p ${SIMULATION_LIB_DIR}
+fi
 cd logvn
 ./make.sh
 cd ..
