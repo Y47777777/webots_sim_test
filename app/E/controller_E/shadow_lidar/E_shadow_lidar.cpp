@@ -13,9 +13,6 @@
 #include <qelapsedtimer.h>
 #include <QElapsedTimer>
 
-#include "sim_data_flow/point_cloud.pb.h"
-#include "sim_data_flow/pose.pb.h"
-
 #include "geometry/geometry.h"
 #include "time/time.h"
 
@@ -33,8 +30,10 @@ std::shared_ptr<ReflectorChecker> ReflectorChecker::instance_ptr_ = nullptr;
 
 std::string slam_1_webots_topic = "webots/Lidar/.54/PointCloud";
 std::string slam_2_webots_topic = "webots/Lidar/.56/PointCloud";
+std::string slam_1_webots_base_topic = "webots/LidarToBase/.54/PointCloud";
+std::string slam_2_webots_base_topic = "webots/LidarToBase/.56/PointCloud";
 
-AGVController::AGVController() : BaseController("webots_shadow_lidar") {
+AGVController::AGVController() : BaseLidarControl("webots_shadow_lidar") {
     // Sensor
     slam_1_ptr_ = std::make_shared<WLidar>("slam_1", 100);
     slam_1_ptr_->setSimulationNRLS("mid360.csv");
@@ -45,7 +44,7 @@ AGVController::AGVController() : BaseController("webots_shadow_lidar") {
     // 机器人位姿
     pose_ptr_ = std::make_shared<WPose>("RobotNode");
     transfer_ptr_ = std::make_shared<WTransfer>();
-    
+
     // 升降门
     liftdoor_ptr_ = std::make_shared<WLiftDoor>(true);
 
@@ -60,8 +59,8 @@ AGVController::AGVController() : BaseController("webots_shadow_lidar") {
     // 想高反判断部分注册外参
     reflector_check_ptr_->setSensorMatrix4d("slam_1",
                                             slam_1_ptr_->getMatrixFromLidar());
-    reflector_check_ptr_->setSensorMatrix4d(
-        "slam_2", slam_2_ptr_->getMatrixFromLidar());
+    reflector_check_ptr_->setSensorMatrix4d("slam_2",
+                                            slam_2_ptr_->getMatrixFromLidar());
 
     v_while_spin_.push_back(bind(&WBase::spin, slam_1_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, slam_2_ptr_));
@@ -72,6 +71,8 @@ AGVController::AGVController() : BaseController("webots_shadow_lidar") {
     // creat publish
     ecal_ptr_->addEcal(slam_1_webots_topic.c_str());
     ecal_ptr_->addEcal(slam_2_webots_topic.c_str());
+    ecal_ptr_->addEcal(slam_1_webots_base_topic.c_str());
+    ecal_ptr_->addEcal(slam_2_webots_base_topic.c_str());
 
     // creat subscribe
     ecal_ptr_->addEcal("webot/pose",
@@ -86,8 +87,7 @@ AGVController::AGVController() : BaseController("webots_shadow_lidar") {
     m_thread_.insert(std::pair<std::string, std::thread>(
         "slam_1_report", std::bind(&AGVController::Slam1ReportSpin, this)));
     m_thread_.insert(std::pair<std::string, std::thread>(
-        "slam_2_report",
-        std::bind(&AGVController::Slam2ReportSpin, this)));
+        "slam_2_report", std::bind(&AGVController::Slam2ReportSpin, this)));
 }
 
 void AGVController::whileSpin() {
@@ -114,8 +114,8 @@ void AGVController::transferCallBack(const char *topic_name,
     transfer_ptr_->setTransfer(transfer);
 }
 
-void VNSim::AGVController::liftdoorCallBack(const char * topic_name, const eCAL::SReceiveCallbackData * data)
-{
+void VNSim::AGVController::liftdoorCallBack(
+    const char *topic_name, const eCAL::SReceiveCallbackData *data) {
     sim_data_flow::MTransfer transfer;
     transfer.ParseFromArray(data->buf, data->size);
     liftdoor_ptr_->setTag(transfer);
@@ -123,49 +123,16 @@ void VNSim::AGVController::liftdoorCallBack(const char * topic_name, const eCAL:
 
 void AGVController::Slam1ReportSpin() {
     LOG_INFO("Slam1ReportSpin start\n");
-    while (!webotsExited_) { sendPointCloud(slam_1_webots_topic, slam_1_ptr_); }
+    while (!webotsExited_) {
+        sendPointCloud(slam_1_webots_topic, slam_1_ptr_, pose_ptr_,
+                       slam_1_webots_base_topic);
+    }
 }
 
 void AGVController::Slam2ReportSpin() {
     LOG_INFO("Slam2ReportSpin start\n");
     while (!webotsExited_) {
-        sendPointCloud(slam_2_webots_topic, slam_2_ptr_);
+        sendPointCloud(slam_2_webots_topic, slam_2_ptr_, pose_ptr_,
+                       slam_2_webots_base_topic);
     }
-}
-
-
-// TODO:可以放到base中
-bool AGVController::sendPointCloud(std::string topic,
-                                   std::shared_ptr<WLidar> lidar_ptr) {
-    if (lidar_ptr == nullptr) {
-        return false;
-    }
-
-    if (!lidar_ptr->checkDataReady()) {
-        Timer::getInstance()->sleep<microseconds>(5);
-        return false;
-    }
-
-    Timer lidar_alarm;
-    lidar_alarm.alarmTimerInit(lidar_ptr->getSleepTime());
-
-    sim_data_flow::WBPointCloud payload;
-
-    lidar_ptr->getLocalPointCloud(payload);
-
-    payload.set_timestamp(pose_ptr_->getTimeStamp());
-
-    // 在数量大的情况下约为10ms
-    for (int i = 0; i < payload.point_cloud_size(); i++) {
-        if (ReflectorChecker::getInstance()->checkInReflector(
-                payload.name(), &payload.point_cloud().at(i))) {
-            payload.mutable_point_cloud()->at(i).set_intensity(200);
-        }
-    }
-    uint8_t buf[payload.ByteSize()];
-    payload.SerializePartialToArray(buf, payload.ByteSize());
-    ecal_ptr_->send(topic.c_str(), buf, payload.ByteSize());
-
-    lidar_alarm.wait();
-    return true;
 }

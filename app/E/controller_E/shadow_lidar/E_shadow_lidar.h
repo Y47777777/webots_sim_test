@@ -1,17 +1,17 @@
 /**
  * @file E_shadow_lidar.h
  * @author your name (you@domain.com)
- * @brief 
+ * @brief
  * @version 0.1
  * @date 2024-07-09
- * 
+ *
  * @copyright Copyright (c) 2024
- * 
+ *
  */
 #pragma once
 #include <thread>
 
-#include "controller/base_ctrl.h"
+#include "controller/base_lidar.h"
 #include "webots_device/w_lidar.h"
 #include "webots_device/w_pose.h"
 #include "webots_device/w_reflector.h"
@@ -21,7 +21,7 @@
 
 namespace VNSim {
 
-class AGVController : public BaseController {
+class AGVController : public BaseLidarControl {
    public:
     AGVController();
     ~AGVController(){};
@@ -34,12 +34,8 @@ class AGVController : public BaseController {
     // task
     void whileSpin();
 
-    
     void Slam1ReportSpin();
     void Slam2ReportSpin();
-    
-
-    bool sendPointCloud(std::string topic, std::shared_ptr<WLidar> lidar_ptr);
 
    private:
     std::shared_ptr<WLidar> slam_1_ptr_;

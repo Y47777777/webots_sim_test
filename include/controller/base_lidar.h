@@ -60,8 +60,8 @@ class BaseLidarControl : public BaseController {
         if (!multi_topic.empty()) {
             std::cout << multi_topic;
             sim_data_flow::WBPointCloud payload_multi;
-            // pbToBaseLink(payload, payload_multi,
-            //              lidar_ptr->getMatrixFromLidar());
+            pbToBaseLink(payload, payload_multi,
+                         lidar_ptr->getMatrixFromLidar());
 
             uint8_t buf_mutil[payload_multi.ByteSize()];
             payload_multi.SerializePartialToArray(buf_mutil,
@@ -76,7 +76,7 @@ class BaseLidarControl : public BaseController {
 
     void pbToBaseLink(const sim_data_flow::WBPointCloud &payload,
                       sim_data_flow::WBPointCloud &result,
-                      Eigen::Matrix4d &matrix) {
+                      Eigen::Matrix4d matrix) {
         // 复制点云
         result.CopyFrom(payload);
 

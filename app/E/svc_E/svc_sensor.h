@@ -24,11 +24,11 @@ class SVCShadow : public BaseSvc {
     void onPerceptionMsg(const char *topic_name,
                          const eCAL::SReceiveCallbackData *data);
     void onBrighteyeMsg(const char *topic_name,
-                         const eCAL::SReceiveCallbackData *data);
+                        const eCAL::SReceiveCallbackData *data);
+    void onMultiMid360Msg(const char *topic_name,
+                          const eCAL::SReceiveCallbackData *data);
 
    private:
-    uint64_t seq_bp_{0};
-    uint64_t seq_mid360_{0};
 };
 }  // namespace VNSim
 
