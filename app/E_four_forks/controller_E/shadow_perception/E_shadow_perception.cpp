@@ -13,15 +13,14 @@
 #include <qelapsedtimer.h>
 #include <QElapsedTimer>
 
-#include "sim_data_flow/point_cloud.pb.h"
-#include "sim_data_flow/pose.pb.h"
-
 #include "geometry/geometry.h"
 #include "time/time.h"
 
 #include "logvn/logvn.h"
 
 #include "E_shadow_perception.h"
+
+#include "dataTransform.h"
 
 using namespace VNSim;
 using namespace webots;
@@ -33,8 +32,9 @@ std::shared_ptr<ReflectorChecker> ReflectorChecker::instance_ptr_ = nullptr;
 
 std::string slam_3_webots_topic = "webots/Lidar/.57/PointCloud";
 std::string perception_webots_topic = "webots/Lidar/.100/PointCloud";
+std::string slam_3_webots_base_topic = "webots/LidarToBase/.57/PointCloud";
 
-AGVController::AGVController() : BaseController("webots_shadow_perception") {
+AGVController::AGVController() : BaseLidarControl("webots_shadow_perception") {
     // Sensor
     slam_3_ptr_ = std::make_shared<WLidar>("slam_3", 100);
     slam_3_ptr_->setSimulationNRLS("mid360.csv");
@@ -68,6 +68,7 @@ AGVController::AGVController() : BaseController("webots_shadow_perception") {
     // creat publish
     ecal_ptr_->addEcal(slam_3_webots_topic.c_str());
     ecal_ptr_->addEcal(perception_webots_topic.c_str());
+    ecal_ptr_->addEcal(slam_3_webots_base_topic.c_str());
 
     // creat subscribe
     ecal_ptr_->addEcal("webot/pose",
@@ -82,8 +83,7 @@ AGVController::AGVController() : BaseController("webots_shadow_perception") {
     m_thread_.insert(std::pair<std::string, std::thread>(
         "slam_3_report", std::bind(&AGVController::Slam1ReportSpin, this)));
     m_thread_.insert(std::pair<std::string, std::thread>(
-        "perception_report",
-        std::bind(&AGVController::Slam2ReportSpin, this)));
+        "perception_report", std::bind(&AGVController::Slam2ReportSpin, this)));
 }
 
 void AGVController::whileSpin() {
@@ -110,52 +110,17 @@ void AGVController::transferCallBack(const char *topic_name,
     transfer_ptr_->setTransfer(transfer);
 }
 
-
 void AGVController::Slam1ReportSpin() {
-    LOG_INFO("Slam1ReportSpin start\n");
-    while (!webotsExited_) { sendPointCloud(slam_3_webots_topic, slam_3_ptr_); }
+    LOG_INFO("Slam3ReportSpin start\n");
+    while (!webotsExited_) {
+        sendPointCloud(slam_3_webots_topic, slam_3_ptr_, pose_ptr_,
+                       slam_3_webots_base_topic);
+    }
 }
 
 void AGVController::Slam2ReportSpin() {
-    LOG_INFO("Slam2ReportSpin start\n");
+    LOG_INFO("perceptionReportSpin start\n");
     while (!webotsExited_) {
-        sendPointCloud(perception_webots_topic, perception_ptr_);
+        sendPointCloud(perception_webots_topic, perception_ptr_, pose_ptr_);
     }
-}
-
-
-// TODO:可以放到base中
-bool AGVController::sendPointCloud(std::string topic,
-                                   std::shared_ptr<WLidar> lidar_ptr) {
-    if (lidar_ptr == nullptr) {
-        return false;
-    }
-
-    if (!lidar_ptr->checkDataReady()) {
-        Timer::getInstance()->sleep<microseconds>(5);
-        return false;
-    }
-
-    Timer lidar_alarm;
-    lidar_alarm.alarmTimerInit(lidar_ptr->getSleepTime());
-
-    sim_data_flow::WBPointCloud payload;
-
-    lidar_ptr->getLocalPointCloud(payload);
-
-    payload.set_timestamp(pose_ptr_->getTimeStamp());
-
-    // 在数量大的情况下约为10ms
-    for (int i = 0; i < payload.point_cloud_size(); i++) {
-        if (ReflectorChecker::getInstance()->checkInReflector(
-                payload.name(), &payload.point_cloud().at(i))) {
-            payload.mutable_point_cloud()->at(i).set_intensity(200);
-        }
-    }
-    uint8_t buf[payload.ByteSize()];
-    payload.SerializePartialToArray(buf, payload.ByteSize());
-    ecal_ptr_->send(topic.c_str(), buf, payload.ByteSize());
-
-    lidar_alarm.wait();
-    return true;
 }
