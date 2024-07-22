@@ -22,7 +22,7 @@ int main(int argc, char *argv[]) {
     // serial service
     // TODO: 生成不同的log
     g_Logger.initLog("../../plugins/log_config/general_svc.ini");
-    LOG_INFO("start svc_ST");
+    LOG_INFO("start svc_E");
 
     std::shared_ptr<BaseSvc> serial_service = std::make_shared<SVCMaster>();
     serial_service->init(true, "svc_E");

@@ -71,7 +71,7 @@ void SVCShadow::onSlam1Msg(const char *topic_name,
     pb::PointCloud2 payload_send;
     static uint64_t seq = 0;
     payload.ParseFromArray(data->buf, data->size);
-    pbTopb2(payload, payload_send, seq++);
+    pbTopb2(payload, payload_send, seq++, 2);
     uint8_t buf[payload_send.ByteSize()];
     payload_send.SerializePartialToArray(buf, payload_send.ByteSize());
     ecal_ptr_->send(slam_1_real_topic.c_str(), buf, payload_send.ByteSize());
@@ -85,7 +85,7 @@ void SVCShadow::onSlam2Msg(const char *topic_name,
     payload.ParseFromArray(data->buf, data->size);
 
     // 转pointcloud2
-    pbTopb2(payload, payload_send, seq++);
+    pbTopb2(payload, payload_send, seq++, 3);
     uint8_t buf[payload_send.ByteSize()];
     payload_send.SerializePartialToArray(buf, payload_send.ByteSize());
     ecal_ptr_->send(slam_2_real_topic.c_str(), buf, payload_send.ByteSize());
@@ -100,7 +100,7 @@ void SVCShadow::onSlam3Msg(const char *topic_name,
     payload.ParseFromArray(data->buf, data->size);
 
     // 转pointcloud2
-    pbTopb2(payload, payload_send, seq++);
+    pbTopb2(payload, payload_send, seq++, 4);
     uint8_t buf[payload_send.ByteSize()];
     payload_send.SerializePartialToArray(buf, payload_send.ByteSize());
     ecal_ptr_->send(slam_3_real_topic.c_str(), buf, payload_send.ByteSize());
@@ -115,7 +115,7 @@ void SVCShadow::onPerceptionMsg(const char *topic_name,
     payload.ParseFromArray(data->buf, data->size);
 
     // 转pointcloud2
-    pbTopb2(payload, payload_send, seq++);
+    pbTopb2(payload, payload_send, seq++, 0);
     uint8_t buf[payload_send.ByteSize()];
     payload_send.SerializePartialToArray(buf, payload_send.ByteSize());
     ecal_ptr_->send(perception_real_topic.c_str(), buf,

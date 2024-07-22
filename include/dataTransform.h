@@ -28,6 +28,22 @@ struct PointFieldBw {
     uint32_t count;
 };
 
+typedef union Label {
+    union {
+        struct {
+            union {
+                struct {
+                    uint8_t tag;
+                    uint8_t laser_type;
+                };
+                uint16_t label_u16;
+            };
+            uint16_t real;
+        };
+        uint32_t label_u32;
+    };
+};
+
 /**
  * @brief pointCloud -> pointCloud2
  *
@@ -36,7 +52,7 @@ struct PointFieldBw {
  * @param seq
  */
 void pbTopb2(const sim_data_flow::WBPointCloud &payload,
-             pb::PointCloud2 &payload_send, uint64_t seq) {
+             pb::PointCloud2 &payload_send, uint64_t seq, uint8_t tag = 0) {
     uint64_t point_size = payload.point_cloud().size();
     std::vector<PointFieldBw> PointField{
         {"x", 4, 7, 1},         {"y", 4, 7, 1},     {"z", 4, 7, 1},
@@ -71,7 +87,14 @@ void pbTopb2(const sim_data_flow::WBPointCloud &payload,
     // data
     payload_send.mutable_data()->resize(PBPOINT_BANDWIDTH * (point_size));
     char *pb_data_ptr = &((*payload_send.mutable_data())[0]);
-    int label = 8;
+
+    // tag 赋值
+    Label label;
+    label.label_u32 = 0;
+    label.laser_type = 0x55;
+    label.tag = tag;
+
+    // int label = 8;
     double point_base_time = 0;
 
     for (int i = 0; i < point_size; i++) {

@@ -11,8 +11,8 @@ int main(int argc, char *argv[]) {
     g_Logger.initLog("../../plugins/log_config/webots_master.ini");
 
     LOG_INFO("log init...");
-    LOG_INFO("try start svc_E");
-    system("./../svc_E/svc_E &");
+    LOG_INFO("try start svc_E_four_forks");
+    system("./../svc_E_four_forks/svc_E_four_forks &");
 
     QApplication a(argc, argv);
     // init ctrl
@@ -28,8 +28,8 @@ int main(int argc, char *argv[]) {
     f.show();
 
     a.exec();
-    LOG_INFO("try stop svc_E");
-    system("killall svc_E");
+    LOG_INFO("try stop svc_E_four_forks");
+    system("killall svc_E_four_forks");
 
     return 0;
 }
