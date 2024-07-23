@@ -11,7 +11,7 @@
 #pragma once
 #include <thread>
 
-#include "controller/base_ctrl.h"
+#include "controller/base_lidar.h"
 #include "webots_device/w_lidar.h"
 #include "webots_device/w_pose.h"
 #include "webots_device/w_reflector.h"
@@ -20,7 +20,7 @@
 
 namespace VNSim {
 
-class AGVController : public BaseController {
+class AGVController : public BaseLidarControl {
    public:
     AGVController();
     ~AGVController(){};
@@ -36,8 +36,6 @@ class AGVController : public BaseController {
     void BpReportSpin();
     void Mid360PerceptionReportSpin();
 
-    bool sendPointCloud(std::string topic, std::shared_ptr<WLidar> lidar_ptr);
-
    private:
     std::shared_ptr<WLidar> BP_ptr_;
     std::shared_ptr<WLidar> mid360_perception_ptr_;
@@ -47,7 +45,6 @@ class AGVController : public BaseController {
     std::shared_ptr<WReflector> reflector_ptr_;
     std::shared_ptr<WCollision> collision_ptr_;
     std::shared_ptr<ReflectorChecker> reflector_check_ptr_;
-    
 
    private:
     void poseCallBack(const char *topic_name,

@@ -34,7 +34,7 @@ std::shared_ptr<ReflectorChecker> ReflectorChecker::instance_ptr_ = nullptr;
 std::string BP_webots_topic = "webots/Lidar/.55/PointCloud";
 std::string MID360Per_webots_topic = "webots/Lidar/.57/PointCloud";
 
-AGVController::AGVController() : BaseController("webots_shadow_perception") {
+AGVController::AGVController() : BaseLidarControl("webots_shadow_perception") {
     // Sensor
     BP_ptr_ = std::make_shared<WLidar>("BP", 50);
     VertivalFov fov = {.begin = 0, .end = (PI / 2)};
@@ -114,48 +114,15 @@ void AGVController::transferCallBack(const char *topic_name,
 
 void AGVController::BpReportSpin() {
     LOG_INFO("BpReportSpin start\n");
-    while (!webotsExited_) { sendPointCloud(BP_webots_topic, BP_ptr_); }
+    while (!webotsExited_) {
+        sendPointCloud(BP_webots_topic, BP_ptr_, pose_ptr_);
+    }
 }
 
 void AGVController::Mid360PerceptionReportSpin() {
     LOG_INFO("Mid360TwoReportSpin start\n");
     while (!webotsExited_) {
-        sendPointCloud(MID360Per_webots_topic, mid360_perception_ptr_);
+        sendPointCloud(MID360Per_webots_topic, mid360_perception_ptr_,
+                       pose_ptr_);
     }
-}
-
-// TODO:可以放到base中
-bool AGVController::sendPointCloud(std::string topic,
-                                   std::shared_ptr<WLidar> lidar_ptr) {
-    if (lidar_ptr == nullptr) {
-        return false;
-    }
-
-    if (!lidar_ptr->checkDataReady()) {
-        Timer::getInstance()->sleep<microseconds>(5);
-        return false;
-    }
-
-    Timer lidar_alarm;
-    lidar_alarm.alarmTimerInit(lidar_ptr->getSleepTime());
-
-    sim_data_flow::WBPointCloud payload;
-
-    lidar_ptr->getLocalPointCloud(payload);
-
-    payload.set_timestamp(pose_ptr_->getTimeStamp());
-
-    // 在数量大的情况下约为10ms
-    for (int i = 0; i < payload.point_cloud_size(); i++) {
-        if (ReflectorChecker::getInstance()->checkInReflector(
-                payload.name(), &payload.point_cloud().at(i))) {
-            payload.mutable_point_cloud()->at(i).set_intensity(200);
-        }
-    }
-    uint8_t buf[payload.ByteSize()];
-    payload.SerializePartialToArray(buf, payload.ByteSize());
-    ecal_ptr_->send(topic.c_str(), buf, payload.ByteSize());
-
-    lidar_alarm.wait();
-    return true;
 }
