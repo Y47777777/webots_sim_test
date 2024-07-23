@@ -8,6 +8,8 @@
  * @copyright Copyright (c) 2024
  *
  */
+
+#include <shared_mutex>
 #include "dataTransform.h"
 #include "svc_sensor.h"
 #include "sim_data_flow/point_cloud2.pb.h"
@@ -164,6 +166,7 @@ void SVCShadow::onMultiMid360Msg(const char *topic_name,
     payload.ParseFromArray(data->buf, data->size);
 
     // 拷贝至缓存
+    static std::shared_mutex rw_mutex_;  // 读写锁
     static bool slam1_recive_ = false;
     static bool slam2_recive_ = false;
     static bool slam3_recive_ = false;
@@ -172,21 +175,26 @@ void SVCShadow::onMultiMid360Msg(const char *topic_name,
     static sim_data_flow::WBPointCloud payload_slam3_;
 
     if (strcmp(topic_name, slam_1_webots_base_topic.c_str()) == 0) {
+        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
         slam1_recive_ = true;
         payload_slam1_.CopyFrom(payload);
     }
     if (strcmp(topic_name, slam_2_webots_base_topic.c_str()) == 0) {
+        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
         slam2_recive_ = true;
         payload_slam2_.CopyFrom(payload);
     }
     if (strcmp(topic_name, slam_3_webots_base_topic.c_str()) == 0) {
+        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
         slam3_recive_ = true;
         payload_slam3_.CopyFrom(payload);
     }
 
     // 三帧拼一帧
     if (slam1_recive_ && slam2_recive_ && slam3_recive_) {
-        std::cout<<" merge pointCloud "<<std::endl;
+        // 读写锁
+        std::unique_lock<std::shared_mutex> lock(rw_mutex_);
+
         // 拷贝
         sim_data_flow::WBPointCloud payload_result;
         payload_result.CopyFrom(payload_slam1_);
@@ -198,6 +206,7 @@ void SVCShadow::onMultiMid360Msg(const char *topic_name,
         time_stamp = std::min(payload_slam1_.timestamp(), payload_slam2_.timestamp());
         time_stamp = std::min(time_stamp, payload_slam3_.timestamp());
         payload_result.set_timestamp(time_stamp);
+        std::cout<<"time_stamp "<<time_stamp<<std::endl;
 
         // 转pointcloud2
         pb::PointCloud2 payload_send;
@@ -209,5 +218,9 @@ void SVCShadow::onMultiMid360Msg(const char *topic_name,
         slam1_recive_ = false;
         slam2_recive_ = false;
         slam3_recive_ = false;
+
+        payload_slam1_.Clear();
+        payload_slam2_.Clear();
+        payload_slam3_.Clear();
     }
 }
