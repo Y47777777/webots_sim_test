@@ -159,8 +159,9 @@ void SVCShadow::onBrighteyeMsg(const char *topic_name,
 
 void SVCShadow::onMultiMid360Msg(const char *topic_name,
                                  const eCAL::SReceiveCallbackData *data) {
-    // 从回调读出                                    
+    // 从回调读出
     sim_data_flow::WBPointCloud payload;
+    pb::PointCloud2 payload_pc2;
     static uint64_t seq = 0;
     payload.ParseFromArray(data->buf, data->size);
 
@@ -169,50 +170,65 @@ void SVCShadow::onMultiMid360Msg(const char *topic_name,
     static bool slam1_recive_ = false;
     static bool slam2_recive_ = false;
     static bool slam3_recive_ = false;
-    static sim_data_flow::WBPointCloud payload_slam1_;
-    static sim_data_flow::WBPointCloud payload_slam2_;
-    static sim_data_flow::WBPointCloud payload_slam3_;
+    static pb::PointCloud2 payload_slam1_;
+    static pb::PointCloud2 payload_slam2_;
+    static pb::PointCloud2 payload_slam3_;
 
     if (strcmp(topic_name, slam_1_webots_base_topic.c_str()) == 0) {
         std::shared_lock<std::shared_mutex> lock(rw_mutex_);
         slam1_recive_ = true;
-        payload_slam1_.CopyFrom(payload);
+        pbTopb2(payload, payload_pc2, seq++, 2);
+        payload_slam1_.CopyFrom(payload_pc2);
     }
     if (strcmp(topic_name, slam_2_webots_base_topic.c_str()) == 0) {
         std::shared_lock<std::shared_mutex> lock(rw_mutex_);
         slam2_recive_ = true;
-        payload_slam2_.CopyFrom(payload);
+        pbTopb2(payload, payload_pc2, seq++, 3);
+        payload_slam2_.CopyFrom(payload_pc2);
     }
     if (strcmp(topic_name, slam_3_webots_base_topic.c_str()) == 0) {
         std::shared_lock<std::shared_mutex> lock(rw_mutex_);
         slam3_recive_ = true;
-        payload_slam3_.CopyFrom(payload);
+        pbTopb2(payload, payload_pc2, seq++, 4);
+        payload_slam3_.CopyFrom(payload_pc2);
     }
 
     // 三帧拼一帧
     if (slam1_recive_ && slam2_recive_ && slam3_recive_) {
-        // 读写锁
-        std::unique_lock<std::shared_mutex> lock(rw_mutex_);
-
         // 拷贝
-        sim_data_flow::WBPointCloud payload_result;
-        payload_result.CopyFrom(payload_slam1_);
-        payload_result.mutable_point_cloud()->MergeFrom(payload_slam2_.point_cloud());
-        payload_result.mutable_point_cloud()->MergeFrom(payload_slam3_.point_cloud());
+        pb::PointCloud2 payload_result;
+        {
+            std::unique_lock<std::shared_mutex> lock(rw_mutex_);
+            // slam1 (主雷达)
+            payload_result.CopyFrom(payload_slam1_);
 
-        // 填入时间戳
-        uint64_t time_stamp = 0;
-        time_stamp = std::min(payload_slam1_.timestamp(), payload_slam2_.timestamp());
-        time_stamp = std::min(time_stamp, payload_slam3_.timestamp());
-        payload_result.set_timestamp(time_stamp);
-        std::cout<<"time_stamp "<<time_stamp<<std::endl;
+            // slam2 左
+            payload_result.mutable_data()->append(payload_slam2_.data());
+            payload_result.set_width(payload_result.width() +
+                                     payload_slam2_.width());
+            payload_result.set_row_step(payload_result.row_step() +
+                                        payload_slam2_.row_step());
 
-        // 转pointcloud2
-        pb::PointCloud2 payload_send;
-        pbTopb2(payload_result, payload_send, seq++);
-        uint8_t buf[payload_send.ByteSize()];
-        payload_send.SerializePartialToArray(buf, payload_send.ByteSize());
-        ecal_ptr_->send(multi_mid360_topic.c_str(), buf, payload_send.ByteSize());
+            // slam3 右
+            payload_result.mutable_data()->append(payload_slam3_.data());
+            payload_result.set_width(payload_result.width() +
+                                     payload_slam3_.width());
+            payload_result.set_row_step(payload_result.row_step() +
+                                        payload_slam3_.row_step());
+
+            // 填入时间戳
+            uint64_t time_stamp = 0;
+            time_stamp = std::min(payload_slam1_.header().timestamp(),
+                                  payload_slam2_.header().timestamp());
+            time_stamp =
+                std::min(time_stamp, payload_slam3_.header().timestamp());
+            payload_result.mutable_header()->set_timestamp(time_stamp);
+        }
+
+        uint8_t buf[payload_result.ByteSize()];
+        payload_result.SerializePartialToArray(buf, payload_result.ByteSize());
+        ecal_ptr_->send(multi_mid360_topic.c_str(), buf,
+                        payload_result.ByteSize());
 
         slam1_recive_ = false;
         slam2_recive_ = false;
