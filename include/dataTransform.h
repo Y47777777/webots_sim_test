@@ -33,8 +33,8 @@ typedef union Label {
         struct {
             union {
                 struct {
-                    uint8_t tag;
-                    uint8_t laser_type;
+                    uint8_t tag;            // 雨雾信息： level 0->best,level 4 -> worst
+                    uint8_t laser_type;     // 雷达标识 （雷达序号）
                 };
                 uint16_t label_u16;
             };
@@ -52,7 +52,7 @@ typedef union Label {
  * @param seq
  */
 void pbTopb2(const sim_data_flow::WBPointCloud &payload,
-             pb::PointCloud2 &payload_send, uint64_t seq, uint8_t tag = 0) {
+             pb::PointCloud2 &payload_send, uint64_t seq, uint8_t laser_type = 0) {
     uint64_t point_size = payload.point_cloud().size();
     std::vector<PointFieldBw> PointField{
         {"x", 4, 7, 1},         {"y", 4, 7, 1},     {"z", 4, 7, 1},
@@ -91,8 +91,7 @@ void pbTopb2(const sim_data_flow::WBPointCloud &payload,
     // tag 赋值
     Label label;
     label.label_u32 = 0;
-    label.laser_type = 0x55;
-    label.tag = tag;
+    label.laser_type = laser_type;
 
     // int label = 8;
     double point_base_time = 0;
