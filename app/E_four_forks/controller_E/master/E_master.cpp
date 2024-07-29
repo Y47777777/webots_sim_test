@@ -29,7 +29,7 @@ using namespace webots;
 const double WHEELBASE = 1.7;     // 前后轮间距
 const double FRONT_TREAD = 0.78;  // 定向轮间距
 const double REAR_TREAD = 1.1;    // 驱动轮间距
-const double FOLLOW_START = 0.4;
+const double FOLLOW_START = 0.34;
 
 // 计算tan角度
 inline double CalcTan(double len, double yaw) {
