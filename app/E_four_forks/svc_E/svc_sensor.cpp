@@ -17,20 +17,20 @@
 
 using namespace VNSim;
 
-std::string slam_1_webots_topic = "webots/Lidar/.54/PointCloud";
-std::string slam_2_webots_topic = "webots/Lidar/.56/PointCloud";
-std::string slam_3_webots_topic = "webots/Lidar/.57/PointCloud";
-std::string perception_webots_topic = "webots/Lidar/.100/PointCloud";
+std::string lidar_2_webots_topic = "webots/Lidar/.111/PointCloud";
+std::string lidar_4_webots_topic = "webots/Lidar/.113/PointCloud";
+std::string lidar_3_webots_topic = "webots/Lidar/.112/PointCloud";
+std::string lidar_0_webots_topic = "webots/Lidar/.109/PointCloud";
 std::string be_webots_topic = "webots/Lidar/.200/PointCloud";
 
-std::string slam_1_webots_base_topic = "webots/LidarToBase/.54/PointCloud";
-std::string slam_2_webots_base_topic = "webots/LidarToBase/.56/PointCloud";
-std::string slam_3_webots_base_topic = "webots/LidarToBase/.57/PointCloud";
+std::string lidar_2_webots_base_topic = "webots/LidarToBase/.111/PointCloud";
+std::string lidar_4_webots_base_topic = "webots/LidarToBase/.113/PointCloud";
+std::string lidar_3_webots_base_topic = "webots/LidarToBase/.112/PointCloud";
 
-std::string slam_1_real_topic = "192.168.1.54";
-std::string slam_2_real_topic = "192.168.1.56";
-std::string slam_3_real_topic = "192.168.1.57";
-std::string perception_real_topic = "192.168.1.100";
+std::string lidar_2_real_topic = "192.168.1.111";
+std::string lidar_4_real_topic = "192.168.1.113";
+std::string lidar_3_real_topic = "192.168.1.112";
+std::string lidar_0_real_topic = "192.168.1.109";
 std::string be_real_topic = "192.168.1.200";
 
 std::string multi_mid360_topic = "multi_mid360";
@@ -41,43 +41,43 @@ SVCShadow::~SVCShadow() {}
 
 int SVCShadow::initService() {
     // pub
-    ecal_ptr_->addEcal(slam_1_real_topic.c_str());
-    ecal_ptr_->addEcal(slam_2_real_topic.c_str());
-    ecal_ptr_->addEcal(slam_3_real_topic.c_str());
-    ecal_ptr_->addEcal(perception_real_topic.c_str());
+    ecal_ptr_->addEcal(lidar_2_real_topic.c_str());
+    ecal_ptr_->addEcal(lidar_4_real_topic.c_str());
+    ecal_ptr_->addEcal(lidar_3_real_topic.c_str());
+    ecal_ptr_->addEcal(lidar_0_real_topic.c_str());
     ecal_ptr_->addEcal(be_real_topic.c_str());
     ecal_ptr_->addEcal(multi_mid360_topic.c_str());
 
     // sub
     // TODO: 可以用匿名函数套一手
-    ecal_ptr_->addEcal(slam_1_webots_topic.c_str(),
-                       std::bind(&SVCShadow::onSlam1Msg, this,
+    ecal_ptr_->addEcal(lidar_2_webots_topic.c_str(),
+                       std::bind(&SVCShadow::onLidar2Mssg, this,
                                  std::placeholders::_1, std::placeholders::_2));
-    ecal_ptr_->addEcal(slam_2_webots_topic.c_str(),
-                       std::bind(&SVCShadow::onSlam2Msg, this,
-                                 std::placeholders::_1, std::placeholders::_2));
-
-    ecal_ptr_->addEcal(slam_3_webots_topic.c_str(),
-                       std::bind(&SVCShadow::onSlam3Msg, this,
+    ecal_ptr_->addEcal(lidar_4_webots_topic.c_str(),
+                       std::bind(&SVCShadow::onLidar4Mssg, this,
                                  std::placeholders::_1, std::placeholders::_2));
 
-    ecal_ptr_->addEcal(perception_webots_topic.c_str(),
-                       std::bind(&SVCShadow::onPerceptionMsg, this,
+    ecal_ptr_->addEcal(lidar_3_webots_topic.c_str(),
+                       std::bind(&SVCShadow::onLidar3Mssg, this,
+                                 std::placeholders::_1, std::placeholders::_2));
+
+    ecal_ptr_->addEcal(lidar_0_webots_topic.c_str(),
+                       std::bind(&SVCShadow::onLidar0Mssg, this,
                                  std::placeholders::_1, std::placeholders::_2));
 
     ecal_ptr_->addEcal(be_webots_topic.c_str(),
                        std::bind(&SVCShadow::onBrighteyeMsg, this,
                                  std::placeholders::_1, std::placeholders::_2));
 
-    ecal_ptr_->addEcal(slam_1_webots_base_topic.c_str(),
+    ecal_ptr_->addEcal(lidar_2_webots_base_topic.c_str(),
                        std::bind(&SVCShadow::onMultiMid360Msg, this,
                                  std::placeholders::_1, std::placeholders::_2));
 
-    ecal_ptr_->addEcal(slam_2_webots_base_topic.c_str(),
+    ecal_ptr_->addEcal(lidar_4_webots_base_topic.c_str(),
                        std::bind(&SVCShadow::onMultiMid360Msg, this,
                                  std::placeholders::_1, std::placeholders::_2));
 
-    ecal_ptr_->addEcal(slam_3_webots_base_topic.c_str(),
+    ecal_ptr_->addEcal(lidar_3_webots_base_topic.c_str(),
                        std::bind(&SVCShadow::onMultiMid360Msg, this,
                                  std::placeholders::_1, std::placeholders::_2));
 
@@ -85,7 +85,7 @@ int SVCShadow::initService() {
 }
 
 // TODO: 是不是可以归一成一条函数(如何避免多线程？)
-void SVCShadow::onSlam1Msg(const char *topic_name,
+void SVCShadow::onLidar2Mssg(const char *topic_name,
                            const eCAL::SReceiveCallbackData *data) {
     // directly send the msg to slam..., try...
     sim_data_flow::WBPointCloud payload;
@@ -95,10 +95,10 @@ void SVCShadow::onSlam1Msg(const char *topic_name,
     pbTopb2(payload, payload_send, seq++, 2);
     uint8_t buf[payload_send.ByteSize()];
     payload_send.SerializePartialToArray(buf, payload_send.ByteSize());
-    ecal_ptr_->send(slam_1_real_topic.c_str(), buf, payload_send.ByteSize());
+    ecal_ptr_->send(lidar_2_real_topic.c_str(), buf, payload_send.ByteSize());
 }
 
-void SVCShadow::onSlam2Msg(const char *topic_name,
+void SVCShadow::onLidar4Mssg(const char *topic_name,
                            const eCAL::SReceiveCallbackData *data) {
     sim_data_flow::WBPointCloud payload;
     pb::PointCloud2 payload_send;
@@ -109,10 +109,10 @@ void SVCShadow::onSlam2Msg(const char *topic_name,
     pbTopb2(payload, payload_send, seq++, 3);
     uint8_t buf[payload_send.ByteSize()];
     payload_send.SerializePartialToArray(buf, payload_send.ByteSize());
-    ecal_ptr_->send(slam_2_real_topic.c_str(), buf, payload_send.ByteSize());
+    ecal_ptr_->send(lidar_4_real_topic.c_str(), buf, payload_send.ByteSize());
 }
 
-void SVCShadow::onSlam3Msg(const char *topic_name,
+void SVCShadow::onLidar3Mssg(const char *topic_name,
                            const eCAL::SReceiveCallbackData *data) {
     sim_data_flow::WBPointCloud payload;
     pb::PointCloud2 payload_send;
@@ -124,10 +124,10 @@ void SVCShadow::onSlam3Msg(const char *topic_name,
     pbTopb2(payload, payload_send, seq++, 4);
     uint8_t buf[payload_send.ByteSize()];
     payload_send.SerializePartialToArray(buf, payload_send.ByteSize());
-    ecal_ptr_->send(slam_3_real_topic.c_str(), buf, payload_send.ByteSize());
+    ecal_ptr_->send(lidar_3_real_topic.c_str(), buf, payload_send.ByteSize());
 }
 
-void SVCShadow::onPerceptionMsg(const char *topic_name,
+void SVCShadow::onLidar0Mssg(const char *topic_name,
                                 const eCAL::SReceiveCallbackData *data) {
     sim_data_flow::WBPointCloud payload;
     pb::PointCloud2 payload_send;
@@ -139,7 +139,7 @@ void SVCShadow::onPerceptionMsg(const char *topic_name,
     pbTopb2(payload, payload_send, seq++, 0);
     uint8_t buf[payload_send.ByteSize()];
     payload_send.SerializePartialToArray(buf, payload_send.ByteSize());
-    ecal_ptr_->send(perception_real_topic.c_str(), buf,
+    ecal_ptr_->send(lidar_0_real_topic.c_str(), buf,
                     payload_send.ByteSize());
 }
 
@@ -175,19 +175,19 @@ void SVCShadow::onMultiMid360Msg(const char *topic_name,
     static pb::PointCloud2 payload_slam2_;
     static pb::PointCloud2 payload_slam3_;
 
-    if (strcmp(topic_name, slam_1_webots_base_topic.c_str()) == 0) {
+    if (strcmp(topic_name, lidar_2_webots_base_topic.c_str()) == 0) {
         std::shared_lock<std::shared_mutex> lock(rw_mutex_);
         slam1_recive_ = true;
         pbTopb2(payload, payload_pc2, seq++, 2);
         payload_slam1_.CopyFrom(payload_pc2);
     }
-    if (strcmp(topic_name, slam_2_webots_base_topic.c_str()) == 0) {
+    if (strcmp(topic_name, lidar_4_webots_base_topic.c_str()) == 0) {
         std::shared_lock<std::shared_mutex> lock(rw_mutex_);
         slam2_recive_ = true;
         pbTopb2(payload, payload_pc2, seq++, 3);
         payload_slam2_.CopyFrom(payload_pc2);
     }
-    if (strcmp(topic_name, slam_3_webots_base_topic.c_str()) == 0) {
+    if (strcmp(topic_name, lidar_3_webots_base_topic.c_str()) == 0) {
         std::shared_lock<std::shared_mutex> lock(rw_mutex_);
         slam3_recive_ = true;
         pbTopb2(payload, payload_pc2, seq++, 4);

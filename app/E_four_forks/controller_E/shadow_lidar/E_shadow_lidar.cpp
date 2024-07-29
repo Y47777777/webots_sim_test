@@ -28,18 +28,18 @@ std::shared_ptr<Timer> Timer::instance_ptr_ = nullptr;
 std::shared_ptr<EcalWrapper> EcalWrapper::instance_ptr_ = nullptr;
 std::shared_ptr<ReflectorChecker> ReflectorChecker::instance_ptr_ = nullptr;
 
-std::string slam_1_webots_topic = "webots/Lidar/.54/PointCloud";
-std::string slam_2_webots_topic = "webots/Lidar/.56/PointCloud";
-std::string slam_1_webots_base_topic = "webots/LidarToBase/.54/PointCloud";
-std::string slam_2_webots_base_topic = "webots/LidarToBase/.56/PointCloud";
+std::string lidar_2_webots_topic = "webots/Lidar/.111/PointCloud";
+std::string lidar_4_webots_topic = "webots/Lidar/.113/PointCloud";
+std::string lidar_2_webots_base_topic = "webots/LidarToBase/.111/PointCloud";
+std::string lidar_4_webots_base_topic = "webots/LidarToBase/.113/PointCloud";
 
 AGVController::AGVController() : BaseLidarControl("webots_shadow_lidar") {
     // Sensor
-    slam_1_ptr_ = std::make_shared<WLidar>("slam_1", 100);
-    slam_1_ptr_->setSimulationNRLS("mid360.csv");
+    lidar_2_ptr_ = std::make_shared<WLidar>("lidar_2", 100);
+    lidar_2_ptr_->setSimulationNRLS("mid360.csv");
 
-    slam_2_ptr_ = std::make_shared<WLidar>("slam_2", 100);
-    slam_2_ptr_->setSimulationNRLS("mid360.csv");
+    lidar_4_ptr_ = std::make_shared<WLidar>("lidar_4", 100);
+    lidar_4_ptr_->setSimulationNRLS("mid360.csv");
 
     // 机器人位姿
     pose_ptr_ = std::make_shared<WPose>("RobotNode");
@@ -57,22 +57,22 @@ AGVController::AGVController() : BaseLidarControl("webots_shadow_lidar") {
     reflector_check_ptr_->copyFrom(reflector_ptr_->getReflectors());
 
     // 想高反判断部分注册外参
-    reflector_check_ptr_->setSensorMatrix4d("slam_1",
-                                            slam_1_ptr_->getMatrixFromLidar());
-    reflector_check_ptr_->setSensorMatrix4d("slam_2",
-                                            slam_2_ptr_->getMatrixFromLidar());
+    reflector_check_ptr_->setSensorMatrix4d("lidar_2",
+                                            lidar_2_ptr_->getMatrixFromLidar());
+    reflector_check_ptr_->setSensorMatrix4d("lidar_4",
+                                            lidar_4_ptr_->getMatrixFromLidar());
 
-    v_while_spin_.push_back(bind(&WBase::spin, slam_1_ptr_));
-    v_while_spin_.push_back(bind(&WBase::spin, slam_2_ptr_));
+    v_while_spin_.push_back(bind(&WBase::spin, lidar_2_ptr_));
+    v_while_spin_.push_back(bind(&WBase::spin, lidar_4_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, pose_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, transfer_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, liftdoor_ptr_));
 
     // creat publish
-    ecal_ptr_->addEcal(slam_1_webots_topic.c_str());
-    ecal_ptr_->addEcal(slam_2_webots_topic.c_str());
-    ecal_ptr_->addEcal(slam_1_webots_base_topic.c_str());
-    ecal_ptr_->addEcal(slam_2_webots_base_topic.c_str());
+    ecal_ptr_->addEcal(lidar_2_webots_topic.c_str());
+    ecal_ptr_->addEcal(lidar_4_webots_topic.c_str());
+    ecal_ptr_->addEcal(lidar_2_webots_base_topic.c_str());
+    ecal_ptr_->addEcal(lidar_4_webots_base_topic.c_str());
 
     // creat subscribe
     ecal_ptr_->addEcal("webot/pose",
@@ -85,9 +85,9 @@ AGVController::AGVController() : BaseLidarControl("webots_shadow_lidar") {
 
     // 创建线程
     m_thread_.insert(std::pair<std::string, std::thread>(
-        "slam_1_report", std::bind(&AGVController::Slam1ReportSpin, this)));
+        "lidar_2_report", std::bind(&AGVController::Slam1ReportSpin, this)));
     m_thread_.insert(std::pair<std::string, std::thread>(
-        "slam_2_report", std::bind(&AGVController::Slam2ReportSpin, this)));
+        "lidar_4_report", std::bind(&AGVController::Slam2ReportSpin, this)));
 }
 
 void AGVController::whileSpin() {
@@ -124,15 +124,15 @@ void VNSim::AGVController::liftdoorCallBack(
 void AGVController::Slam1ReportSpin() {
     LOG_INFO("Slam1ReportSpin start\n");
     while (!webotsExited_) {
-        sendPointCloud(slam_1_webots_topic, slam_1_ptr_, pose_ptr_,
-                       slam_1_webots_base_topic);
+        sendPointCloud(lidar_2_webots_topic, lidar_2_ptr_, pose_ptr_,
+                       lidar_2_webots_base_topic);
     }
 }
 
 void AGVController::Slam2ReportSpin() {
     LOG_INFO("Slam2ReportSpin start\n");
     while (!webotsExited_) {
-        sendPointCloud(slam_2_webots_topic, slam_2_ptr_, pose_ptr_,
-                       slam_2_webots_base_topic);
+        sendPointCloud(lidar_4_webots_topic, lidar_4_ptr_, pose_ptr_,
+                       lidar_4_webots_base_topic);
     }
 }

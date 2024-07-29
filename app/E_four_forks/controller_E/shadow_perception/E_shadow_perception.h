@@ -40,8 +40,8 @@ class AGVController : public BaseLidarControl {
 
 
    private:
-    std::shared_ptr<WLidar> slam_3_ptr_;
-    std::shared_ptr<WLidar> perception_ptr_;
+    std::shared_ptr<WLidar> lidar_3_ptr_;
+    std::shared_ptr<WLidar> lidar_0_ptr_;
 
     std::shared_ptr<WPose> pose_ptr_;
     std::shared_ptr<WTransfer> transfer_ptr_;

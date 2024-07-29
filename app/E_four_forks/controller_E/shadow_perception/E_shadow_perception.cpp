@@ -1,5 +1,5 @@
 /**
- * @file E_shadow_perception.cpp
+ * @file E_shadow_lidar_0.cpp
  * @author xyjie (xyjie@visionnav.com)
  * @brief lidar shadow (雷达镜像)
  * @version 2.0
@@ -30,17 +30,17 @@ std::shared_ptr<Timer> Timer::instance_ptr_ = nullptr;
 std::shared_ptr<EcalWrapper> EcalWrapper::instance_ptr_ = nullptr;
 std::shared_ptr<ReflectorChecker> ReflectorChecker::instance_ptr_ = nullptr;
 
-std::string slam_3_webots_topic = "webots/Lidar/.57/PointCloud";
-std::string perception_webots_topic = "webots/Lidar/.100/PointCloud";
-std::string slam_3_webots_base_topic = "webots/LidarToBase/.57/PointCloud";
+std::string lidar_3_webots_topic = "webots/Lidar/.112/PointCloud";
+std::string lidar_0_webots_topic = "webots/Lidar/.109/PointCloud";
+std::string lidar_3_webots_base_topic = "webots/LidarToBase/.112/PointCloud";
 
 AGVController::AGVController() : BaseLidarControl("webots_shadow_perception") {
     // Sensor
-    slam_3_ptr_ = std::make_shared<WLidar>("slam_3", 100);
-    slam_3_ptr_->setSimulationNRLS("mid360.csv");
+    lidar_3_ptr_ = std::make_shared<WLidar>("lidar_3", 100);
+    lidar_3_ptr_->setSimulationNRLS("mid360.csv");
 
-    perception_ptr_ = std::make_shared<WLidar>("perception", 100);
-    perception_ptr_->setSimulationNRLS("mid360.csv");
+    lidar_0_ptr_ = std::make_shared<WLidar>("lidar_0", 100);
+    lidar_0_ptr_->setSimulationNRLS("mid360.csv");
 
     // 机器人位姿
     pose_ptr_ = std::make_shared<WPose>("RobotNode");
@@ -55,20 +55,20 @@ AGVController::AGVController() : BaseLidarControl("webots_shadow_perception") {
     reflector_check_ptr_->copyFrom(reflector_ptr_->getReflectors());
 
     // 想高反判断部分注册外参
-    reflector_check_ptr_->setSensorMatrix4d("slam_3",
-                                            slam_3_ptr_->getMatrixFromLidar());
+    reflector_check_ptr_->setSensorMatrix4d("lidar_3",
+                                            lidar_3_ptr_->getMatrixFromLidar());
     reflector_check_ptr_->setSensorMatrix4d(
-        "perception", perception_ptr_->getMatrixFromLidar());
+        "lidar_0", lidar_0_ptr_->getMatrixFromLidar());
 
-    v_while_spin_.push_back(bind(&WBase::spin, slam_3_ptr_));
-    v_while_spin_.push_back(bind(&WBase::spin, perception_ptr_));
+    v_while_spin_.push_back(bind(&WBase::spin, lidar_3_ptr_));
+    v_while_spin_.push_back(bind(&WBase::spin, lidar_0_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, pose_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, transfer_ptr_));
 
     // creat publish
-    ecal_ptr_->addEcal(slam_3_webots_topic.c_str());
-    ecal_ptr_->addEcal(perception_webots_topic.c_str());
-    ecal_ptr_->addEcal(slam_3_webots_base_topic.c_str());
+    ecal_ptr_->addEcal(lidar_3_webots_topic.c_str());
+    ecal_ptr_->addEcal(lidar_0_webots_topic.c_str());
+    ecal_ptr_->addEcal(lidar_3_webots_base_topic.c_str());
 
     // creat subscribe
     ecal_ptr_->addEcal("webot/pose",
@@ -81,9 +81,9 @@ AGVController::AGVController() : BaseLidarControl("webots_shadow_perception") {
 
     // 创建线程
     m_thread_.insert(std::pair<std::string, std::thread>(
-        "slam_3_report", std::bind(&AGVController::Slam1ReportSpin, this)));
+        "lidar_3_report", std::bind(&AGVController::Slam1ReportSpin, this)));
     m_thread_.insert(std::pair<std::string, std::thread>(
-        "perception_report", std::bind(&AGVController::Slam2ReportSpin, this)));
+        "lidar_0_report", std::bind(&AGVController::Slam2ReportSpin, this)));
 }
 
 void AGVController::whileSpin() {
@@ -113,14 +113,14 @@ void AGVController::transferCallBack(const char *topic_name,
 void AGVController::Slam1ReportSpin() {
     LOG_INFO("Slam3ReportSpin start\n");
     while (!webotsExited_) {
-        sendPointCloud(slam_3_webots_topic, slam_3_ptr_, pose_ptr_,
-                       slam_3_webots_base_topic);
+        sendPointCloud(lidar_3_webots_topic, lidar_3_ptr_, pose_ptr_,
+                       lidar_3_webots_base_topic);
     }
 }
 
 void AGVController::Slam2ReportSpin() {
-    LOG_INFO("perceptionReportSpin start\n");
+    LOG_INFO("lidar_0ReportSpin start\n");
     while (!webotsExited_) {
-        sendPointCloud(perception_webots_topic, perception_ptr_, pose_ptr_);
+        sendPointCloud(lidar_0_webots_topic, lidar_0_ptr_, pose_ptr_);
     }
 }
