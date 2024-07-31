@@ -4,6 +4,8 @@
 #include <Eigen/Geometry>
 #include <vector>
 #include <cmath>
+#include <iostream>
+#include <random>
 
 namespace VNSim {
 
@@ -64,4 +66,20 @@ Eigen::Matrix4d poseToMatrix4d(Eigen::Quaterniond rotation,
                                Eigen::Vector3d translation);
 
 double dotProduct(const Eigen::Vector4d &a, const Eigen::Vector4d &b);
+
+class RandomGenerator {
+   private:
+    std::mt19937 gen;
+    std::uniform_real_distribution<> distr;
+
+   public:
+    // 构造函数，初始化随机数生成器和分布
+    RandomGenerator(double range = 0.0)
+        : gen(std::random_device{}()),  // 使用初始化列表初始化随机数生成器
+          distr(0.0, range) {}  // 初始化分布器
+
+    // 生成随机数的方法
+    double generate() { return distr(gen); }
+};
+
 }  // namespace VNSim

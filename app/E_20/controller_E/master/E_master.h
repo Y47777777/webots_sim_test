@@ -40,7 +40,6 @@ class AGVController : public BaseController {
     void pubRobotPoseSpin();
     void movePerLidarSpin();
     void pubLiftDoorTag();
-    void moveShadowForkSpin();
 
    private:
     std::shared_ptr<WImu> imu_ptr_;

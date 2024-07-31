@@ -9,13 +9,14 @@ message E20MsgUp{
   double forkposeZ = 3;
   double forkposeY = 4;
   double forkposeP = 5;
-  double forkposeC = 6;
-  double steerPosition = 7;
-  double l_wheel = 8;
-  double r_wheel = 9;
-  double steering_theta = 10;
-  uint32 dataidx_upload = 11;
-  foxglove.Imu imu = 12;
+  double forkposeCL = 6;
+  double forkposeCR = 7;
+  double steerPosition = 9;
+  double l_wheel = 10;
+  double r_wheel = 11;
+  double steering_theta = 12;
+  uint32 dataidx_upload = 13;
+  foxglove.Imu imu = 14;
 }
 
 message E20MsgDown{

@@ -19,6 +19,8 @@
 #include "webots_device/w_base.h"
 #include "logvn/logvn.h"
 
+#include "geometry/geometry.h"
+
 #define FORK_DELAY 10
 
 namespace VNSim {
@@ -33,10 +35,11 @@ class WFork : public WBase {
      * @param[in] solid_name        需要旋转 或 控制旋转轴 填入webots solid 名称
      * @param[in] sensor_name       positionSensor 如果有motor 可输入为空
      * @param[in] break_name        break 如果有motor 可输入为空
+     * @param[in] slower_move       每次移动时随机减少一定值
      */
     WFork(std::string fork_motor_name = "", std::string solid_name = "",
           std::string sensor_name = "", std::string brake_name = "",
-          bool isNeedShadowMove = false)
+          bool isNeedShadowMove = false, double slower_move = 0.0)
         : WBase() {
         // creat fork
         isShadowMove_ = isNeedShadowMove;
@@ -82,16 +85,23 @@ class WFork : public WBase {
         }
 
         // creat brake
-        if (brake_name == "" && motor_ != nullptr) {
-            brake_ = motor_->getBrake();
-        } else {
-            brake_ = super_->getBrake(brake_name);
+        {
+            if (brake_name == "" && motor_ != nullptr) {
+                brake_ = motor_->getBrake();
+            } else {
+                brake_ = super_->getBrake(brake_name);
+            }
+
+            if (brake_ != nullptr) {
+                LOG_INFO("creat fork brake:%s  fork brake :%s",
+                         fork_motor_name.c_str(), brake_name.c_str());
+            }
         }
 
-        if (brake_ != nullptr) {
-            LOG_INFO("creat fork brake:%s  fork brake :%s",
-                     fork_motor_name.c_str(), brake_name.c_str());
+        if (fabs(slower_move) > 0.00001) {
+            random_generator_ = std::make_shared<RandomGenerator>(slower_move);
         }
+
         v_delay_speed_.resize(FORK_DELAY, 0);
         std::fill(v_delay_speed_.begin(), v_delay_speed_.end(), 0);
         sub_speed_iter_ = 0;
@@ -105,6 +115,15 @@ class WFork : public WBase {
      */
     void setVelocityAll(double v) {
         std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+        if (random_generator_ != nullptr) {
+            if (fabs(v) > 0.001) {
+                if (v > 0) {
+                    v = v - random_generator_->generate();
+                } else {
+                    v = v + random_generator_->generate();
+                }
+            }
+        }
         std::fill(v_delay_speed_.begin(), v_delay_speed_.end(), v);
         sub_speed_iter_ = 0;
         set_speed_iter_ = 1;
@@ -118,6 +137,16 @@ class WFork : public WBase {
     void setVelocity(double v) {
         std::shared_lock<std::shared_mutex> lock(rw_mutex_);
 
+        if (random_generator_ != nullptr) {
+            if (fabs(v) > 0.001) {
+                if (v > 0) {
+                    v = v - random_generator_->generate();
+                } else {
+                    v = v + random_generator_->generate();
+                }
+            }
+        }
+        
         v_delay_speed_[sub_speed_iter_] = v;
         sub_speed_iter_++;
         if (sub_speed_iter_ >= FORK_DELAY) {
@@ -259,6 +288,9 @@ class WFork : public WBase {
     // double speed_ = 0;
     double high_bound_ = 0;
     double low_bound_ = 0;
+
+    // 随机数生成器
+    std::shared_ptr<RandomGenerator> random_generator_ = nullptr;
 };
 
 }  // namespace VNSim
