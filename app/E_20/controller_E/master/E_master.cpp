@@ -13,6 +13,7 @@
 #include <qelapsedtimer.h>
 #include <QElapsedTimer>
 
+#include "sim_data_flow/E20_msg.pb.h"
 #include "sim_data_flow/point_cloud.pb.h"
 #include "sim_data_flow/pose.pb.h"
 
@@ -42,24 +43,15 @@ inline double CalcAngle(double tangent) {
 }
 
 // 函数1：计算转向角和驱动轮速度
-void computeSteeringAndDrive(double v, double yaw, double &steer_l,
-                             double &steer_r, double &driver_l,
+void computeSteeringAndDrive(double v, double yaw, double &driver_l,
                              double &driver_r) {
     if (fabs(0 - yaw) < 0.001) {
-        steer_l = 0;
-        steer_r = 0;
         driver_l = v;
         driver_r = v;
     } else {
         // 计算转向角度
         double back_radius_c = WHEELBASE / tan(yaw);
         double front_radius_c = WHEELBASE / sin(yaw);
-        steer_l = atan2(WHEELBASE, back_radius_c - (FRONT_TREAD / 2));
-        steer_r = atan2(WHEELBASE, back_radius_c + (FRONT_TREAD / 2));
-        if (yaw < 0) {
-            steer_l -= M_PI;
-            steer_r -= M_PI;
-        }
 
         double back_radius_r = back_radius_c + (REAR_TREAD / 2);
         double back_radius_l = back_radius_c - (REAR_TREAD / 2);
@@ -72,16 +64,12 @@ void computeSteeringAndDrive(double v, double yaw, double &steer_l,
 }
 
 // 函数2：计算内侧驱动轮的转速
-double computeInsideWheelSpeed(double steer_l, double steer_r,
-                               double outside_wheel_speed) {
-    double steer_c = (steer_l + steer_r) / 2;
-    if (fabs(steer_c) < 0.001) {
+double computeInsideWheelSpeed(double steer, double outside_wheel_speed) {
+    if (fabs(steer) < 0.001) {
         return outside_wheel_speed;
     }
 
-    double back_radius_c1 = (WHEELBASE / tan(steer_l)) + (FRONT_TREAD / 2);
-    double back_radius_c2 = (WHEELBASE / tan(steer_r)) - (FRONT_TREAD / 2);
-    double back_radius_c = (back_radius_c1 + back_radius_c2) / 2;
+    double back_radius_c = steer;
 
     // std::cout << "11 back_radius_c1 = " << back_radius_c1
     //           << "  back_radius_c2 = " << back_radius_c2
@@ -94,7 +82,7 @@ double computeInsideWheelSpeed(double steer_l, double steer_r,
     //           << "  back_radius_r = " << back_radius_r << std::endl;
 
     double inner_speed = 0;
-    if (steer_c > 0) {
+    if (steer > 0) {
         double w = outside_wheel_speed / back_radius_r;
         inner_speed = (w * back_radius_l);
 
@@ -113,18 +101,17 @@ std::shared_ptr<ReflectorChecker> ReflectorChecker::instance_ptr_ = nullptr;
 
 AGVController::AGVController() : BaseController("webots_master") {
     imu_ptr_ = std::make_shared<WImu>("inertial unit", "gyro", "accelerometer");
+
     fork_ptr_ = std::make_shared<WFork>("fork height motor", "ForkZAxis",
                                         "fork height");
     forkY_ptr_ = std::make_shared<WFork>("YMotor", "ForkYAxis", "YSensor");
     forkP_ptr_ = std::make_shared<WFork>("PMotor", "ForkPAxis", "PSensor");
     forkCLF1_ptr_ = std::make_shared<WFork>("CLMotor", "LF1", "CSensor");
-    forkCLF2_ptr_ = std::make_shared<WFork>("", "LF2_M", "", "", true);
     forkCRF1_ptr_ = std::make_shared<WFork>("", "RF1_M", "", "", true);
-    forkCRF2_ptr_ = std::make_shared<WFork>("", "RF2_M", "", "", true);
-    streeR_ptr_ =
-        std::make_shared<WWheel>("", "SteerWheelR", "SteerSolidL", "FLWheel");
-    streeL_ptr_ =
-        std::make_shared<WWheel>("", "SteerWheelL", "SteerSolidR", "FLWheel");
+
+    stree_ptr_ =
+        std::make_shared<WWheel>("", "SteerWheel", "SteerSolid", "FLWheel");
+
     l_ptr_ = std::make_shared<WWheel>("FL", "", "", "RS", "");
     r_ptr_ = std::make_shared<WWheel>("FR", "", "", "RS", "");
     pose_ptr_ = std::make_shared<WPose>("RobotNode");
@@ -133,8 +120,7 @@ AGVController::AGVController() : BaseController("webots_master") {
     collision_ptr_ = std::make_shared<WCollision>(false);
     liftdoor_ptr_ = std::make_shared<WLiftDoor>(false);
 
-    v_while_spin_.push_back(bind(&WBase::spin, streeR_ptr_));
-    v_while_spin_.push_back(bind(&WBase::spin, streeL_ptr_));
+    v_while_spin_.push_back(bind(&WBase::spin, stree_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, l_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, r_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, fork_ptr_));
@@ -176,10 +162,10 @@ void AGVController::manualSetState(const std::map<std::string, double> &msg) {
         forkY_speed = msg.at("forkY_speed");
         forkP_speed = msg.at("forkP_speed");
         forkC_speed = msg.at("forkC_speed");
-        double r_yaw, l_yaw;
+
         double r_v, l_v;
 
-        computeSteeringAndDrive(steer_speed, steer_yaw, l_yaw, r_yaw, l_v, r_v);
+        computeSteeringAndDrive(steer_speed, steer_yaw, l_v, r_v);
 
         // double l_speed = 0;
         // double r_speed = 0;
@@ -198,8 +184,7 @@ void AGVController::manualSetState(const std::map<std::string, double> &msg) {
         //     // l_speed = l_v;
         // }
 
-        streeR_ptr_->setYaw(r_yaw);
-        streeL_ptr_->setYaw(l_yaw);
+        stree_ptr_->setYaw(steer_yaw);
         l_ptr_->setVelocity(l_v);
         r_ptr_->setVelocity(r_v);
 
@@ -211,12 +196,9 @@ void AGVController::manualSetState(const std::map<std::string, double> &msg) {
 }
 
 void AGVController::manualGetState(std::map<std::string, double> &msg) {
-    double steer_c =
-        (streeR_ptr_->getMotorYaw() + streeL_ptr_->getMotorYaw()) / 2;
-
     msg["steer_speed_r"] = r_ptr_->getSpeed();
     msg["steer_speed"] = l_ptr_->getSpeed();
-    msg["steer_yaw"] = steer_c;
+    msg["steer_yaw"] = stree_ptr_->getMotorYaw();
     msg["fork_speed"] = fork_ptr_->getVelocityValue();
     msg["forkY_speed"] = forkY_ptr_->getVelocityValue();
     msg["forkP_speed"] = forkP_ptr_->getVelocityValue();
@@ -262,10 +244,6 @@ void AGVController::moveShadowForkSpin() {
     double forkC = forkCLF1_ptr_->getSenosorValue();
     double forkCSpeed = forkCLF1_ptr_->getVelocityValue();
     forkCRF1_ptr_->setShadowPos(forkC);
-    if (fabs(forkC) > FOLLOW_START) {
-        forkCLF2_ptr_->setShadowPos(-(fabs(forkC) - FOLLOW_START));
-        forkCRF2_ptr_->setShadowPos((fabs(forkC) - FOLLOW_START));
-    }
 }
 
 void AGVController::pubTransferSpin() {
@@ -300,27 +278,25 @@ void AGVController::pubRobotPoseSpin() {
 void AGVController::subEMsgCallBack(const char *topic_name,
                                     const eCAL::SReceiveCallbackData *data) {
     if (!isManual_) {
-        sim_data_flow::EMsgDown payload;
+        sim_data_flow::E20MsgDown payload;
         payload.ParseFromArray(data->buf, data->size);
 
-        double l_theta = payload.steering_theta_l();
-        double r_theta = payload.steering_theta_r();
+        double steeting_theta = payload.steering_theta();
         double speed = payload.steering_speed();
         double l_speed = 0;
         double r_speed = 0;
 
-        if ((l_theta > 0)) {
-            l_speed = computeInsideWheelSpeed(l_theta, r_theta, speed);
+        if ((steeting_theta > 0)) {
+            l_speed = computeInsideWheelSpeed(steeting_theta, speed);
             r_speed = speed;
         } else {
-            r_speed = computeInsideWheelSpeed(l_theta, r_theta, speed);
+            r_speed = computeInsideWheelSpeed(steeting_theta, speed);
             l_speed = speed;
         }
         // LOG_INFO("L l_yaw: %lf, r_yaw = %lf , l_v = %lf r_v = %lf", l_theta,
         //          r_theta, l_speed, r_speed);
 
-        streeL_ptr_->setYaw(l_theta);
-        streeR_ptr_->setYaw(r_theta);
+        stree_ptr_->setYaw(steeting_theta);
         l_ptr_->setVelocity(l_speed);
         r_ptr_->setVelocity(r_speed);
 
@@ -332,15 +308,14 @@ void AGVController::subEMsgCallBack(const char *topic_name,
 }
 
 void AGVController::pubSerialSpin() {
-    sim_data_flow::EMsgUp payload;
+    sim_data_flow::E20MsgUp payload;
     payload.set_timestamp(time_stamp_);
     payload.set_forkposez(fork_ptr_->getSenosorValue());
     payload.set_forkposey(forkY_ptr_->getSenosorValue());
     payload.set_forkposep(forkP_ptr_->getSenosorValue());
     payload.set_forkposec(forkCLF1_ptr_->getSenosorValue());
 
-    payload.set_steering_theta_l(streeL_ptr_->getMotorYaw());
-    payload.set_steering_theta_r(streeR_ptr_->getMotorYaw());
+    payload.set_steering_theta(stree_ptr_->getMotorYaw());
 
     payload.set_l_wheel(l_ptr_->getWheelArcLength());
     payload.set_r_wheel(r_ptr_->getWheelArcLength());

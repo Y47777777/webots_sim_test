@@ -11,7 +11,6 @@
 #pragma once
 #include <thread>
 
-#include "sim_data_flow/E_msg.pb.h"
 #include "controller/base_ctrl.h"
 #include "webots_device/w_fork.h"
 #include "webots_device/w_wheel.h"
@@ -45,17 +44,15 @@ class AGVController : public BaseController {
 
    private:
     std::shared_ptr<WImu> imu_ptr_;
-    std::shared_ptr<WWheel> streeR_ptr_;
-    std::shared_ptr<WWheel> streeL_ptr_;
+    std::shared_ptr<WWheel> stree_ptr_;
     std::shared_ptr<WWheel> l_ptr_;
     std::shared_ptr<WWheel> r_ptr_;
     std::shared_ptr<WFork> fork_ptr_;
     std::shared_ptr<WFork> forkY_ptr_;
     std::shared_ptr<WFork> forkP_ptr_;
     std::shared_ptr<WFork> forkCLF1_ptr_;
-    std::shared_ptr<WFork> forkCLF2_ptr_;
     std::shared_ptr<WFork> forkCRF1_ptr_;
-    std::shared_ptr<WFork> forkCRF2_ptr_;
+
     std::shared_ptr<WPose> pose_ptr_;
     std::shared_ptr<WLidar> lidar_pose_ptr_;
     std::shared_ptr<WTransfer> transfer_ptr_;
