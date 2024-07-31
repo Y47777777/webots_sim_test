@@ -122,7 +122,7 @@ class WTransfer : public WBase {
 
     void spin() {
         std::unique_lock<std::shared_mutex> lock(rw_mutex_);
-        const float POSI_THRESHOLD = 0.001;
+        const float POSI_THRESHOLD = 0.00001;
         const float BASE_RANGE = 3;
         if (set_flag) {
             // 写入(shadow)
