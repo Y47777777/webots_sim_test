@@ -11,7 +11,7 @@
 #pragma once
 #include <thread>
 
-#include "sim_data_flow/E_msg.pb.h"
+#include "sim_data_flow/E40_msg.pb.h"
 #include "controller/base_ctrl.h"
 #include "webots_device/w_fork.h"
 #include "webots_device/w_wheel.h"

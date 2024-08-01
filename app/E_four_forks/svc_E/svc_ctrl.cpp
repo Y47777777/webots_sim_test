@@ -71,6 +71,7 @@ void SVCMaster::pubEMsgsToWebots() {
     double ForkDeviceZ;
     double ForkDeviceY;
     double ForkDeviceP;
+    double ForkDeviceC;
     double SteeringDeviceL;
     double SteeringDeviceR;
     double MoveDevice;
@@ -83,6 +84,7 @@ void SVCMaster::pubEMsgsToWebots() {
     decoder_.getValue("ForkDevice", &ForkDeviceZ, "Z");  // fork Speed
     decoder_.getValue("ForkDevice", &ForkDeviceY, "Y");
     decoder_.getValue("ForkDevice", &ForkDeviceP, "P");
+    decoder_.getValue("ForkDevice", &ForkDeviceC, "C");
 
     msg_to_webots_.set_steering_speed(MoveDevice);
     msg_to_webots_.set_steering_theta_l(SteeringDeviceL);
@@ -90,6 +92,7 @@ void SVCMaster::pubEMsgsToWebots() {
     msg_to_webots_.set_forkspeedz(ForkDeviceZ);
     msg_to_webots_.set_forkspeedy(ForkDeviceY);
     msg_to_webots_.set_forkspeedp(ForkDeviceP);
+    msg_to_webots_.set_forkspeedc(ForkDeviceC);
 
     // publish
     uint8_t buf[msg_to_webots_.ByteSize()];
@@ -112,8 +115,10 @@ void SVCMaster::pubUpStream() {
     encoder_.updateValue("IncrementalSteeringCoder", 1, "RF",
                          msg_from_webots_.steering_theta_r());
     encoder_.updateValue("Gyroscope", 1, "", msg_from_webots_.gyroscope());
-    encoder_.updateValue("ForkDisplacementSencer", 1, "C",
-                         msg_from_webots_.forkposec());
+    encoder_.updateValue("ForkDisplacementSencer", 1, "RC",
+                         msg_from_webots_.forkposecr());
+    encoder_.updateValue("ForkDisplacementSencer", 1, "LC",
+                         msg_from_webots_.forkposecl());
     encoder_.updateValue("ForkDisplacementSencer", 1, "Y",
                          msg_from_webots_.forkposey());
     encoder_.updateValue("ForkDisplacementSencer", 1, "P",
@@ -128,7 +133,9 @@ void SVCMaster::pubUpStream() {
     static double wheel_coder_r = 0;
     wheel_coder_l += msg_from_webots_.l_wheel() * 0.5;
     wheel_coder_r += msg_from_webots_.r_wheel() * 0.5;
-    // LOG_INFO("l_wheel_msg = %lf r_wheel_msg = %lf, wheel_l = %lf, wheel_r = %lf\n", msg_from_webots_.l_wheel(), msg_from_webots_.r_wheel(), wheel_coder_l, wheel_coder_r);
+    // LOG_INFO("l_wheel_msg = %lf r_wheel_msg = %lf, wheel_l = %lf, wheel_r =
+    // %lf\n", msg_from_webots_.l_wheel(), msg_from_webots_.r_wheel(),
+    // wheel_coder_l, wheel_coder_r);
     encoder_.updateValue("WheelCoder", 2, "", wheel_coder_l, wheel_coder_r);
     encoder_.updateValue("AngularVelocitySensor", 1, "X",
                          imu->angular_velocity().x());

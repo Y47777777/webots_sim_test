@@ -11,7 +11,7 @@
 #ifndef __SVC_MODEL_SERIAL_H__
 #define __SVC_MODEL_SERIAL_H__
 
-#include "sim_data_flow/E_msg.pb.h"
+#include "sim_data_flow/E40_msg.pb.h"
 #include "svc/base_svc_serial.h"
 
 namespace VNSim {
@@ -34,8 +34,8 @@ class SVCMaster : public BaseSerialSvc {
     void pubEMsgsToWebots();
 
    private:
-    sim_data_flow::EMsgUp msg_from_webots_;
-    sim_data_flow::EMsgDown msg_to_webots_;
+    sim_data_flow::E40MsgUp msg_from_webots_;
+    sim_data_flow::E40MsgDown msg_to_webots_;
     struct Package msgs_from_agv_;
 };
 }  // namespace VNSim

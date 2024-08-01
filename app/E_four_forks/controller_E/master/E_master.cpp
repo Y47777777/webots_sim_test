@@ -300,7 +300,7 @@ void AGVController::pubRobotPoseSpin() {
 void AGVController::subEMsgCallBack(const char *topic_name,
                                     const eCAL::SReceiveCallbackData *data) {
     if (!isManual_) {
-        sim_data_flow::EMsgDown payload;
+        sim_data_flow::E40MsgDown payload;
         payload.ParseFromArray(data->buf, data->size);
 
         double l_theta = payload.steering_theta_l();
@@ -332,12 +332,13 @@ void AGVController::subEMsgCallBack(const char *topic_name,
 }
 
 void AGVController::pubSerialSpin() {
-    sim_data_flow::EMsgUp payload;
+    sim_data_flow::E40MsgUp payload;
     payload.set_timestamp(time_stamp_);
     payload.set_forkposez(fork_ptr_->getSenosorValue());
     payload.set_forkposey(forkY_ptr_->getSenosorValue());
     payload.set_forkposep(forkP_ptr_->getSenosorValue());
-    payload.set_forkposec(forkCLF1_ptr_->getSenosorValue());
+    payload.set_forkposecl(forkCLF1_ptr_->getSenosorValue());
+    payload.set_forkposecr(forkCLF1_ptr_->getSenosorValue());
 
     payload.set_steering_theta_l(streeL_ptr_->getMotorYaw());
     payload.set_steering_theta_r(streeR_ptr_->getMotorYaw());

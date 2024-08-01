@@ -1,0 +1,31 @@
+syntax = "proto3";
+import "Imu.proto";
+
+package sim_data_flow;
+
+message E40MsgUp {
+    uint64 timestamp = 1;
+    double gyroscope = 2;
+    double forkposeZ = 3;
+    double forkposeY = 4;
+    double forkposeP = 5;
+    double forkposeCL = 6;
+    double forkposeCR = 7;
+    double l_wheel = 8;
+    double r_wheel = 9;
+    double steering_theta_L = 10;
+    double steering_theta_R = 11;
+    uint32 dataidx_upload = 12;
+    foxglove.Imu imu = 13;
+}
+
+message E40MsgDown {
+    uint64 timestamp = 1;
+    double steering_theta_L = 2;
+    double steering_theta_R = 3;
+    double steering_speed = 4;
+    double forkspeedZ = 5;
+    double forkspeedY = 6;
+    double forkspeedP = 7;
+    double forkspeedC = 8;
+}
