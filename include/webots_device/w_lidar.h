@@ -203,12 +203,13 @@ class WLidar : public WBase {
             LOG_ERROR("can`t move %s", lidar_name_.c_str());
             return;
         }
-        double translation[3] = {tf_translation_[0], tf_translation_[1]};
+        double translation[3] = {tf_translation_[0], tf_translation_[1],
+                                 tf_translation_[2]};
 
         if (values < connecting_rod_) {
-            translation[2] = 0 - values;
+            translation[2] = tf_translation_[2] - values;
         } else {
-            translation[2] = 0 - (connecting_rod_);
+            translation[2] = tf_translation_[2] - (connecting_rod_);
         }
 
         translation_ptr_->setSFVec3f(translation);
