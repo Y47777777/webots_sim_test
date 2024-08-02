@@ -30,6 +30,7 @@ const double WHEELBASE = 1.7;     // 前后轮间距
 const double FRONT_TREAD = 0.78;  // 定向轮间距
 const double REAR_TREAD = 1.1;    // 驱动轮间距
 const double FOLLOW_START = 0.34;
+const double FROK_MIN_SPAC = 0.44;  //外叉内间距最小值
 
 // 计算tan角度
 inline double CalcTan(double len, double yaw) {
@@ -224,7 +225,7 @@ void AGVController::manualGetState(std::map<std::string, double> &msg) {
     msg["fork_height"] = fork_ptr_->getSenosorValue();
     msg["forkY_height"] = forkY_ptr_->getSenosorValue();
     msg["forkP_height"] = forkP_ptr_->getSenosorValue();
-    msg["forkC_height"] = forkCLF1_ptr_->getSenosorValue();
+    msg["forkC_height"] = forkCLF1_ptr_->getSenosorValue() * 2 + FROK_MIN_SPAC;
 
     msg["real_speed"] = 0;
 }
@@ -337,8 +338,10 @@ void AGVController::pubSerialSpin() {
     payload.set_forkposez(fork_ptr_->getSenosorValue());
     payload.set_forkposey(forkY_ptr_->getSenosorValue());
     payload.set_forkposep(forkP_ptr_->getSenosorValue());
-    payload.set_forkposecl(forkCLF1_ptr_->getSenosorValue());
-    payload.set_forkposecr(forkCLF1_ptr_->getSenosorValue());
+    payload.set_forkposecl(forkCLF1_ptr_->getSenosorValue() +
+                           (FROK_MIN_SPAC / 2));
+    payload.set_forkposecr(forkCLF1_ptr_->getSenosorValue() +
+                           (FROK_MIN_SPAC / 2));
 
     payload.set_steering_theta_l(streeL_ptr_->getMotorYaw());
     payload.set_steering_theta_r(streeR_ptr_->getMotorYaw());
