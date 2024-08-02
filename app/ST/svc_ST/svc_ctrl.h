@@ -11,7 +11,7 @@
 #ifndef __SVC_MODEL_SERIAL_H__
 #define __SVC_MODEL_SERIAL_H__
 
-#include "sim_data_flow/P_msg.pb.h"
+#include "sim_data_flow/ST_msg.pb.h"
 #include "svc/base_svc_serial.h"
 
 namespace VNSim {
@@ -25,17 +25,17 @@ class SVCMaster : public BaseSerialSvc {
    private:
     int onInitService();
     void subDownStreamCallBack(uint8_t *msg, int len);
-    void subPMsgCallBack(const char *topic_name,
+    void subSTMsgCallBack(const char *topic_name,
                          const eCAL::SReceiveCallbackData *data);
     void subPoseCallBakc(const char *topic_name,
                          const eCAL::SReceiveCallbackData *data);
 
     void pubUpStream();
-    void pubPMsgsToWebots();
+    void pubSTMsgsToWebots();
 
    private:
-    sim_data_flow::PMsgUp msg_from_webots_;
-    sim_data_flow::PMsgDown msg_to_webots_;
+    sim_data_flow::STMsgUp msg_from_webots_;
+    sim_data_flow::STMsgDown msg_to_webots_;
     struct Package msgs_from_agv_;
 };
 }  // namespace VNSim

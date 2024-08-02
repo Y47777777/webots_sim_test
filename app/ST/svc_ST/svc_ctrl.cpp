@@ -14,12 +14,12 @@ SVCMaster::~SVCMaster() {}
 int SVCMaster::onInitService() {
     // publisher
     ecal_ptr_->addEcal("Sensor/read");
-    ecal_ptr_->addEcal("svc/P_msg");
+    ecal_ptr_->addEcal("svc/ST_msg");
     ecal_ptr_->addEcal("svc/pose");
 
     // Receive
-    ecal_ptr_->addEcal("webot/P_msg",
-                       std::bind(&SVCMaster::subPMsgCallBack, this,
+    ecal_ptr_->addEcal("webot/ST_msg",
+                       std::bind(&SVCMaster::subSTMsgCallBack, this,
                                  std::placeholders::_1, std::placeholders::_2));
 
     ecal_ptr_->addEcal("webot/pose",
@@ -28,7 +28,7 @@ int SVCMaster::onInitService() {
     return 0;
 }
 
-void SVCMaster::subPMsgCallBack(const char *topic_name,
+void SVCMaster::subSTMsgCallBack(const char *topic_name,
                                 const eCAL::SReceiveCallbackData *data) {
     // 反序列化
     msg_from_webots_.ParseFromArray(data->buf, data->size);
@@ -64,10 +64,10 @@ void SVCMaster::subDownStreamCallBack(uint8_t *msg, int len) {
         decoder_.getValue2("DataIndex", &dataidx_sub_, 4);  // 回报
     }
 
-    pubPMsgsToWebots();
+    pubSTMsgsToWebots();
 }
 
-void SVCMaster::pubPMsgsToWebots() {
+void SVCMaster::pubSTMsgsToWebots() {
     double ForkDeviceZ;
     double SteeringDevice;
     double MoveDevice;
@@ -83,7 +83,7 @@ void SVCMaster::pubPMsgsToWebots() {
     // publish
     uint8_t buf[msg_to_webots_.ByteSize()];
     msg_to_webots_.SerializePartialToArray(buf, msg_to_webots_.ByteSize());
-    ecal_ptr_->send("svc/P_msg", buf, msg_to_webots_.ByteSize());
+    ecal_ptr_->send("svc/ST_msg", buf, msg_to_webots_.ByteSize());
 }
 
 void SVCMaster::pubUpStream() {
@@ -95,29 +95,33 @@ void SVCMaster::pubUpStream() {
     }
 
     // 数据转换
-    encoder_.updateValue("IncrementalSteeringCoder", 1, "",
-                         msg_from_webots_.steering_theta());
-    encoder_.updateValue("Gyroscope", 1, "", msg_from_webots_.gyroscope());
-    encoder_.updateValue("HeightCoder", 1, "", msg_from_webots_.forkposez());
-    encoder_.updateValue("ForkDisplacementSencer", 1, "Z",
-                         msg_from_webots_.forkposez());
+    encoder_.updateValue("IncrementalSteeringCoder", 1, "",msg_from_webots_.steering_theta());
+    encoder_.updateValue("Gyroscope",                1, "", msg_from_webots_.gyroscope());
+    encoder_.updateValue("HeightCoder",              1, "", msg_from_webots_.forkposez());
+    encoder_.updateValue("ForkDisplacementSencer",   1, "Z",msg_from_webots_.forkposez());
+    encoder_.updateValue("RPMSensor",                1, "", msg_from_webots_.steerposition());
     encoder_.updateValue2("DataIndex", &dataidx_upload_, sizeof(uint32_t));
+
+    foxglove::Imu *imu = msg_from_webots_.mutable_imu();
+    encoder_.updateValue("AngularVelocitySensor", 1, "X", imu->angular_velocity().x());
+    encoder_.updateValue("AngularVelocitySensor", 1, "Y", imu->angular_velocity().y());
+    encoder_.updateValue("AngularVelocitySensor", 1, "Z", imu->angular_velocity().z());
+    encoder_.updateValue("Accelerometer",         1, "X", imu->linear_acceleration().x());
+    encoder_.updateValue("Accelerometer",         1, "Y",imu->linear_acceleration().y());
+    encoder_.updateValue("Accelerometer",         1, "Z",imu->linear_acceleration().z());
+
+    // encoder_.updateSwitchValue("SwitchSencer", 38 + i, fork[i]);
 
     uint16_t battery_device = 100;
     encoder_.updateValue2("BatterySencer", &battery_device, sizeof(uint16_t));
-
-    static double wheel_coder_l = 0;
-    static double wheel_coder_r = 0;
-    wheel_coder_l += msg_from_webots_.l_wheel() * 0.5;
-    wheel_coder_r += msg_from_webots_.r_wheel() * 0.5;
-    encoder_.updateValue("WheelCoder", 2, "", wheel_coder_l, wheel_coder_r);
-
     {
         // 该数据多线程读写
         std::lock_guard<std::mutex> lock(msgs_lock_);
         encoder_.updateValue2("DataIndexReturn", &dataidx_sub_,
                               sizeof(uint32_t));
     }
+
+    
 
     const struct Package *pack = encoder_.encodePackage();
     ecal_ptr_->send("Sensor/read", pack->buf, pack->len);

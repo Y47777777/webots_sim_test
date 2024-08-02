@@ -1,6 +1,6 @@
 /**
- * @file P_master.cpp
- * @author weijchen (weijchen@visionnav.com)
+ * @file master.cpp
+ * @author xyjie (xyjie@visionnav.com)
  * @brief 主控 ctrl
  * @version 2.0
  * @date 2024-06-21
@@ -34,32 +34,29 @@ std::shared_ptr<ReflectorChecker> ReflectorChecker::instance_ptr_ = nullptr;
 AGVController::AGVController() : BaseController("webots_master") {
     imu_ptr_ = std::make_shared<WImu>("inertial unit", "gyro", "accelerometer");
     fork_ptr_ = std::make_shared<WFork>("fork height motor");
-    stree_ptr_ =
-        std::make_shared<WWheel>("FL", "SteerWheel", "SteerSolid", "FLWheel");
-    l_ptr_ = std::make_shared<WWheel>("", "", "", "RS", "BRPS");
-    r_ptr_ = std::make_shared<WWheel>("", "", "", "LS", "BLPS");
+    stree_ptr_ = std::make_shared<WWheel>("FL", "SteerWheel", "SteerSolid", "FLWheel");
     pose_ptr_ = std::make_shared<WPose>("RobotNode");
-    lidar_pose_ptr_ = std::make_shared<WLidar>("mid360Per", 100, false);
+    
     transfer_ptr_ = std::make_shared<WTransfer>();
+    collision_ptr_ = std::make_shared<WCollision>(false);
     liftdoor_ptr_ = std::make_shared<WLiftDoor>(false);
 
     v_while_spin_.push_back(bind(&WBase::spin, stree_ptr_));
-    v_while_spin_.push_back(bind(&WBase::spin, l_ptr_));
-    v_while_spin_.push_back(bind(&WBase::spin, r_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, fork_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, imu_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, pose_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, transfer_ptr_));
+    v_while_spin_.push_back(bind(&WBase::spin, collision_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, liftdoor_ptr_));
 
     // pub
-    ecal_ptr_->addEcal("webot/P_msg");
+    ecal_ptr_->addEcal("webot/ST_msg");
     ecal_ptr_->addEcal("webot/transfer");
     ecal_ptr_->addEcal("webot/pose");
     ecal_ptr_->addEcal("webot/liftdoor");
 
     // sub
-    ecal_ptr_->addEcal("svc/P_msg",
+    ecal_ptr_->addEcal("svc/ST_msg",
                        std::bind(&AGVController::subPMsgCallBack, this,
                                  std::placeholders::_1, std::placeholders::_2));
 }
@@ -95,9 +92,6 @@ void AGVController::whileSpin() {
     // 发送至svc
     pubSerialSpin();
 
-    // 移动感知激光
-    movePerLidarSpin();
-
     // 发送至shadow
     pubRobotPoseSpin();
 
@@ -106,14 +100,6 @@ void AGVController::whileSpin() {
     pubTransferSpin();
 
     pubLiftDoorTag();
-}
-
-void AGVController::movePerLidarSpin() {
-    double fork_z = fork_ptr_->getSenosorValue();  // 米制
-
-    // TODO: 激光随动
-    lidar_pose_ptr_->moveLidar(fork_z);
-    // LOG_INFO("fork :%.2f", fork_z);
 }
 
 void AGVController::pubTransferSpin() {
@@ -148,7 +134,7 @@ void AGVController::pubRobotPoseSpin() {
 void AGVController::subPMsgCallBack(const char *topic_name,
                                     const eCAL::SReceiveCallbackData *data) {
     if (!isManual_) {
-        sim_data_flow::PMsgDown payload;
+        sim_data_flow::STMsgDown payload;
         payload.ParseFromArray(data->buf, data->size);
 
         stree_ptr_->setSpeed(payload.steering_speed(),
@@ -158,25 +144,23 @@ void AGVController::subPMsgCallBack(const char *topic_name,
 }
 
 void AGVController::pubSerialSpin() {
-    sim_data_flow::PMsgUp payload;
+    sim_data_flow::STMsgUp payload;
 
     payload.set_timestamp(time_stamp_);
     payload.set_forkposez(fork_ptr_->getSenosorValue());
     payload.set_steerposition(stree_ptr_->getSenosorValue());
 
-    payload.set_l_wheel(l_ptr_->getWheelArcLength());
-    payload.set_r_wheel(r_ptr_->getWheelArcLength());
-
     payload.set_steering_theta(stree_ptr_->getMotorYaw());
 
     payload.set_gyroscope(imu_ptr_->getInertialYaw());
 
-    // double *rotation = pose_ptr_->getRotaion();
-    // LOG_INFO("imu: %.2f, robot: %.2f", imu_ptr_->getInertialYaw(), rotation[3]);
+    foxglove::Imu *imu = payload.mutable_imu();
+    imu->mutable_angular_velocity()->CopyFrom(imu_ptr_->getGyroValue());
+    imu->mutable_linear_acceleration()->CopyFrom(imu_ptr_->getAccValue());
 
     uint8_t buf[payload.ByteSize()];
     payload.SerializePartialToArray(buf, payload.ByteSize());
-    ecal_ptr_->send("webot/P_msg", buf, payload.ByteSize());
+    ecal_ptr_->send("webot/ST_msg", buf, payload.ByteSize());
 }
 
 void VNSim::AGVController::pubLiftDoorTag()
