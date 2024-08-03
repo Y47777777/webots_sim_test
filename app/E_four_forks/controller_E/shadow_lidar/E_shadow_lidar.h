@@ -18,6 +18,7 @@
 #include "webots_device/w_transfer.h"
 #include "webots_device/w_collision.h"
 #include "webots_device/w_liftdoor.h"
+#include "webots_device/w_barcodescan.h"
 
 namespace VNSim {
 
@@ -47,6 +48,7 @@ class AGVController : public BaseLidarControl {
     std::shared_ptr<WReflector> reflector_ptr_;
     std::shared_ptr<WCollision> collision_ptr_;
     std::shared_ptr<ReflectorChecker> reflector_check_ptr_;
+    std::shared_ptr<WBarcodeScan> barcode_scaner_ptr_;
 
    private:
     void poseCallBack(const char *topic_name,

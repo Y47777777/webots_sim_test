@@ -136,7 +136,6 @@ class ReflectorChecker {
             if (fabs(point.y() - reflector.center.y()) > 2)
                 continue;
 
-            // return true;
             if (isPonitInCube(point, reflector)) {
                 return true;
             }

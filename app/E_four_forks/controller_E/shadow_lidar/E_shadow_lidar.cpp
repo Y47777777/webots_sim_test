@@ -27,6 +27,8 @@ using namespace webots;
 std::shared_ptr<Timer> Timer::instance_ptr_ = nullptr;
 std::shared_ptr<EcalWrapper> EcalWrapper::instance_ptr_ = nullptr;
 std::shared_ptr<ReflectorChecker> ReflectorChecker::instance_ptr_ = nullptr;
+std::vector<std::shared_ptr<WBarcode>> WBarcodeScan::v_barcode_;
+bool WBarcodeScan::enable_;
 
 std::string lidar_2_webots_topic = "webots/Lidar/.111/PointCloud";
 std::string lidar_4_webots_topic = "webots/Lidar/.113/PointCloud";
@@ -51,6 +53,8 @@ AGVController::AGVController() : BaseLidarControl("webots_shadow_lidar") {
     // 删除所有物理属性，碰撞属性
     collision_ptr_ = std::make_shared<WCollision>();
 
+    barcode_scaner_ptr_ = std::make_shared<WBarcodeScan>("Scaner");
+
     // 高反
     reflector_ptr_ = std::make_shared<WReflector>("HighReflector");
     reflector_check_ptr_ = ReflectorChecker::getInstance();
@@ -67,6 +71,7 @@ AGVController::AGVController() : BaseLidarControl("webots_shadow_lidar") {
     v_while_spin_.push_back(bind(&WBase::spin, pose_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, transfer_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, liftdoor_ptr_));
+    v_while_spin_.push_back(bind(&WBase::spin, barcode_scaner_ptr_));
 
     // creat publish
     ecal_ptr_->addEcal(lidar_2_webots_topic.c_str());
