@@ -31,6 +31,7 @@ const double WHEELBASE = 1.7;     // 前后轮间距
 const double FRONT_TREAD = 0.78;  // 定向轮间距
 const double REAR_TREAD = 1.1;    // 驱动轮间距
 const double FOLLOW_START = 0.4;
+const double FROK_MIN_SPAC = 0.44;  //外叉内间距最小值 FIXME: E20
 
 // 计算tan角度
 inline double CalcTan(double len, double yaw) {
@@ -107,7 +108,8 @@ AGVController::AGVController() : BaseController("webots_master") {
     forkY_ptr_ = std::make_shared<WFork>("YMotor", "ForkYAxis");
     forkP_ptr_ = std::make_shared<WFork>("PMotor", "ForkPAxis");
     forkCLF1_ptr_ = std::make_shared<WFork>("CLMotor", "LF1");
-    forkCRF1_ptr_ = std::make_shared<WFork>("CRMotor", "RF1", "", "", false, 0.03);
+    forkCRF1_ptr_ =
+        std::make_shared<WFork>("CRMotor", "RF1", "", "", false, 0.03);
 
     stree_ptr_ =
         std::make_shared<WWheel>("", "SteerWheel", "SteerSolid", "FLWheel");
@@ -305,8 +307,10 @@ void AGVController::pubSerialSpin() {
     payload.set_forkposez(fork_ptr_->getSenosorValue());
     payload.set_forkposey(forkY_ptr_->getSenosorValue());
     payload.set_forkposep(forkP_ptr_->getSenosorValue());
-    payload.set_forkposecl(forkCLF1_ptr_->getSenosorValue());
-    payload.set_forkposecr(forkCRF1_ptr_->getSenosorValue());
+    payload.set_forkposecl(forkCLF1_ptr_->getSenosorValue() +
+                           FROK_MIN_SPAC / 2);
+    payload.set_forkposecr(forkCRF1_ptr_->getSenosorValue() +
+                           FROK_MIN_SPAC / 2);
 
     payload.set_steering_theta(stree_ptr_->getMotorYaw());
 
