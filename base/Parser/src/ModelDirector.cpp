@@ -193,6 +193,10 @@ void SencerDirector::create(const char *name, const char *function,
     } else if (strcmp(name, "AngularVelocitySensor") == 0) {
         ptr = std::make_shared<AngularVelocitySensor>();
         // std::cout << "create AngularVelocitySensorX = " << name << std::endl;
+    } else if (strcmp(name, "HydraulicPressureSensor") == 0) {
+        ptr = std::make_shared<HydraulicPressureSensor>();
+        // std::cout << "create HydraulicPressureSensor = " << name <<
+        // std::endl;
     } else {
         ptr = std::make_shared<SDataIgnore>();
         // std::cout << "create SDataIgnore = " << name << std::endl;

@@ -107,9 +107,10 @@ AGVController::AGVController() : BaseController("webots_master") {
                                         "fork height");
     forkY_ptr_ = std::make_shared<WFork>("YMotor", "ForkYAxis");
     forkP_ptr_ = std::make_shared<WFork>("PMotor", "ForkPAxis");
-    forkCLF1_ptr_ = std::make_shared<WFork>("CLMotor", "LF1");
-    forkCRF1_ptr_ =
-        std::make_shared<WFork>("CRMotor", "RF1", "", "", false, 0.03);
+    forkCLF1_ptr_ = std::make_shared<WFork>("CLMotor", "LF1", "", "", false,
+                                            0.0, true, 200);
+    forkCRF1_ptr_ = std::make_shared<WFork>("CRMotor", "RF1", "", "", false,
+                                            0.03, true, 200);
 
     stree_ptr_ =
         std::make_shared<WWheel>("", "SteerWheel", "SteerSolid", "FLWheel");
@@ -311,7 +312,7 @@ void AGVController::pubSerialSpin() {
                            FROK_MIN_SPAC / 2);
     payload.set_forkposecr(forkCRF1_ptr_->getSenosorValue() +
                            FROK_MIN_SPAC / 2);
-
+    payload.set_clamppressure(forkCLF1_ptr_->getForce());
     payload.set_steering_theta(stree_ptr_->getMotorYaw());
 
     payload.set_l_wheel(l_ptr_->getWheelArcLength());
@@ -326,7 +327,6 @@ void AGVController::pubSerialSpin() {
     // double *rotation = pose_ptr_->getRotaion();
     // LOG_INFO("imu: %.2f, robot: %.2f", imu_ptr_->getInertialYaw(),
     // rotation[3]);
-
     uint8_t buf[payload.ByteSize()];
     payload.SerializePartialToArray(buf, payload.ByteSize());
     ecal_ptr_->send("webot/E_msg", buf, payload.ByteSize());

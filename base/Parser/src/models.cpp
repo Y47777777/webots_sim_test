@@ -1031,6 +1031,59 @@ void AngularVelocitySensor::solveValue(const std::vector<double> &input,
     to2BytesFromint16_t(&AngularVelocitySensor, buf_);
 }
 
+HydraulicPressureSensor::HydraulicPressureSensor()
+    : CommonParsedSencerModel() {}
+
+HydraulicPressureSensor::~HydraulicPressureSensor() {}
+
+void HydraulicPressureSensor::config(
+    const std::vector<struct SpecialParam> &param, int start_p, int length,
+    bool is32bits, bool isSigned) {
+    start_p_ = start_p;
+    length_ = 2;
+    for (int i = 0; i < param.size(); i++) {
+        if (param.at(i).name == "Signed") {
+            std::istringstream(param.at(i).value) >> std::boolalpha >>
+                isSigned_;
+        } else if (param.at(i).name == "Is32Bit") {
+            std::istringstream(param.at(i).value) >> std::boolalpha >>
+                is32bits_;
+            if (is32bits_)
+                length_ = 4;
+        }
+    }
+    if (length != -1)
+        length_ = length;
+    end_p_ = start_p_ + length_ - 1;
+    isNeedParsed_ = true;
+    SensorModel::SencerModelConfig();
+    SensorModel::_setType(isSigned_);
+    for (auto &it : param) {
+        extra_val_[it.name] = strtod(it.value.c_str(), nullptr);
+    }
+}
+
+void HydraulicPressureSensor::solveValue(const std::vector<double> &input,
+                                         std::vector<double> &output) {
+    double magnification = extra_val_["Magnification"];
+    double zero = extra_val_["Zero"];
+    output.resize(1);
+    output[0] = input[0] / magnification + zero;
+    if (!isSigned_ && !is32bits_) {
+        uint16_t Height = (uint16_t) output[0];
+        to2BytesFromuint16_t(&Height, buf_);
+    } else if (!isSigned_ && is32bits_) {
+        uint32_t Height = (uint32_t) output[0];
+        to4BytesFromuint32_t(&Height, buf_);
+    } else if (isSigned_ && !is32bits_) {
+        int16_t Height = (int16_t) output[0];
+        to2BytesFromint16_t(&Height, buf_);
+    } else {
+        int32_t Height = (int32_t) output[0];
+        to4BytesFromint32_t(&Height, buf_);
+    }
+}
+
 DataCRC::DataCRC() : CommonParsedSencerModel() {}
 
 DataCRC::~DataCRC() {}

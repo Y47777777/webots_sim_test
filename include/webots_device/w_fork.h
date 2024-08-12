@@ -39,7 +39,8 @@ class WFork : public WBase {
      */
     WFork(std::string fork_motor_name = "", std::string solid_name = "",
           std::string sensor_name = "", std::string brake_name = "",
-          bool isNeedShadowMove = false, double slower_move = 0.0)
+          bool isNeedShadowMove = false, double slower_move = 0.0,
+          bool isNeedReadForce = false, double force_sample_frequency = 100)
         : WBase() {
         // creat fork
         isShadowMove_ = isNeedShadowMove;
@@ -51,6 +52,9 @@ class WFork : public WBase {
             low_bound_ = motor_->getMinPosition() + 0.1;
             motor_->setPosition(INFINITY);
             motor_->setVelocity(0);
+            if (isNeedReadForce) {
+                motor_->enableForceFeedback(force_sample_frequency);
+            }
             LOG_INFO("creat fork: %s", fork_motor_name.c_str());
         }
 
@@ -146,7 +150,7 @@ class WFork : public WBase {
                 }
             }
         }
-        
+
         v_delay_speed_[sub_speed_iter_] = v;
         sub_speed_iter_++;
         if (sub_speed_iter_ >= FORK_DELAY) {
@@ -196,6 +200,15 @@ class WFork : public WBase {
     double getVelocityValue() {
         std::shared_lock<std::shared_mutex> lock(rw_mutex_);
         return v_delay_speed_[set_speed_iter_];
+    }
+
+    double getForce() {
+        double force = 0;
+        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+        if (motor_ != nullptr) {
+            force = motor_->getForceFeedback();
+        }
+        return force;
     }
 
     void spin() {

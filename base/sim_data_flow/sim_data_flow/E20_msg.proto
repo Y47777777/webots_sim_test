@@ -17,6 +17,7 @@ message E20MsgUp{
   double steering_theta = 12;
   uint32 dataidx_upload = 13;
   foxglove.Imu imu = 14;
+  double ClampPressure = 15;
 }
 
 message E20MsgDown{
