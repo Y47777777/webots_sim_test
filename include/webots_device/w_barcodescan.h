@@ -15,6 +15,7 @@
 #include "geometry/geometry.h"
 #include "webots_device/w_base.h"
 #include "logvn/logvn.h"
+#include "code_scan.h"
 
 namespace VNSim {
 using namespace webots;
@@ -180,8 +181,10 @@ class WBarcodeScan : public WBase {
      * @brief Construct a new WBarcodeScan object
      *
      */
-    WBarcodeScan(std::string scaner_name, int frequency = 500,
+    WBarcodeScan(std::shared_ptr<CoderNotifyer> notifyer,
+                 std::string scaner_name, int frequency = 500,
                  int success_size = 10) {
+        notifyer_ = notifyer;
         // creat Barcode, only once
         if (v_barcode_.empty()) {
             super_->step(step_duration_);
@@ -214,22 +217,26 @@ class WBarcodeScan : public WBase {
 
     ~WBarcodeScan() {}
 
-    char *getQRCode() {
+    const char *getQRCode() {
         std::shared_lock<std::shared_mutex> lock(rw_mutex_);
-        //TODO: 获取码值
-        return "1";
+        // TODO: 获取码值
+        // return "1";
+        if (target_barcode_ != nullptr) {
+            return target_barcode_->getQRcode();
+        }
+        return "";
     }
 
-    void sacnEnableSet(bool enable) {
+    void scanEnableSet(bool enable) {
         std::shared_lock<std::shared_mutex> lock(rw_mutex_);
         enable_ = enable;
     }
 
     void spin() {
         std::unique_lock<std::shared_mutex> lock(rw_mutex_);
-        // if (enable_ == false) {
-        //     return;
-        // }
+        if (enable_ == false) {
+            return;
+        }
 
         int cur_step_cnt = super_->getStepCnt() - start_step_;
         if (cur_step_cnt % frequency_cnt_ != 0) {
@@ -254,6 +261,8 @@ class WBarcodeScan : public WBase {
         memcpy(pose, pose_itr, 16 * sizeof(double));
         Eigen::Matrix4d tran_matrix =
             Eigen::Map<Eigen::Matrix<double, 4, 4, Eigen::RowMajor>>(pose);
+        target_barcode_.reset();
+        target_barcode_ = nullptr;
 
         for (auto &barcode : v_barcode_) {
             int point_in_barcode_size = 0;
@@ -271,6 +280,10 @@ class WBarcodeScan : public WBase {
                             LOG_INFO("barcode size ,%d ",
                                      point_in_barcode_size);
                             LOG_INFO("find QRcode ,%s", barcode->getQRcode());
+                            std::cout << "find QR........" << std::endl;
+                            target_barcode_ = barcode;
+                            // TODO: report outside
+                            notifyer_->onCode();
                             return;
                         }
                     }
@@ -302,12 +315,13 @@ class WBarcodeScan : public WBase {
 
    private:
     static std::vector<std::shared_ptr<WBarcode>> v_barcode_;
+    std::shared_ptr<WBarcode> target_barcode_;
     static bool enable_;
 
     Node *this_node_ = nullptr;
 
     uint64_t cur_step_ = 0;
-
+    std::shared_ptr<CoderNotifyer> notifyer_;
     int frequency_ = 0;
     int frequency_cnt_ = 0;
     Lidar *lidar_ = nullptr;

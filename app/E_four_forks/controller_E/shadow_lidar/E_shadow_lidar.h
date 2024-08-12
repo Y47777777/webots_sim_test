@@ -19,13 +19,14 @@
 #include "webots_device/w_collision.h"
 #include "webots_device/w_liftdoor.h"
 #include "webots_device/w_barcodescan.h"
+#include "code_scan.h"
 
 namespace VNSim {
 
 class AGVController : public BaseLidarControl {
    public:
     AGVController();
-    ~AGVController(){};
+    ~AGVController();
 
     // Manual
     virtual void manualSetState(const std::map<std::string, double> &msg){};
@@ -37,6 +38,7 @@ class AGVController : public BaseLidarControl {
 
     void Slam1ReportSpin();
     void Slam2ReportSpin();
+    void Coder1ReportSpin();
 
    private:
     std::shared_ptr<WLidar> lidar_2_ptr_;
@@ -49,6 +51,8 @@ class AGVController : public BaseLidarControl {
     std::shared_ptr<WCollision> collision_ptr_;
     std::shared_ptr<ReflectorChecker> reflector_check_ptr_;
     std::shared_ptr<WBarcodeScan> barcode_scaner_ptr_;
+    std::shared_ptr<CoderNotifyer> notifier1_;
+    std::shared_ptr<CoderManager> manager1_;
 
    private:
     void poseCallBack(const char *topic_name,
@@ -59,6 +63,8 @@ class AGVController : public BaseLidarControl {
 
     void liftdoorCallBack(const char *topic_name,
                           const eCAL::SReceiveCallbackData *data);
+    void onCoderScannerMsg(const char *topic_name,
+                           const eCAL::SReceiveCallbackData *data);
 };
 
 }  // namespace VNSim

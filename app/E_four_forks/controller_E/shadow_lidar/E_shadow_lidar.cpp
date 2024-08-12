@@ -53,7 +53,9 @@ AGVController::AGVController() : BaseLidarControl("webots_shadow_lidar") {
     // 删除所有物理属性，碰撞属性
     collision_ptr_ = std::make_shared<WCollision>();
 
-    barcode_scaner_ptr_ = std::make_shared<WBarcodeScan>("Scaner");
+    notifier1_ = std::make_shared<CoderNotifyer>();
+    barcode_scaner_ptr_ = std::make_shared<WBarcodeScan>(notifier1_, "Scaner");
+    manager1_ = std::make_shared<CoderManager>(notifier1_);
 
     // 高反
     reflector_ptr_ = std::make_shared<WReflector>("HighReflector");
@@ -78,6 +80,7 @@ AGVController::AGVController() : BaseLidarControl("webots_shadow_lidar") {
     ecal_ptr_->addEcal(lidar_4_webots_topic.c_str());
     ecal_ptr_->addEcal(lidar_2_webots_base_topic.c_str());
     ecal_ptr_->addEcal(lidar_4_webots_base_topic.c_str());
+    ecal_ptr_->addEcal("CodeScanner/read");
 
     // creat subscribe
     ecal_ptr_->addEcal("webot/pose",
@@ -88,11 +91,22 @@ AGVController::AGVController() : BaseLidarControl("webots_shadow_lidar") {
                        std::bind(&AGVController::transferCallBack, this,
                                  std::placeholders::_1, std::placeholders::_2));
 
+    ecal_ptr_->addEcal("CodeScanner/write",
+                       std::bind(&AGVController::onCoderScannerMsg, this,
+                                 std::placeholders::_1, std::placeholders::_2));
+
     // 创建线程
     m_thread_.insert(std::pair<std::string, std::thread>(
         "lidar_2_report", std::bind(&AGVController::Slam1ReportSpin, this)));
     m_thread_.insert(std::pair<std::string, std::thread>(
         "lidar_4_report", std::bind(&AGVController::Slam2ReportSpin, this)));
+    // TODO: add more scaner thread here, l, r, m
+    m_thread_.insert(std::pair<std::string, std::thread>(
+        "codeScan1", std::bind(&AGVController::Coder1ReportSpin, this)));
+}
+
+AGVController::~AGVController() {
+    manager1_->stop();
 }
 
 void AGVController::whileSpin() {
@@ -126,6 +140,19 @@ void VNSim::AGVController::liftdoorCallBack(
     liftdoor_ptr_->setTag(transfer);
 }
 
+void AGVController::onCoderScannerMsg(const char *topic_name,
+                                      const eCAL::SReceiveCallbackData *data) {
+    char CMD[100];
+    memcpy(CMD, data->buf, data->size);
+    if (strcmp(CMD, "Start") == 0) {
+        barcode_scaner_ptr_->scanEnableSet(true);
+        manager1_->start_scan();
+    } else if (strcmp(CMD, "Stop") == 0) {
+        barcode_scaner_ptr_->scanEnableSet(false);
+        manager1_->stop_scan();
+    }
+}
+
 void AGVController::Slam1ReportSpin() {
     LOG_INFO("Slam1ReportSpin start\n");
     while (!webotsExited_) {
@@ -140,4 +167,28 @@ void AGVController::Slam2ReportSpin() {
         sendPointCloud(lidar_4_webots_topic, lidar_4_ptr_, pose_ptr_,
                        lidar_4_webots_base_topic);
     }
+}
+
+void AGVController::Coder1ReportSpin() {
+    LOG_INFO("Code scanner 1 online...");
+    int ret = 0;
+    char code_str[1024];
+    int counter = 0;
+    while (!webotsExited_) {
+        // wait next timer...
+        // ignore incoming start, when scanner is running
+        ret = manager1_->run();
+        if (ret == 0) {
+            const char *code = barcode_scaner_ptr_->getQRCode();
+            if (strlen(code) == 0) {
+                sprintf(code_str, "%s", "NoRead");
+            } else {
+                sprintf(code_str, "%s", code);
+            }
+            LOG_INFO("code = [%s]", code_str);
+            ecal_ptr_->send("CodeScanner/read", (const uint8_t *) code_str,
+                            strlen(code_str));
+        }
+    }
+    LOG_INFO("Code scanner 1 close offline...");
 }
