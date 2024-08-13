@@ -43,6 +43,9 @@ typedef struct WTransferNode {
 
     Node* node_ptr_ = nullptr;
 
+    // 暂时只用于叉端雷达随动逻辑
+    bool may_need_check_local = false;
+
     void initWorldPosi(const double* t){
         for(int i = 0;i<3;++i){
             tran_world[i] = t[i];
@@ -149,7 +152,7 @@ class WTransfer : public WBase {
                     &&std::abs(robot_tran[1] - last_posi[1])<=BASE_RANGE)){// 在车体周围
                         auto curr_posi = 
                               it->second.node_ptr_->getPosition();
-                    if(send_all
+                    if(send_all || it->second.may_need_check_local
                        ||std::abs(curr_posi[0] - last_posi[0])>=POSI_THRESHOLD
                        ||std::abs(curr_posi[1] - last_posi[1])>=POSI_THRESHOLD
                        ||std::abs(curr_posi[2] - last_posi[2])>=POSI_THRESHOLD){// 世界坐标是否发生变化
@@ -207,12 +210,18 @@ class WTransfer : public WBase {
         Field *translation_ptr_ = this_ptr->getField("translation");
 
         if (rotation_ptr_ != nullptr && translation_ptr_ != nullptr) {
-            auto node_type = this_ptr->getTypeName();
+            auto node_type = this_ptr->getTypeName();// 用于区分自定义的ProtoType
+            auto node_base_type = this_ptr->getBaseTypeName();// 只区分基本的类型
             
             if (node_type.compare("Robot") != 0) {
                 WTransferNode tran(this_ptr,rotation_ptr_, translation_ptr_);
                 tran.initWorldPosi(this_ptr->getPosition());
 
+                if (node_base_type.compare("Lidar") == 0) 
+                    tran.may_need_check_local = true;
+                else
+                    tran.may_need_check_local = false;
+                    
                 auto tmp_pair = std::make_pair(idx++,tran);
 
                 m_tanfer_.insert(tmp_pair);
