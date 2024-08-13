@@ -10,13 +10,16 @@ fi
 mkdir build 
 cd build
 cmake -DCMAKE_BUILD_TYPE=Release ..
-make -j4
+make -j12
+echo "cp libraries"
 cp *.so* ../../../../../simulation_world/webots/libraries/
+cp *.a* ../../../../../simulation_world/webots/libraries/
 cp ../glog.ini ../../../../../simulation_world/webots/plugins/log_config/general_controller.ini
 
 # create log folder
 mkdir -p  ../../../../../simulation_world/webots/log
 
+echo "cp include"
 cd ..
 current_folder_name=$(basename "$(pwd)")
 mkdir -p ../../include/"$current_folder_name"

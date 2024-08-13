@@ -11,8 +11,12 @@ mkdir build
 cd build
 python3 ../build.py
 cmake -DCMAKE_BUILD_TYPE=Release ..
-make -j4
+make -j12
+
+echo "cp libraries"
 cp *.a* ../../../../../simulation_world/webots/libraries/
+
+echo "cp include"
 cd ..
 cp -r foxglove-vn ../../include
 rm ./foxglove-vn/*.cc ./foxglove-vn/*.cs ./foxglove-vn/*.h

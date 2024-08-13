@@ -21,7 +21,10 @@ cd build
 cmake -DCMAKE_BUILD_TYPE=Release ..
 make 
 
+echo "cp libraries"
 cp *.a* ../../../../../simulation_world/webots/libraries/
+
+echo "cp include"
 mkdir -p ../../../include/sim_data_flow/
 cp *.h ../../../include/sim_data_flow/
 cp *.cc ../../../include/sim_data_flow/

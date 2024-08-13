@@ -1,12 +1,17 @@
-#!/bin/sh
+#!/bin/bash
 
+# 获取当前目录下所有子目录的列表
+directories=$(find . -maxdepth 1 -type d)
 
-for file in ./*
-    do 
-    if ! test -f $file
-    then
-    	echo $file
-    	cd $file
-    	./make_clean.sh
+# 遍历每个子目录
+for dir in $directories; do
+    # 跳过当前目录
+    if [[ "$dir" == "." ]]; then
+        continue
+    fi
+
+    if [[ -d "$dir" && -f "$dir/make.sh" ]]; then
+        echo "delete build: $dir"
+        (cd "$dir" && rm -rf "build")
     fi
 done

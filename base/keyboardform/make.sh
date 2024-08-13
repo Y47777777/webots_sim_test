@@ -10,9 +10,12 @@ fi
 mkdir build 
 cd build
 cmake -DCMAKE_BUILD_TYPE=Release ..
-make -j4
-cp *.so* ../../../../../simulation_world/webots/libraries/
+make -j12
+echo "cp libraries"
+#cp *.so* ../../../../../simulation_world/webots/libraries/
+cp *.a* ../../../../../simulation_world/webots/libraries/
 
+echo "cp include"
 cd ..
 current_folder_name=$(basename "$(pwd)")
 mkdir -p ../../include/"$current_folder_name"

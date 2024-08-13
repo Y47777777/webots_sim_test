@@ -33,7 +33,7 @@ include_directories(
 
 qt5_wrap_cpp(MOC_SOURCES ${header_files})
 
-add_library(${PROJECT_NAME} SHARED
+add_library(${PROJECT_NAME} STATIC
   ${src_files}
   ${MOC_SOURCES}
   keyboardform.ui

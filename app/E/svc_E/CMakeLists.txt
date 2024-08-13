@@ -55,7 +55,7 @@ target_link_libraries(svc_${PROJECT_NAME}
     ${LIBRARY_INSTALL_DIR}/libParser.so
     ${LIBRARY_INSTALL_DIR}/libfoxglove-vn.a
     ${LIBRARY_INSTALL_DIR}/libsim_data_flow.a
-    ${LIBRARY_INSTALL_DIR}/libgeometry.so 
+    ${LIBRARY_INSTALL_DIR}/libgeometry.a
     eCAL::core
 )
 

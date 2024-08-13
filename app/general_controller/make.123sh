@@ -10,5 +10,5 @@ fi
 mkdir build 
 cd build
 cmake -DCMAKE_BUILD_TYPE=Release ..
-make -j4
+make -j12
 cp general_controller ~/webots/SimRobot/controllers/general_controller

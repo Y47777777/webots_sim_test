@@ -59,9 +59,9 @@ include_directories(/usr/local/webots/include/controller/cpp)
 
 target_link_libraries(controller_${PROJECT_NAME}
     ${LIBRARY_INSTALL_DIR}/liblogvn.so # TODO: FIXME: can not execute on ST server
-    ${LIBRARY_INSTALL_DIR}/libgeometry.so 
+    ${LIBRARY_INSTALL_DIR}/libgeometry.a
     ${WEBOTSLIB_SO}/libCppController.so
-    ${LIBRARY_INSTALL_DIR}/libkeyboardform.so
+    ${LIBRARY_INSTALL_DIR}/libkeyboardform.a
     ${LIBRARY_INSTALL_DIR}/libfoxglove-vn.a
     ${LIBRARY_INSTALL_DIR}/libsim_data_flow.a
     eCAL::core

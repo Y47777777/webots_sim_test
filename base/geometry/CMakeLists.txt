@@ -5,7 +5,7 @@ project(geometry LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_library(${PROJECT_NAME} SHARED
+add_library(${PROJECT_NAME} STATIC
   ${PROJECT_NAME}.cpp
   ${PROJECT_NAME}.h
   make.sh
