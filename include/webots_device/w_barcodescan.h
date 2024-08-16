@@ -263,7 +263,6 @@ class WBarcodeScan : public WBase {
             Eigen::Map<Eigen::Matrix<double, 4, 4, Eigen::RowMajor>>(pose);
         target_barcode_.reset();
         target_barcode_ = nullptr;
-
         for (auto &barcode : v_barcode_) {
             int point_in_barcode_size = 0;
             for (int i = start_point_; i < end_point_; i++) {
@@ -280,9 +279,7 @@ class WBarcodeScan : public WBase {
                             LOG_INFO("barcode size ,%d ",
                                      point_in_barcode_size);
                             LOG_INFO("find QRcode ,%s", barcode->getQRcode());
-                            std::cout << "find QR........" << std::endl;
                             target_barcode_ = barcode;
-                            // TODO: report outside
                             notifyer_->onCode();
                             return;
                         }

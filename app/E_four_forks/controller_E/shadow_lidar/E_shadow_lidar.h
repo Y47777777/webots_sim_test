@@ -38,7 +38,9 @@ class AGVController : public BaseLidarControl {
 
     void Slam1ReportSpin();
     void Slam2ReportSpin();
-    void Coder1ReportSpin();
+    void CoderLReportSpin();
+    void CoderMReportSpin();
+    void CoderRReportSpin();
 
    private:
     std::shared_ptr<WLidar> lidar_2_ptr_;
@@ -50,9 +52,15 @@ class AGVController : public BaseLidarControl {
     std::shared_ptr<WReflector> reflector_ptr_;
     std::shared_ptr<WCollision> collision_ptr_;
     std::shared_ptr<ReflectorChecker> reflector_check_ptr_;
-    std::shared_ptr<WBarcodeScan> barcode_scaner_ptr_;
-    std::shared_ptr<CoderNotifyer> notifier1_;
-    std::shared_ptr<CoderManager> manager1_;
+    std::shared_ptr<WBarcodeScan> barcode_scaner_l_ptr_;
+    std::shared_ptr<CoderNotifyer> notifier_l_;
+    std::shared_ptr<CoderManager> manager_l_;
+    std::shared_ptr<WBarcodeScan> barcode_scaner_m_ptr_;
+    std::shared_ptr<CoderNotifyer> notifier_m_;
+    std::shared_ptr<CoderManager> manager_m_;
+    std::shared_ptr<WBarcodeScan> barcode_scaner_r_ptr_;
+    std::shared_ptr<CoderNotifyer> notifier_r_;
+    std::shared_ptr<CoderManager> manager_r_;
 
    private:
     void poseCallBack(const char *topic_name,
@@ -63,8 +71,12 @@ class AGVController : public BaseLidarControl {
 
     void liftdoorCallBack(const char *topic_name,
                           const eCAL::SReceiveCallbackData *data);
-    void onCoderScannerMsg(const char *topic_name,
-                           const eCAL::SReceiveCallbackData *data);
+    void onCoderLScannerMsg(const char *topic_name,
+                            const eCAL::SReceiveCallbackData *data);
+    void onCoderMScannerMsg(const char *topic_name,
+                            const eCAL::SReceiveCallbackData *data);
+    void onCoderRScannerMsg(const char *topic_name,
+                            const eCAL::SReceiveCallbackData *data);
 };
 
 }  // namespace VNSim

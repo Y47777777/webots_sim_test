@@ -27,19 +27,29 @@ class CoderManager {
     std::condition_variable running_notify;
     std::mutex wait_mutex1_;
     std::mutex wait_mutex2_;
+    std::mutex running_mutex_;
+    bool running_{false};
     bool trigger_next_{false};
     int state_{STATE_CODE::STANDBY};
 
    public:
     CoderManager(std::shared_ptr<CoderNotifyer> ptr) { listener_ = ptr; }
     ~CoderManager() {}
-    int run() {
-        int ret = 1;
+    int standBy() {
+        int ret = 0;
         std::unique_lock<std::mutex> lk(wait_mutex1_);
         {
             running_notify.wait(lk, [&]() { return trigger_next_; });
             trigger_next_ = false;
         }
+        running_mutex_.lock();
+        if (!running_)
+            ret = -1;
+        running_mutex_.unlock();
+        return ret;
+    }
+    int run() {
+        int ret = 1;
         wait_mutex2_.lock();
         state_ = STATE_CODE::RUNNING;
         wait_mutex2_.unlock();
@@ -56,6 +66,9 @@ class CoderManager {
         wait_mutex2_.lock();
         int state_l = state_;
         wait_mutex2_.unlock();
+        running_mutex_.lock();
+        running_ = true;
+        running_mutex_.unlock();
         if (state_l == int(STATE_CODE::STANDBY)) {
             std::unique_lock<std::mutex> lk(wait_mutex1_);
             {
@@ -75,6 +88,9 @@ class CoderManager {
         wait_mutex2_.lock();
         state_ = STATE_CODE::STANDBY;
         wait_mutex2_.unlock();
+        running_mutex_.lock();
+        running_ = false;
+        running_mutex_.unlock();
         std::unique_lock<std::mutex> lk(wait_mutex1_);
         {
             trigger_next_ = true;
