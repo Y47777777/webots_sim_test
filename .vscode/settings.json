@@ -78,7 +78,8 @@
         "core": "cpp",
         "geometry": "cpp",
         "*.ipp": "cpp",
-        "charconv": "cpp"
+        "charconv": "cpp",
+        "filesystem": "cpp"
     },
     // 头部注释
     "fileheader.customMade": {
