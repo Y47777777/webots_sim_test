@@ -121,10 +121,17 @@ class WFork : public WBase {
         std::shared_lock<std::shared_mutex> lock(rw_mutex_);
         if (random_generator_ != nullptr) {
             if (fabs(v) > 0.001) {
+                double random = random_generator_->generate();
                 if (v > 0) {
-                    v = v - random_generator_->generate();
+                    v = v - random;
+                    if(v < 0){
+                        v = v + random;
+                    }
                 } else {
-                    v = v + random_generator_->generate();
+                    v = v + random;
+                    if(v > 0){
+                        v = v - random;
+                    }
                 }
             }
         }
