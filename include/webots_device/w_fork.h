@@ -47,6 +47,7 @@ class WFork : public WBase {
         isShadowMove_ = isNeedShadowMove;
         isNeedExtraForce_ = isNeedAddExtraPoints;
         isNeedReadForce_ = isNeedReadForce;
+        solid_name_ = solid_name;
         motor_ = super_->getMotor(fork_motor_name);
         if (motor_ != nullptr) {
             // user should set model +- 0.1 for (minStop, minStart, minPosition,
@@ -286,7 +287,7 @@ class WFork : public WBase {
                 }
             } else {
                 if (brake_ != nullptr) {
-                    brake_->setDampingConstant(0);
+                    brake_->setDampingConstant(1000);
                 }
                 motor_->setPosition(INFINITY);
                 motor_->setVelocity(speed);
@@ -294,12 +295,14 @@ class WFork : public WBase {
             }
 
             if(isNeedExtraForce_ && isNeedReadForce_){
-                target_feedback_force_ = std::fabs(motor_->getForceFeedback());
+                if((pos_sensor_value_ > (low_bound_ - 0.0002)) && (pos_sensor_value_ < (high_bound_ + 0.0002) ))
+                    target_feedback_force_ = std::fabs(motor_->getForceFeedback());
                 if(std::fabs(target_feedback_force_ - output_feedback_force_) > unit_force_){
                     if((target_feedback_force_ - output_feedback_force_) >= 0){
                         // increase
                         output_feedback_force_ += unit_force_;
                     }else{
+                        // decrease
                         output_feedback_force_ -= unit_force_;
                     }
                 }else{
@@ -336,6 +339,7 @@ class WFork : public WBase {
     double output_feedback_force_ = 0;
     double target_feedback_force_ = 0;
     double unit_force_ = 0;
+    std::string solid_name_ = "";
 
     // 随机数生成器
     std::shared_ptr<RandomGenerator> random_generator_ = nullptr;
