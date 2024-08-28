@@ -32,6 +32,7 @@ const double FRONT_TREAD = 0.78;  // 定向轮间距
 const double REAR_TREAD = 1.1;    // 驱动轮间距
 const double FOLLOW_START = 0.4;
 const double FROK_MIN_SPAC = 0.44;  //外叉内间距最小值 FIXME: E20
+const double CLAMP_FACTOR = 15;
 
 // 计算tan角度
 inline double CalcTan(double len, double yaw) {
@@ -105,12 +106,12 @@ AGVController::AGVController() : BaseController("webots_master") {
 
     fork_ptr_ = std::make_shared<WFork>("fork height motor", "ForkZAxis",
                                         "fork height");
-    forkY_ptr_ = std::make_shared<WFork>("YMotor", "ForkYAxis");
+    // forkY_ptr_ = std::make_shared<WFork>("YMotor", "ShadowY","","",false,0.0, false, 100, true);
     forkP_ptr_ = std::make_shared<WFork>("PMotor", "ForkPAxis");
     forkCLF1_ptr_ = std::make_shared<WFork>("CLMotor", "LF1", "", "", false,
                                             0.0, true, 200);
     forkCRF1_ptr_ = std::make_shared<WFork>("CRMotor", "RF1", "", "", false,
-                                            0.03, true, 200);
+                                            0.0, true, 200);
 
     stree_ptr_ =
         std::make_shared<WWheel>("", "SteerWheel", "SteerSolid", "FLWheel");
@@ -127,7 +128,7 @@ AGVController::AGVController() : BaseController("webots_master") {
     v_while_spin_.push_back(bind(&WBase::spin, l_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, r_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, fork_ptr_));
-    v_while_spin_.push_back(bind(&WBase::spin, forkY_ptr_));
+    // v_while_spin_.push_back(bind(&WBase::spin, forkY_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, forkP_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, forkCLF1_ptr_));
     v_while_spin_.push_back(bind(&WBase::spin, forkCRF1_ptr_));
@@ -193,10 +194,14 @@ void AGVController::manualSetState(const std::map<std::string, double> &msg) {
         r_ptr_->setVelocity(r_v);
 
         fork_ptr_->setVelocityAll(fork_speed);
-        forkY_ptr_->setVelocityAll(forkY_speed);
+        //forkY_ptr_->setVelocityAll(forkY_speed);
+        //forkY_ptr_->setMotorPositionValue(forkY_speed);
         forkP_ptr_->setVelocityAll(forkP_speed);
-        forkCLF1_ptr_->setVelocityAll(forkC_speed);
-        forkCRF1_ptr_->setVelocityAll(forkC_speed);
+        double CL_T = forkC_speed - forkY_speed;
+        double CR_T = forkC_speed + forkY_speed;
+        //std::cout << "CL_T = " << CL_T << ", CR_T = " << CR_T << std::endl;
+        forkCLF1_ptr_->setVelocityAll(CL_T);
+        forkCRF1_ptr_->setVelocityAll(CR_T);
     }
 }
 
@@ -205,11 +210,11 @@ void AGVController::manualGetState(std::map<std::string, double> &msg) {
     msg["steer_speed"] = l_ptr_->getSpeed();
     msg["steer_yaw"] = stree_ptr_->getMotorYaw();
     msg["fork_speed"] = fork_ptr_->getVelocityValue();
-    msg["forkY_speed"] = forkY_ptr_->getVelocityValue();
+    msg["forkY_speed"] = 0;
     msg["forkP_speed"] = forkP_ptr_->getVelocityValue();
     msg["forkC_speed"] = forkCLF1_ptr_->getVelocityValue();
     msg["fork_height"] = fork_ptr_->getSenosorValue();
-    msg["forkY_height"] = forkY_ptr_->getSenosorValue();
+    msg["forkY_height"] = 0;
     msg["forkP_height"] = forkP_ptr_->getSenosorValue();
     msg["forkC_height"] = forkCLF1_ptr_->getSenosorValue();
     msg["real_speed"] = forkCRF1_ptr_->getSenosorValue();
@@ -296,9 +301,11 @@ void AGVController::subEMsgCallBack(const char *topic_name,
         r_ptr_->setVelocity(r_speed);
 
         fork_ptr_->setVelocity(payload.forkspeedz());
-        forkY_ptr_->setVelocity(payload.forkspeedy());
         forkP_ptr_->setVelocity(payload.forkspeedp());
-        forkCLF1_ptr_->setVelocity(payload.forkspeedc());
+        double CL_T = payload.forkspeedc() + payload.forkspeedy();
+        double CR_T = payload.forkspeedc() - payload.forkspeedy();
+        forkCLF1_ptr_->setVelocity(CL_T);
+        forkCRF1_ptr_->setVelocity(CR_T);
     }
 }
 
@@ -306,13 +313,17 @@ void AGVController::pubSerialSpin() {
     sim_data_flow::E20MsgUp payload;
     payload.set_timestamp(time_stamp_);
     payload.set_forkposez(fork_ptr_->getSenosorValue());
-    payload.set_forkposey(forkY_ptr_->getSenosorValue());
+    payload.set_forkposey(0);
     payload.set_forkposep(forkP_ptr_->getSenosorValue());
     payload.set_forkposecl(forkCLF1_ptr_->getSenosorValue() +
                            FROK_MIN_SPAC / 2);
     payload.set_forkposecr(forkCRF1_ptr_->getSenosorValue() +
                            FROK_MIN_SPAC / 2);
-    payload.set_clamppressure(forkCLF1_ptr_->getForce());
+    //double origin_force = forkCLF1_ptr_->getForce();
+    double origin_force = forkCLF1_ptr_->getForce() * CLAMP_FACTOR;
+    // payload.set_clamppressure(origin_force * origin_force * (-4) - 587 * origin_force);
+    payload.set_clamppressure(origin_force);
+    //std::cout << "Clamp Force = " << payload.clamppressure() << std::endl;
     payload.set_steering_theta(stree_ptr_->getMotorYaw());
 
     payload.set_l_wheel(l_ptr_->getWheelArcLength());
