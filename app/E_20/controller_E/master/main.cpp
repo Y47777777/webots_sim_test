@@ -12,7 +12,7 @@ int main(int argc, char *argv[]) {
 
     LOG_INFO("log init...");
     LOG_INFO("try start svc_E20");
-    system("./../svc_E20/svc_E20 &");
+    system("./../svc_E_20/svc_E_20 &");
 
     QApplication a(argc, argv);
     // init ctrl
@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
 
     a.exec();
     LOG_INFO("try stop svc_E20");
-    system("killall svc_E20");
+    system("killall svc_E_20");
 
     return 0;
 }
