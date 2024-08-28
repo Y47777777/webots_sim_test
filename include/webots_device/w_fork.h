@@ -22,6 +22,7 @@
 #include "geometry/geometry.h"
 
 #define FORK_DELAY 10
+#define TOTAL_MAX_FORCE_UNITS_NUMBER 3
 
 namespace VNSim {
 using namespace webots;
@@ -40,10 +41,12 @@ class WFork : public WBase {
     WFork(std::string fork_motor_name = "", std::string solid_name = "",
           std::string sensor_name = "", std::string brake_name = "",
           bool isNeedShadowMove = false, double slower_move = 0.0,
-          bool isNeedReadForce = false, double force_sample_frequency = 100)
+          bool isNeedReadForce = false, double force_sample_frequency = 100, bool isNeedAddExtraPoints = false, double unit_factor = TOTAL_MAX_FORCE_UNITS_NUMBER)
         : WBase() {
         // creat fork
         isShadowMove_ = isNeedShadowMove;
+        isNeedExtraForce_ = isNeedAddExtraPoints;
+        isNeedReadForce_ = isNeedReadForce;
         motor_ = super_->getMotor(fork_motor_name);
         if (motor_ != nullptr) {
             // user should set model +- 0.1 for (minStop, minStart, minPosition,
@@ -54,6 +57,8 @@ class WFork : public WBase {
             motor_->setVelocity(0);
             if (isNeedReadForce) {
                 motor_->enableForceFeedback(force_sample_frequency);
+                unit_force_ = motor_->getMaxForce() / unit_factor;
+                LOG_INFO("fork unit force = %f", unit_force_);
             }
             LOG_INFO("creat fork: %s", fork_motor_name.c_str());
         }
@@ -212,8 +217,12 @@ class WFork : public WBase {
     double getForce() {
         double force = 0;
         std::shared_lock<std::shared_mutex> lock(rw_mutex_);
-        if (motor_ != nullptr) {
-            force = motor_->getForceFeedback();
+        if(!isNeedExtraForce_){
+            if (motor_ != nullptr) {
+                force = std::fabs(motor_->getForceFeedback());
+            }
+        }else{
+            force = output_feedback_force_;
         }
         return force;
     }
@@ -283,6 +292,20 @@ class WFork : public WBase {
                 motor_->setVelocity(speed);
                 last_pos_ = pos_sensor_value_;
             }
+
+            if(isNeedExtraForce_ && isNeedReadForce_){
+                target_feedback_force_ = std::fabs(motor_->getForceFeedback());
+                if(std::fabs(target_feedback_force_ - output_feedback_force_) > unit_force_){
+                    if((target_feedback_force_ - output_feedback_force_) >= 0){
+                        // increase
+                        output_feedback_force_ += unit_force_;
+                    }else{
+                        output_feedback_force_ -= unit_force_;
+                    }
+                }else{
+                    output_feedback_force_ = target_feedback_force_;
+                }
+            }
         }
     }
 
@@ -308,6 +331,11 @@ class WFork : public WBase {
     // double speed_ = 0;
     double high_bound_ = 0;
     double low_bound_ = 0;
+    bool isNeedExtraForce_ = false;
+    bool isNeedReadForce_ = false;
+    double output_feedback_force_ = 0;
+    double target_feedback_force_ = 0;
+    double unit_force_ = 0;
 
     // 随机数生成器
     std::shared_ptr<RandomGenerator> random_generator_ = nullptr;
