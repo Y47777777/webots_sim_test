@@ -111,7 +111,7 @@ AGVController::AGVController() : BaseController("webots_master") {
     forkCLF1_ptr_ = std::make_shared<WFork>("CLMotor", "LF1", "", "", false,
                                             0.0, true, 200, true, 10);
     forkCRF1_ptr_ = std::make_shared<WFork>("CRMotor", "RF1", "", "", false,
-                                            0.0, true, 200);
+                                            0.0, false, 200);
 
     stree_ptr_ =
         std::make_shared<WWheel>("", "SteerWheel", "SteerSolid", "FLWheel");
