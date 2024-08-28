@@ -109,10 +109,11 @@ void SVCMaster::pubUpStream() {
     encoder_.updateValue("IncrementalSteeringCoder", 1, "",
                          msg_from_webots_.steering_theta());
     encoder_.updateValue("Gyroscope", 1, "", msg_from_webots_.gyroscope());
-    encoder_.updateValue("ForkDisplacementSencer", 1, "C",
+    encoder_.updateValue("ForkDisplacementSencer", 1, "LC",
                          msg_from_webots_.forkposecl());
-    encoder_.updateValue("ForkDisplacementSencer", 1, "Y",
-                         msg_from_webots_.forkposey());
+    encoder_.updateValue("ForkDisplacementSencer", 1, "RC", msg_from_webots_.forkposecr());
+    // encoder_.updateValue("ForkDisplacementSencer", 1, "Y",
+    //                      msg_from_webots_.forkposey());
     encoder_.updateValue("ForkDisplacementSencer", 1, "P",
                          msg_from_webots_.forkposep());
     encoder_.updateValue("HeightCoder", 1, "", msg_from_webots_.forkposez());
