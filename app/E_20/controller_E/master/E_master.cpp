@@ -31,7 +31,7 @@ const double WHEELBASE = 1.7;     // 前后轮间距
 const double FRONT_TREAD = 0.78;  // 定向轮间距
 const double REAR_TREAD = 1.1;    // 驱动轮间距
 const double FOLLOW_START = 0.4;
-const double FROK_MIN_SPAC = 0.44;  //外叉内间距最小值 FIXME: E20
+const double FROK_MIN_SPAC = 1.0;  //外叉内间距最小值 FIXME: E20
 const double CLAMP_FACTOR = 15;
 
 // 计算tan角度
@@ -150,11 +150,12 @@ AGVController::AGVController() : BaseController("webots_master") {
                                  std::placeholders::_1, std::placeholders::_2));
 }
 
+static double forkY_speed = 0;
+
 void AGVController::manualSetState(const std::map<std::string, double> &msg) {
     static double steer_speed = 0;
     static double steer_yaw = 0;
     static double fork_speed = 0;
-    static double forkY_speed = 0;
     static double forkP_speed = 0;
     static double forkC_speed = 0;
     if (msg.find("refresh_world") != msg.end()) {
@@ -213,7 +214,7 @@ void AGVController::manualGetState(std::map<std::string, double> &msg) {
     msg["steer_speed"] = l_ptr_->getSpeed();
     msg["steer_yaw"] = stree_ptr_->getMotorYaw();
     msg["fork_speed"] = fork_ptr_->getVelocityValue();
-    msg["forkY_speed"] = 0;
+    msg["forkY_speed"] = forkY_speed;
     msg["forkP_speed"] = forkP_ptr_->getVelocityValue();
     msg["forkC_speed"] = forkCLF1_ptr_->getVelocityValue();
     msg["fork_height"] = fork_ptr_->getSenosorValue();
