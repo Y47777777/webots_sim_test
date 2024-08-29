@@ -31,8 +31,8 @@ const double WHEELBASE = 1.7;     // 前后轮间距
 const double FRONT_TREAD = 0.78;  // 定向轮间距
 const double REAR_TREAD = 1.1;    // 驱动轮间距
 const double FOLLOW_START = 0.4;
-const double FROK_MIN_SPAC = 1.0;  //外叉内间距最小值 FIXME: E20
-const double CLAMP_FACTOR = 15;
+const double FROK_MIN_SPAC = 0.666;  //外叉内间距最小值 FIXME: E20
+const double CLAMP_FACTOR = 48;
 
 // 计算tan角度
 inline double CalcTan(double len, double yaw) {
@@ -378,7 +378,6 @@ void AGVController::pubSerialSpin() {
                            FROK_MIN_SPAC / 2);
     double origin_force = forkCLF1_ptr_->getForce() * CLAMP_FACTOR;
     payload.set_clamppressure(origin_force);
-    //std::cout << "origin_force = " << origin_force << std::endl;
     payload.set_steering_theta(stree_ptr_->getMotorYaw());
 
     payload.set_l_wheel(l_ptr_->getWheelArcLength());
