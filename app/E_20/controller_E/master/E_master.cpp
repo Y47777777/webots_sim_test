@@ -197,6 +197,12 @@ void AGVController::manualSetState(const std::map<std::string, double> &msg) {
         forkP_ptr_->setVelocityAll(forkP_speed);
         double CL_T = forkC_speed - forkY_speed;
         double CR_T = forkC_speed + forkY_speed;
+        if(determineForceCAxisReset(CL_T, CR_T)){
+            // CL_T = forkC_speed;
+            // CR_T = forkC_speed;
+            CL_T = 0;
+            CR_T = 0;
+        }
         forkCLF1_ptr_->setVelocityAll(CL_T);
         forkCRF1_ptr_->setVelocityAll(CR_T);
     }
@@ -219,6 +225,9 @@ void AGVController::manualGetState(std::map<std::string, double> &msg) {
 
 void AGVController::whileSpin() {
     /* 主循环 在super_->step()后*/
+    // determine whether we should reset C speed to 0
+    determineForceCAxisReset();
+
     // 发送至svc
     pubSerialSpin();
 
@@ -233,6 +242,50 @@ void AGVController::whileSpin() {
     pubTransferSpin();
 
     pubLiftDoorTag();
+
+}
+
+bool AGVController::determineForceCAxisReset(double CL_T, double CR_T){
+    bool flag = false;
+    int clf1_bound = forkCLF1_ptr_->isOnBoundary();
+    int crf1_bound = forkCRF1_ptr_->isOnBoundary();
+    if((CL_T * CR_T) < 0){
+        if((CL_T > 0) && ((clf1_bound == -1) || (crf1_bound == -2))){
+            // Y left
+            LOG_INFO("%s1 --> CL_T = %lf, CR_T = %lf, forkCLF1_ptr_->isOnBoundary() = %d, forkCRF1_ptr_->isOnBoundary() = %d", __FUNCTION__, CL_T, CR_T, 
+            clf1_bound, crf1_bound);
+            flag = true;
+        }else if((CL_T < 0) && ((clf1_bound == -2) || (crf1_bound == -1))){
+            // Y right
+            LOG_INFO("%s1 --> CL_T = %lf, CR_T = %lf, forkCLF1_ptr_->isOnBoundary() = %d, forkCRF1_ptr_->isOnBoundary() = %d", __FUNCTION__, CL_T, CR_T, 
+            clf1_bound, crf1_bound);
+            flag = true;
+        }
+    }
+    return flag;
+}
+
+void AGVController::determineForceCAxisReset(){
+    double CL_T = forkCLF1_ptr_->getVelocityValue();
+    double CR_T = forkCRF1_ptr_->getVelocityValue();
+    bool flag = false;
+    int clf1_bound = forkCLF1_ptr_->isOnBoundary();
+    int crf1_bound = forkCRF1_ptr_->isOnBoundary();
+    if((CL_T * CR_T) < 0){
+        if((CL_T > 0) && ((clf1_bound == -1) || (crf1_bound == -2))){
+            // Y left
+            flag = true;
+            LOG_DEBUG("%s2 --> CL_T = %lf, CR_T = %lf, forkCLF1_ptr_->isOnBoundary() = %d, forkCRF1_ptr_->isOnBoundary() = %d", __FUNCTION__, CL_T, CR_T, 
+            clf1_bound, crf1_bound);
+        }else if((CL_T < 0) && ((clf1_bound == -2) || (crf1_bound == -1))){
+            // Y right
+            flag = true;
+            LOG_DEBUG("%s2 --> CL_T = %lf, CR_T = %lf, forkCLF1_ptr_->isOnBoundary() = %d, forkCRF1_ptr_->isOnBoundary() = %d", __FUNCTION__, CL_T, CR_T, 
+            clf1_bound, crf1_bound);
+        }
+    }
+    forkCLF1_ptr_->forceReset(flag);
+    forkCRF1_ptr_->forceReset(flag);
 }
 
 void AGVController::movePerLidarSpin() {
@@ -301,6 +354,12 @@ void AGVController::subEMsgCallBack(const char *topic_name,
         forkP_ptr_->setVelocity(payload.forkspeedp());
         double CL_T = payload.forkspeedc() + payload.forkspeedy();
         double CR_T = payload.forkspeedc() - payload.forkspeedy();
+        if(determineForceCAxisReset(CL_T, CR_T)){
+            // CL_T = payload.forkspeedc();
+            // CR_T = payload.forkspeedc();
+            CL_T = 0;
+            CR_T = 0;
+        }
         forkCLF1_ptr_->setVelocity(CL_T);
         forkCRF1_ptr_->setVelocity(CR_T);
     }
@@ -318,6 +377,7 @@ void AGVController::pubSerialSpin() {
                            FROK_MIN_SPAC / 2);
     double origin_force = forkCLF1_ptr_->getForce() * CLAMP_FACTOR;
     payload.set_clamppressure(origin_force);
+    //std::cout << "origin_force = " << origin_force << std::endl;
     payload.set_steering_theta(stree_ptr_->getMotorYaw());
 
     payload.set_l_wheel(l_ptr_->getWheelArcLength());

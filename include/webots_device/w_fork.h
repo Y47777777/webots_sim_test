@@ -146,6 +146,22 @@ class WFork : public WBase {
         set_speed_iter_ = 1;
     }
 
+    int isOnBoundary(){
+        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+        if ((std::fabs(pos_sensor_value_ - high_bound_) < 0.002) || (pos_sensor_value_ > high_bound_)) {
+            return -1;
+        }
+        if (std::fabs(pos_sensor_value_ - low_bound_) < 0.002 || (pos_sensor_value_ < low_bound_)) {
+            return -2;
+        }
+        return 0;
+    }
+
+    void forceReset(bool reset){
+        std::unique_lock<std::shared_mutex> lock(rw_mutex_);
+        forceReset_ = reset;
+    }
+
     /**
      * @brief Set the Velocity object
      *
@@ -236,6 +252,10 @@ class WFork : public WBase {
             set_speed_iter_ = 0;
         }
         double speed = v_delay_speed_[set_speed_iter_];
+        if(forceReset_){
+            LOG_INFO("%s --> forceReset_ on", solid_name_.c_str());
+            speed = 0;
+        }
 
         if (fabs(speed) > 1.0) {
             LOG_ERROR("v_delay_speed_1 %.2f, %.2f, %.2f, %.2f, %.2f",
@@ -287,7 +307,7 @@ class WFork : public WBase {
                 }
             } else {
                 if (brake_ != nullptr) {
-                    brake_->setDampingConstant(1000);
+                    brake_->setDampingConstant(0);
                 }
                 motor_->setPosition(INFINITY);
                 motor_->setVelocity(speed);
@@ -340,6 +360,7 @@ class WFork : public WBase {
     double target_feedback_force_ = 0;
     double unit_force_ = 0;
     std::string solid_name_ = "";
+    bool forceReset_ = false;
 
     // 随机数生成器
     std::shared_ptr<RandomGenerator> random_generator_ = nullptr;
