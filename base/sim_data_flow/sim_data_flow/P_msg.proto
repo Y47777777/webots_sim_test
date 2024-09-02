@@ -12,6 +12,10 @@ message PMsgUp{
   double r_wheel = 6;
   double steering_theta = 7;
   uint32 dataidx_upload = 8;
+  bool HSwitchL = 9;
+  bool HSwitchR = 10;
+  bool VSwitchL = 11;
+  bool VSwitchR = 12;
 }
 
 message PMsgDown{

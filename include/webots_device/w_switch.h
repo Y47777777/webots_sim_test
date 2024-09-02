@@ -23,10 +23,12 @@ class WSwitch : public WBase {
 
 class manchanical : public WSwitch {
    public:
-    manchanical(const std::string &device_name, const std::string &robot_def) {
+    manchanical(const std::string &device_name, const std::string &robot_def, int freq = 100) {
         device = super_->getTouchSensor(device_name);
-        if (device)
+        if (device){
             deviceNode = super_->getFromDevice(device);
+            device->enable(freq);
+        }
         else
             deviceNode = nullptr;
         robotNode = super_->getFromDef(robot_def);
@@ -41,6 +43,7 @@ class manchanical : public WSwitch {
         if (device) {
             auto curr_val = device->getValue();
             switchTag = (curr_val == 1.0 ? true : false);
+            LOG_DEBUG("registed device = %s --> %d, value = %lf", deviceName.c_str(), switchTag, curr_val);
         } else {
             std::cerr << " registed device :" << deviceName << " is null"
                       << std::endl;
@@ -120,17 +123,21 @@ class manchanical : public WSwitch {
 class photoelectric : public WSwitch {
    public:
     photoelectric(const std::string &device_name,
-                  const std::string &robot_def) {
+                  const std::string &robot_def, int freq = 100) {
         device = super_->getDistanceSensor(device_name);
         robotNode = super_->getFromDef(robot_def);
-        if (device)
+        if (device){
             deviceNode = super_->getFromDevice(device);
+            device->enable(freq);
+        }
         else
             deviceNode = nullptr;
-        if (deviceNode)
+        if (deviceNode){
             deviceField = deviceNode->getField("signThreshold");
-        else
+        }
+        else{
             deviceField = nullptr;
+        }
         deviceName = device_name;
         robotName = robot_def;
         switchTag = false;
@@ -143,11 +150,12 @@ class photoelectric : public WSwitch {
                 deviceNode = super_->getFromDevice(device);
                 deviceField = deviceNode->getField("signThreshold");
             }
-            auto threshold = deviceField->getSFFloat();
+            auto thresholdHigh = deviceField->getSFFloat();
             auto curr_val = device->getValue();
 
-            switchTag = (curr_val <= threshold ? true : false);
-        } else {
+            switchTag = ((curr_val <= thresholdHigh) ? true : false);
+            LOG_DEBUG("registed device = %s --> %d, target = %lf, value = %lf", deviceName.c_str(), switchTag, thresholdHigh, curr_val);
+        } else { 
             std::cerr << " registed device :" << deviceName << " is null"
                       << std::endl;
             switchTag = false;
