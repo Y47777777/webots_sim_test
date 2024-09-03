@@ -2,7 +2,7 @@
 #define __CODE_SCAN_H__
 #include <condition_variable>
 namespace VNSim {
-#define SCAN_TIME 2000  // 2s
+#define SCAN_TIME 6000  // 6s
 class CoderNotifyer {
    private:
     std::condition_variable code_notify;

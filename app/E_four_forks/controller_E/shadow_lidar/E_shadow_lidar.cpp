@@ -174,10 +174,19 @@ void AGVController::onCoderLScannerMsg(const char *topic_name,
                                        const eCAL::SReceiveCallbackData *data) {
     char CMD[100];
     memcpy(CMD, data->buf, data->size);
+    if(data->size <= 100){
+        CMD[data->size] = 0x00;
+    }else{
+        LOG_WARN("%s --> bad length = [%d]", __FUNCTION__, data->size);
+        CMD[99] = 0x00; 
+    }
+    LOG_INFO("%s --> origin cmd = %s", __FUNCTION__, CMD);
     if (strcmp(CMD, "Start") == 0) {
+        LOG_INFO("%s --> cmd = [%s]", __FUNCTION__, CMD);
         barcode_scaner_l_ptr_->scanEnableSet(true);
         manager_l_->start_scan();
     } else if (strcmp(CMD, "Stop") == 0) {
+        LOG_INFO("%s --> cmd = [%s]", __FUNCTION__, CMD);
         barcode_scaner_l_ptr_->scanEnableSet(false);
         manager_l_->stop_scan();
     }
@@ -187,10 +196,19 @@ void AGVController::onCoderMScannerMsg(const char *topic_name,
                                        const eCAL::SReceiveCallbackData *data) {
     char CMD[100];
     memcpy(CMD, data->buf, data->size);
+    if(data->size <= 100){
+        CMD[data->size] = 0x00;
+    }else{
+        LOG_WARN("%s --> bad length = [%d]", __FUNCTION__, data->size);
+        CMD[99] = 0x00; 
+    }
+    LOG_INFO("%s --> origin cmd = %s", __FUNCTION__, CMD);
     if (strcmp(CMD, "Start") == 0) {
+        LOG_INFO("%s --> cmd = [%s]", __FUNCTION__, CMD);
         barcode_scaner_m_ptr_->scanEnableSet(true);
         manager_m_->start_scan();
     } else if (strcmp(CMD, "Stop") == 0) {
+        LOG_INFO("%s --> cmd = [%s]", __FUNCTION__, CMD);
         barcode_scaner_m_ptr_->scanEnableSet(false);
         manager_m_->stop_scan();
     }
@@ -200,10 +218,19 @@ void AGVController::onCoderRScannerMsg(const char *topic_name,
                                        const eCAL::SReceiveCallbackData *data) {
     char CMD[100];
     memcpy(CMD, data->buf, data->size);
+    if(data->size <= 100){
+        CMD[data->size] = 0x00;
+    }else{
+        LOG_WARN("%s --> bad length = [%d]", __FUNCTION__, data->size);
+        CMD[99] = 0x00; 
+    }
+    LOG_INFO("%s --> origin cmd = %s", __FUNCTION__, CMD);
     if (strcmp(CMD, "Start") == 0) {
+        LOG_INFO("%s --> cmd = [%s]", __FUNCTION__, CMD);
         barcode_scaner_r_ptr_->scanEnableSet(true);
         manager_r_->start_scan();
     } else if (strcmp(CMD, "Stop") == 0) {
+        LOG_INFO("%s --> cmd = [%s]", __FUNCTION__, CMD);
         barcode_scaner_r_ptr_->scanEnableSet(false);
         manager_r_->stop_scan();
     }

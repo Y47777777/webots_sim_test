@@ -185,6 +185,8 @@ class WBarcodeScan : public WBase {
                  std::string scaner_name, int frequency = 500,
                  int success_size = 10) {
         notifyer_ = notifyer;
+        name_ = scaner_name;
+        enable_ = false;
         // creat Barcode, only once
         if (v_barcode_.empty()) {
             super_->step(step_duration_);
@@ -276,9 +278,9 @@ class WBarcodeScan : public WBase {
                     if (barcode->checkBeScanned(point)) {
                         if (++point_in_barcode_size > success_size_) {
                             // TODO: 扫码成功
-                            LOG_INFO("barcode size ,%d ",
-                                     point_in_barcode_size);
-                            LOG_INFO("find QRcode ,%s", barcode->getQRcode());
+                            LOG_INFO("barcode size ,%d ; scaner = %s",
+                                     point_in_barcode_size, name_.c_str());
+                            LOG_INFO("find QRcode ,%s ; name = %s", barcode->getQRcode(), name_.c_str());
                             target_barcode_ = barcode;
                             notifyer_->onCode();
                             return;
@@ -316,6 +318,7 @@ class WBarcodeScan : public WBase {
     static bool enable_;
 
     Node *this_node_ = nullptr;
+    std::string name_ = "";
 
     uint64_t cur_step_ = 0;
     std::shared_ptr<CoderNotifyer> notifyer_;
