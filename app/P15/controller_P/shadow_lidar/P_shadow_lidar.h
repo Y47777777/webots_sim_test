@@ -34,16 +34,12 @@ class AGVController : public BaseLidarControl {
     // task
     void whileSpin();
 
-    void BpReportSpin();
-    void Mid360ReportSpin();
-    void Mid360TwoReportSpin();
-    void Mid360PerceptionReportSpin();
+    void Slam1ReportSpin();
+    void Slam2ReportSpin();
 
    private:
-    std::shared_ptr<WLidar> BP_ptr_;
-    std::shared_ptr<WLidar> mid360_ptr_;
-    std::shared_ptr<WLidar> mid360Two_ptr_;
-    std::shared_ptr<WLidar> mid360_perception_ptr_;
+    std::shared_ptr<WLidar> lidar_2_ptr_;
+    std::shared_ptr<WLidar> lidar_4_ptr_;
 
     std::shared_ptr<WPose> pose_ptr_;
     std::shared_ptr<WTransfer> transfer_ptr_;
