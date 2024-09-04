@@ -75,6 +75,7 @@ void SVCMaster::pubEMsgsToWebots() {
     double SteeringDeviceL;
     double SteeringDeviceR;
     double MoveDevice;
+    bool isPowerOff = false;
 
     decoder_.getValue("MoveDevice", &MoveDevice);  // steer wheel
     decoder_.getValue("SteeringDevice", &SteeringDeviceL,
@@ -85,6 +86,10 @@ void SVCMaster::pubEMsgsToWebots() {
     decoder_.getValue("ForkDevice", &ForkDeviceY, "Y");
     decoder_.getValue("ForkDevice", &ForkDeviceP, "P");
     decoder_.getValue("ForkDevice", &ForkDeviceC, "C");
+    decoder_.getSwitchValue("SwitchActuator",0, &isPowerOff);
+    if(isPowerOff){
+        LOG_WARN("%s --> Poweroff read value = %d", __FUNCTION__, isPowerOff);
+    }
 
     msg_to_webots_.set_steering_speed(MoveDevice);
     msg_to_webots_.set_steering_theta_l(SteeringDeviceL);
@@ -93,6 +98,7 @@ void SVCMaster::pubEMsgsToWebots() {
     msg_to_webots_.set_forkspeedy(ForkDeviceY);
     msg_to_webots_.set_forkspeedp(ForkDeviceP);
     msg_to_webots_.set_forkspeedc(ForkDeviceC);
+    msg_to_webots_.set_ispoweroff(isPowerOff);
 
     // publish
     uint8_t buf[msg_to_webots_.ByteSize()];

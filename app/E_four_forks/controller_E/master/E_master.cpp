@@ -303,32 +303,42 @@ void AGVController::subEMsgCallBack(const char *topic_name,
     if (!isManual_) {
         sim_data_flow::E40MsgDown payload;
         payload.ParseFromArray(data->buf, data->size);
+        bool isPowerOff = payload.ispoweroff();
+        if(!isPowerOff){
+            double l_theta = payload.steering_theta_l();
+            double r_theta = payload.steering_theta_r();
+            double speed = payload.steering_speed();
+            double l_speed = 0;
+            double r_speed = 0;
 
-        double l_theta = payload.steering_theta_l();
-        double r_theta = payload.steering_theta_r();
-        double speed = payload.steering_speed();
-        double l_speed = 0;
-        double r_speed = 0;
+            if ((l_theta > 0)) {
+                l_speed = computeInsideWheelSpeed(l_theta, r_theta, speed);
+                r_speed = speed;
+            } else {
+                r_speed = computeInsideWheelSpeed(l_theta, r_theta, speed);
+                l_speed = speed;
+            }
+            // LOG_INFO("L l_yaw: %lf, r_yaw = %lf , l_v = %lf r_v = %lf", l_theta,
+            //          r_theta, l_speed, r_speed);
 
-        if ((l_theta > 0)) {
-            l_speed = computeInsideWheelSpeed(l_theta, r_theta, speed);
-            r_speed = speed;
-        } else {
-            r_speed = computeInsideWheelSpeed(l_theta, r_theta, speed);
-            l_speed = speed;
+            streeL_ptr_->setYaw(l_theta);
+            streeR_ptr_->setYaw(r_theta);
+            l_ptr_->setVelocity(l_speed);
+            r_ptr_->setVelocity(r_speed);
+
+            fork_ptr_->setVelocity(payload.forkspeedz());
+            forkY_ptr_->setVelocity(payload.forkspeedy());
+            forkP_ptr_->setVelocity(payload.forkspeedp());
+            forkCLF1_ptr_->setVelocity(payload.forkspeedc());
+        }else{
+            l_ptr_->setVelocity(0);
+            r_ptr_->setVelocity(0);
+
+            fork_ptr_->setVelocityAll(0);
+            forkY_ptr_->setVelocityAll(0);
+            forkP_ptr_->setVelocityAll(0);
+            forkCLF1_ptr_->setVelocityAll(0);
         }
-        // LOG_INFO("L l_yaw: %lf, r_yaw = %lf , l_v = %lf r_v = %lf", l_theta,
-        //          r_theta, l_speed, r_speed);
-
-        streeL_ptr_->setYaw(l_theta);
-        streeR_ptr_->setYaw(r_theta);
-        l_ptr_->setVelocity(l_speed);
-        r_ptr_->setVelocity(r_speed);
-
-        fork_ptr_->setVelocity(payload.forkspeedz());
-        forkY_ptr_->setVelocity(payload.forkspeedy());
-        forkP_ptr_->setVelocity(payload.forkspeedp());
-        forkCLF1_ptr_->setVelocity(payload.forkspeedc());
     }
 }
 
