@@ -938,7 +938,7 @@ void VelocityControlLevel::config(const std::vector<struct SpecialParam> &param,
         length_ = length;
     end_p_ = start_p_ + length_ - 1;
     SensorModel::SencerModelConfig();
-    buf_[0] = 0x04;
+    buf_[0] = 0x07;
 }
 
 SwitchSencer::SwitchSencer() : SensorModel() {}
