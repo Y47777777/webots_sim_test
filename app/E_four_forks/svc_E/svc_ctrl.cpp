@@ -167,3 +167,13 @@ void SVCMaster::pubUpStream() {
 
     dataidx_upload_++;
 }
+
+void SVCMaster::onWatchDogHungry(){
+    msg_to_webots_.set_ispoweroff(true);
+    // publish
+    uint8_t buf[msg_to_webots_.ByteSize()];
+    msg_to_webots_.SerializePartialToArray(buf, msg_to_webots_.ByteSize());
+    LOG_INFO("%s --> svc/E_msg ispoweroff set true", __FUNCTION__);
+    printf("%s --> svc/E_msg ispoweroff set true\n", __FUNCTION__);
+    ecal_ptr_->send("svc/E_msg", buf, msg_to_webots_.ByteSize());
+}

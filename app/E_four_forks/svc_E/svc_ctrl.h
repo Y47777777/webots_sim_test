@@ -32,6 +32,8 @@ class SVCMaster : public BaseSerialSvc {
 
     void pubUpStream();
     void pubEMsgsToWebots();
+   private:
+    void onWatchDogHungry() override;
 
    private:
     sim_data_flow::E40MsgUp msg_from_webots_;
