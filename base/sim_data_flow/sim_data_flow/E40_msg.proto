@@ -28,4 +28,5 @@ message E40MsgDown {
     double forkspeedY = 6;
     double forkspeedP = 7;
     double forkspeedC = 8;
+    bool isPowerOff = 9;
 }
