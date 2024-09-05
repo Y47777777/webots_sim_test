@@ -12,6 +12,7 @@
 #define __BASE_SERIAL_SVC_SERIAL_H__
 #include <thread>
 #include <shared_mutex>
+#include <semaphore.h>
 #include "logvn/logvn.h"
 #include "Parser/parser.hpp"
 #include "time/time.h"
@@ -48,12 +49,17 @@ class BaseSerialSvc : public BaseSvc {
                 ret = -2;
                 break;
             }
+            l_ret = sem_init(&watch_dog_sem_, 0, 0);
             // receive msg from general
             ecal_ptr_->addEcal(
                 "Actuator/write",
                 std::bind(
                     [&](const char *topic_name,
                         const eCAL::SReceiveCallbackData *data) {
+                        if(!this->feedDog()){
+                            LOG_WARN("Dog is currently hungry..., won't trigger...");
+                            return;
+                        }
                         struct Package pack {
                             (uint8_t *) data->buf, (int) data->size
                         };
@@ -64,16 +70,42 @@ class BaseSerialSvc : public BaseSvc {
                     },
                     std::placeholders::_1, std::placeholders::_2));
             this->onInitService();
-            // report thread
-            // std::thread sensor_msg_report_thread([&]() {
-            //     Timer alarm;
-            //     alarm.alarmTimerInit(10);
-            //     while (!SVCExit_) {
-            //         this->pubUpStream();
-            //         alarm.wait();
-            //     }
-            // });
-            // sensor_msg_report_thread_ = std::move(sensor_msg_report_thread);
+            // timer thread
+            std::thread msg_watch_dog([&]() {
+                Timer alarm;
+                while(!SVCExit_){
+                    LOG_INFO("msg watch dog thread ready...");
+                    //printf("msg watch dog thread ready...\n");
+                    sem_wait(&watch_dog_sem_);
+                    LOG_INFO("msg watch dog thread trigger...");
+                    //printf("msg watch dog thread trigger...\n");
+                    feed_dog_mutex_.lock();
+                    msg_watch_dog_ready_ = true;
+                    feed_dog_food_ = 0;
+                    isDogHungry_ = false;
+                    feed_dog_mutex_.unlock();
+                    while(!SVCExit_){
+                        //alarm.restart();
+                        alarm.alarmTimerInit(1500);
+                        alarm.wait();
+                        feed_dog_mutex_.lock();
+                        if(feed_dog_food_ == 0){
+                            // timeout
+                            msg_watch_dog_ready_ = false;
+                            isDogHungry_ = true;
+                            feed_dog_mutex_.unlock();
+                            LOG_WARN("%s --> dog is hungry, need hot dog...", __FUNCTION__);
+                            //printf("%s --> dog is hungry, need hot dog...\n", __FUNCTION__);
+                            this->onWatchDogHungry();
+                            break;
+                        }else{
+                            feed_dog_food_ = 0;
+                            feed_dog_mutex_.unlock();
+                        }
+                    }
+                }
+            });
+            msg_watch_dog_ = std::move(msg_watch_dog);
         } while (0);
         return ret;
     }
@@ -82,7 +114,36 @@ class BaseSerialSvc : public BaseSvc {
     virtual int onInitService() = 0;
     virtual void subDownStreamCallBack(uint8_t *msg, int len) = 0;
     virtual void pubUpStream() = 0;
+    virtual void onWatchDogHungry(){
 
+    }
+   public:
+    bool feedDog(){
+        bool isFeedDogOk = true;
+        bool isNeedPost = false;
+        feed_dog_mutex_.lock();
+        if(msg_watch_dog_ready_ == false){
+            // first, wont feed dog, only start timer
+            if(!is_post_){
+                is_post_ = true;
+                isNeedPost = true;
+            }
+            feed_dog_mutex_.unlock();
+            if(isNeedPost){
+                LOG_INFO("%s --> sem_post reset dog...", __FUNCTION__);
+                sem_post(&watch_dog_sem_);
+            }
+        }else{
+            is_post_ = false;
+            if(!isDogHungry_){
+                feed_dog_food_++;
+            }else{
+                isFeedDogOk = false;
+            }
+            feed_dog_mutex_.unlock();
+        }
+        return isFeedDogOk;
+    }
    protected:
     InputDecoder decoder_;
     OutputEncoder encoder_;
@@ -92,6 +153,16 @@ class BaseSerialSvc : public BaseSvc {
     uint32_t dataidx_upload_ = 0;
     uint32_t dataidx_sub_ = 0;
     bool first_pub_report_ = true;
+    
+   private:
+    sem_t watch_dog_sem_;
+    std::mutex watch_dog_signal_mutex_;
+    std::mutex feed_dog_mutex_;
+    std::thread msg_watch_dog_;
+    uint64_t feed_dog_food_{0};
+    bool isDogHungry_{false};
+    bool msg_watch_dog_ready_{false};
+    bool is_post_{false};
 
 };
 }  // namespace VNSim
