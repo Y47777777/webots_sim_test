@@ -42,6 +42,8 @@ class AGVController : public BaseController {
     void movePerLidarSpin();
     void pubLiftDoorTag();
     void moveShadowForkSpin();
+    void determineForceCAxisReset();
+    bool determineForceCAxisReset(double CL_T, double CR_T);
 
    private:
     std::shared_ptr<WImu> imu_ptr_;

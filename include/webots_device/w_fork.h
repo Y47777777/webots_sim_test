@@ -244,6 +244,26 @@ class WFork : public WBase {
         return force;
     }
 
+    void setMemorySpeed(double speed){
+        std::unique_lock<std::shared_mutex> lock(rw_mutex_);
+        memory_speed_ = speed;
+    }
+
+    double getMemorySpeed(){
+        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+        return memory_speed_;
+    }
+
+    void setMemoryHeight(double height){
+        std::unique_lock<std::shared_mutex> lock(rw_mutex_);
+        memory_height_ = height;
+    }
+
+    double getMemoryHeight(){
+        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+        return memory_height_;
+    }
+
     void spin() {
         set_speed_iter_ = sub_speed_iter_ + 1;
         if (set_speed_iter_ >= FORK_DELAY) {
@@ -359,6 +379,8 @@ class WFork : public WBase {
     double unit_force_ = 0;
     std::string solid_name_ = "";
     bool forceReset_ = false;
+    double memory_speed_ = 0;
+    double memory_height_ = 0;
 
     // 随机数生成器
     std::shared_ptr<RandomGenerator> random_generator_ = nullptr;
