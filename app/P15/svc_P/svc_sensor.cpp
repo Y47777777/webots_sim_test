@@ -86,7 +86,7 @@ int SVCShadow::initService() {
 
 // TODO: 是不是可以归一成一条函数(如何避免多线程？)
 void SVCShadow::onLidar2Mssg(const char *topic_name,
-                           const eCAL::SReceiveCallbackData *data) {
+                             const eCAL::SReceiveCallbackData *data) {
     // directly send the msg to slam..., try...
     sim_data_flow::WBPointCloud payload;
     pb::PointCloud2 payload_send;
@@ -99,7 +99,7 @@ void SVCShadow::onLidar2Mssg(const char *topic_name,
 }
 
 void SVCShadow::onLidar4Mssg(const char *topic_name,
-                           const eCAL::SReceiveCallbackData *data) {
+                             const eCAL::SReceiveCallbackData *data) {
     sim_data_flow::WBPointCloud payload;
     pb::PointCloud2 payload_send;
     static uint64_t seq = 0;
@@ -113,7 +113,7 @@ void SVCShadow::onLidar4Mssg(const char *topic_name,
 }
 
 void SVCShadow::onLidar3Mssg(const char *topic_name,
-                           const eCAL::SReceiveCallbackData *data) {
+                             const eCAL::SReceiveCallbackData *data) {
     sim_data_flow::WBPointCloud payload;
     pb::PointCloud2 payload_send;
     static uint64_t seq = 0;
@@ -128,7 +128,7 @@ void SVCShadow::onLidar3Mssg(const char *topic_name,
 }
 
 void SVCShadow::onLidar0Mssg(const char *topic_name,
-                                const eCAL::SReceiveCallbackData *data) {
+                             const eCAL::SReceiveCallbackData *data) {
     sim_data_flow::WBPointCloud payload;
     pb::PointCloud2 payload_send;
     static uint64_t seq = 0;
@@ -139,8 +139,7 @@ void SVCShadow::onLidar0Mssg(const char *topic_name,
     pbTopb2(payload, payload_send, seq++, 0);
     uint8_t buf[payload_send.ByteSize()];
     payload_send.SerializePartialToArray(buf, payload_send.ByteSize());
-    ecal_ptr_->send(lidar_0_real_topic.c_str(), buf,
-                    payload_send.ByteSize());
+    ecal_ptr_->send(lidar_0_real_topic.c_str(), buf, payload_send.ByteSize());
 }
 
 void SVCShadow::onBrighteyeMsg(const char *topic_name,
@@ -224,20 +223,19 @@ void SVCShadow::onMultiMid360Msg(const char *topic_name,
             time_stamp =
                 std::min(time_stamp, payload_slam3_.header().timestamp());
             payload_result.mutable_header()->set_timestamp(time_stamp);
+
+            slam1_recive_ = false;
+            slam2_recive_ = false;
+            slam3_recive_ = false;
+
+            payload_slam1_.Clear();
+            payload_slam2_.Clear();
+            payload_slam3_.Clear();
         }
-        
+
         uint8_t buf[payload_result.ByteSize()];
         payload_result.SerializePartialToArray(buf, payload_result.ByteSize());
         ecal_ptr_->send(multi_mid360_topic.c_str(), buf,
                         payload_result.ByteSize());
-        
-
-        slam1_recive_ = false;
-        slam2_recive_ = false;
-        slam3_recive_ = false;
-
-        payload_slam1_.Clear();
-        payload_slam2_.Clear();
-        payload_slam3_.Clear();
     }
 }
