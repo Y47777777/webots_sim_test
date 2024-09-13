@@ -31,6 +31,7 @@ class AGVController : public BaseController {
     // Manual
     virtual void manualSetState(const std::map<std::string, double> &msg);
     virtual void manualGetState(std::map<std::string, double> &msg);
+    virtual void onConveyorKeyboardMsg(const std::map<std::string, std::string> &msg) override;
 
    protected:
     // task
@@ -59,9 +60,12 @@ class AGVController : public BaseController {
     std::shared_ptr<WTransfer> transfer_ptr_;
     std::shared_ptr<WCollision> collision_ptr_;
     std::shared_ptr<WLiftDoor> liftdoor_ptr_;
+    std::shared_ptr<VoyerBeltManager> manager_ptr_;
 
    public:
     void subEMsgCallBack(const char *topic_name,
+                         const eCAL::SReceiveCallbackData *data);
+    void onConveyorStateMsg(const char *topic_name,
                          const eCAL::SReceiveCallbackData *data);
 };
 

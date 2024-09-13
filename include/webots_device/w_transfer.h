@@ -11,6 +11,7 @@
 // TODO: 用kd树优化
 #pragma once
 
+#include <regex>
 #include <webots/Node.hpp>
 #include <shared_mutex>
 #include <nlohmann/json.hpp>
@@ -18,6 +19,7 @@
 #include "webots_device/w_base.h"
 #include "logvn/logvn.h"
 #include "sim_data_flow/transfer.pb.h"
+#include "VoyerBeltManager.h"
 
 namespace VNSim {
 using namespace webots;
@@ -57,7 +59,9 @@ typedef struct WTransferNode {
 
 class WTransfer : public WBase {
    public:
-    WTransfer() : WBase() {
+    WTransfer(std::shared_ptr<VoyerBeltManager> manager = nullptr) : WBase() {
+        manager_ = manager;
+
         root_ = super_->getRoot();
 
         robot_ = super_->getFromDef("RobotNode");
@@ -134,7 +138,6 @@ class WTransfer : public WBase {
                  it != m_updated_trans_.end(); ++it) {
                 Field *tran_ptr = it->second.translation_f_ptr_;
                 Field *rota_ptr = it->second.rotation_f_ptr_;
-
                 tran_ptr->setSFVec3f(it->second.tran_set);
                 rota_ptr->setSFRotation(it->second.rota_set);
             }
@@ -187,17 +190,31 @@ class WTransfer : public WBase {
     }
 
    private:
-    void getChildNode(Node *this_ptr) {
+    void getChildNode(Node *this_ptr, std::string root_solid_name = "") {
         if (this_ptr == nullptr) {
             return;
         }
+        std::string l_root_solid_name = root_solid_name;
         Field *children = this_ptr->getField("children");
         if (children != nullptr) {
             int cnt = children->getCount();
             for (int i = 0; i < cnt; i++) {
                 Node *iter = children->getMFNode(i);
-
-                getChildNode(iter);
+                printf("name = %s\n", iter->getTypeName().c_str());
+                if(manager_ != nullptr){
+                    if((iter->getTypeName().compare("VoyarBelt") == 0) && (manager_ != nullptr)){
+                        std::cout << "name = " << iter->getField("name")->getSFString() << ", p_groups = " << iter->getField("p_groups")->getSFString() << std::endl;
+                        manager_->addBelt(iter->getField("name")->getSFString(), \
+                        iter->getField("p_groups")->getSFString(), iter);
+                    }
+                    if((l_root_solid_name == "") && (this_ptr->getField("translation") != nullptr) \
+                    && (this_ptr->getTypeName().compare("Solid") == 0) && (this_ptr->getParentNode()->getTypeName().compare("Robot") !=  0)){
+                        // has translation and is the first solid
+                        l_root_solid_name = this_ptr->getField("name")->getSFString();
+                        // printf("TRY ADD SOLID = %s\n", l_root_solid_name.c_str());
+                    }
+                }
+                getChildNode(iter, l_root_solid_name);
             }
         }
 
@@ -205,23 +222,23 @@ class WTransfer : public WBase {
             LOG_INFO("there is HingeJoint");
             Field *iter = this_ptr->getField("endPoint");
             Node *endPoint = iter->getSFNode();
-            getChildNode(endPoint);
+            getChildNode(endPoint, l_root_solid_name);
 
         } else if (this_ptr->getTypeName().compare("SliderJoint") == 0) {
             LOG_INFO("there is SliderJoint");
             Field *iter = this_ptr->getField("endPoint");
             Node *endPoint = iter->getSFNode();
-            getChildNode(endPoint);
+            getChildNode(endPoint, l_root_solid_name);
         }
 
         Field *rotation_ptr_ = this_ptr->getField("rotation");
         Field *translation_ptr_ = this_ptr->getField("translation");
 
+
         if (rotation_ptr_ != nullptr && translation_ptr_ != nullptr) {
-            auto node_type =
-                this_ptr->getTypeName();  // 用于区分自定义的ProtoType
-            auto node_base_type =
-                this_ptr->getBaseTypeName();  // 只区分基本的类型
+            auto node_type = this_ptr->getTypeName();// 用于区分自定义的ProtoType
+            auto node_base_type = this_ptr->getBaseTypeName();// 只区分基本的类型
+            auto parent_node = this_ptr->getParentNode();
 
             if (node_type.compare("Robot") != 0) {
                 WTransferNode tran(this_ptr, rotation_ptr_, translation_ptr_);
@@ -238,6 +255,24 @@ class WTransfer : public WBase {
                 m_updated_trans_.insert(tmp_pair);  // 初始化更新
                 LOG_INFO("creat tran %d", idx);
             }
+            std::regex pattern("Pallets_[a-zA-Z0-9]+");
+            bool IsPallet = false;
+            if(manager_ != nullptr){
+                printf("CURRENT IDX = %d\n", idx - 1);
+                if(std::regex_match(parent_node->getDef(), pattern) && (node_type.compare("Solid") == 0)){
+                    manager_->initPallets(parent_node->getDef(), this_ptr);
+                    IsPallet = true;
+                }
+                printf("CURRENT_TYPE = %s\n", this_ptr->getTypeName().c_str());
+                Field* name_field = this_ptr->getField("name");
+                if(name_field != nullptr){
+                    if(!IsPallet && (name_field->getSFString().compare(l_root_solid_name)) == 0){
+                        // not input pallets not , not Robot node, possible item on the belt...
+                        printf("ADD IDX = %d, NAME = %s\n", idx - 1, name_field->getSFString().c_str());
+                        manager_->addPossibleNode(this_ptr);
+                    }
+                }
+            }
         }
     }
 
@@ -246,10 +281,12 @@ class WTransfer : public WBase {
     std::map<int32_t, WTransferNode> m_tanfer_;
     // master for pub,shadow for sub
     std::map<int32_t, WTransferNode> m_updated_trans_;
+    // std::list<int32_t> m_cargo_trans_;
     // idx specify node id
     int32_t idx = 0;
     bool send_all = false;
     bool set_flag = false;
+    std::shared_ptr<VoyerBeltManager> manager_;
 };
 
 }  // namespace VNSim

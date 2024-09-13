@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package sim_data_flow;
+
+
+message ConfigInfo {
+    string belt_name = 1;
+    string input_pallets_group = 2;
+}
+
+message StateInfo {
+    string belt_name = 1;
+    uint32 state = 2;
+}

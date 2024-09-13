@@ -16,6 +16,7 @@
 #include "sim_data_flow/E20_msg.pb.h"
 #include "sim_data_flow/point_cloud.pb.h"
 #include "sim_data_flow/pose.pb.h"
+#include "sim_data_flow/voyerbelt_msg.pb.h"
 
 #include "geometry/geometry.h"
 #include "time/time.h"
@@ -100,8 +101,10 @@ double computeInsideWheelSpeed(double steer, double outside_wheel_speed) {
 std::shared_ptr<Timer> Timer::instance_ptr_ = nullptr;
 std::shared_ptr<EcalWrapper> EcalWrapper::instance_ptr_ = nullptr;
 std::shared_ptr<ReflectorChecker> ReflectorChecker::instance_ptr_ = nullptr;
+//std::shared_ptr<PossibleSolidData> PossibleSolidData::this_ptr = nullptr;
 
 AGVController::AGVController() : BaseController("webots_master") {
+    manager_ptr_ = std::make_shared<VoyerBeltManager>();
     imu_ptr_ = std::make_shared<WImu>("inertial unit", "gyro", "accelerometer");
 
     fork_ptr_ = std::make_shared<WFork>("fork height motor", "ForkZAxis",
@@ -121,7 +124,7 @@ AGVController::AGVController() : BaseController("webots_master") {
     r_ptr_ = std::make_shared<WWheel>("FR", "", "", "RS", "");
     pose_ptr_ = std::make_shared<WPose>("RobotNode");
     lidar_pose_ptr_ = std::make_shared<WLidar>("lidar_0", 100, false);
-    transfer_ptr_ = std::make_shared<WTransfer>();
+    transfer_ptr_ = std::make_shared<WTransfer>(manager_ptr_);
     collision_ptr_ = std::make_shared<WCollision>(false);
     liftdoor_ptr_ = std::make_shared<WLiftDoor>(false);
 
@@ -149,6 +152,9 @@ AGVController::AGVController() : BaseController("webots_master") {
     ecal_ptr_->addEcal("svc/E_msg",
                        std::bind(&AGVController::subEMsgCallBack, this,
                                  std::placeholders::_1, std::placeholders::_2));
+    ecal_ptr_->addEcal("Goods/Events",
+                        std::bind(&AGVController::onConveyorStateMsg, this,
+                                std::placeholders::_1, std::placeholders::_2));
 }
 
 static double forkY_speed = 0;
@@ -396,4 +402,21 @@ void VNSim::AGVController::pubLiftDoorTag() {
     uint8_t buf[payload.ByteSize()];
     payload.SerializePartialToArray(buf, payload.ByteSize());
     ecal_ptr_->send("webot/liftdoor", buf, payload.ByteSize());
+}
+
+void AGVController::onConveyorKeyboardMsg(const std::map<std::string, std::string> &msg){
+    // TODO: add state consideration....
+    manager_ptr_->addRandomPallet(msg.at("belt"));
+}
+
+void AGVController::onConveyorStateMsg(const char *topic_name,
+                         const eCAL::SReceiveCallbackData *data){
+    sim_data_flow::StateInfo payload;
+    payload.ParseFromArray(data->buf, data->size);
+    printf("%s --> belt = %s, state = %d\n", __FUNCTION__, payload.belt_name().c_str(), payload.state());
+    if(payload.state() == 0){
+        // belt is full
+        // TODO: may be add more topic
+        manager_ptr_->addRemovePallet(payload.belt_name());
+    }
 }

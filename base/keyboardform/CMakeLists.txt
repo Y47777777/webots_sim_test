@@ -47,10 +47,35 @@ target_link_libraries(${PROJECT_NAME}
     ${LIBRARY_INSTALL_DIR}/liblogvn.so
 )
 
+###################BUILD CONVOYERKEYBOARD################
+file(GLOB convoyer_src_files "convoyer/*.c*")  
+file(GLOB convoyer_header_files "convoyer/*.h*")
+message("convoyer_src_files = ${convoyer_src_files}")
+message("convoyer_header_files = ${convoyer_header_files}")
+qt5_wrap_cpp(CONVOYER_MOC_SOURCES ${convoyer_header_files})
 
+
+add_library(convoyer_${PROJECT_NAME} STATIC
+    ${convoyer_src_files}
+    ${CONVOYER_MOC_SOURCES}
+    convoyer/convoyerKeyboard.ui
+)
+
+target_link_libraries(convoyer_${PROJECT_NAME}
+    Qt${QT_VERSION_MAJOR}::Core 
+    Qt${QT_VERSION_MAJOR}::Widgets
+    Qt5::Widgets
+    ${WEBOTSLIB_SO}/libCppController.so
+    ${LIBRARY_INSTALL_DIR}/liblogvn.so
+)
+###################BUILD CONVOYERKEYBOARD################
 
 if(UNIX)
     set_target_properties(${PROJECT_NAME}
+        PROPERTIES
+        VERSION "${PROJECT_VERSION}"
+        SOVERSION "${PROJECT_VERSION}")
+    set_target_properties(convoyer_${PROJECT_NAME}
         PROPERTIES
         VERSION "${PROJECT_VERSION}"
         SOVERSION "${PROJECT_VERSION}")
