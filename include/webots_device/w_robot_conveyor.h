@@ -39,15 +39,15 @@ enum EVENTS{
     HAVE_GOODS = 0,
     NO_GOODS = 1
 };
-Timer t;
-class Voyar : public WRobot {
+
+class Convoyer : public WRobot {
    public:
    /**
     * @brief Get the Supervisor Instance object
     * 
     * @return WSupervisor* 
     */
-    Voyar(std::string robot_name, std::string name):WRobot(robot_name){
+    Convoyer(std::string robot_name, std::string name):WRobot(robot_name){
         printf("Name = %s\n", this->Robot::getName().c_str());
         device = this->getDistanceSensor(std::string(this->Robot::getName() + "_D"));
         sensor_name_ = name;
@@ -57,15 +57,12 @@ class Voyar : public WRobot {
         //robot_name_ = this->getName();
     }
 
-    ~Voyar(){}
+    ~Convoyer(){}
 
     void spin(){
         this->step(this->getBasicTimeStep());
         if(device){
-            //t.restart();
             double curr_val = device->getValue();
-            //uint32_t diff = t.elapsed<std::chrono::milliseconds>();
-            //printf("time elpsted = %d\n", diff);
             //std::cout << "Robot = " << this->getName() << ", sensor = " << sensor_name_ << "read value = " << device->getValue() << std::endl;
             VoyarEvent_ = curr_val < 2 ? HAVE_GOODS : NO_GOODS;
         }
