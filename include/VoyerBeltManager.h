@@ -31,6 +31,7 @@ namespace VNSim{
             double maxX = 0;
             double minY = 0;
             double maxY = 0;
+            double storage_offsetZ_ = 0;
         public:
             VoyerBeltServer(){}
             ~VoyerBeltServer(){}
@@ -44,7 +45,7 @@ namespace VNSim{
                 // TODO:
                 std::cout << __FUNCTION__ << std::endl;
                 if(!input_pallets_.empty()){
-                    double trans[3] = { s_trans_[0], s_trans_[1], 1.31};
+                    double trans[3] = { s_trans_[0], s_trans_[1], size_[2] + storage_offsetZ_};
                     input_pallets_.front()->getField("translation")->setSFVec3f(trans);
                     input_pallets_.erase(input_pallets_.begin());
                 }
@@ -52,6 +53,7 @@ namespace VNSim{
             }
             void setBeltNode(Node* node){Server_ = node;
                 time_ = Server_->getField("disapper")->getSFInt32();
+                storage_offsetZ_ = Server_->getField("storage_offsetZ")->getSFFloat();
                 if(time_ < 1000){
                     time_ = 1000;
                 }
@@ -62,7 +64,7 @@ namespace VNSim{
                 const double* rotation = Server_->getField("rotation")->getSFRotation();
                 for(int i = 0; i < 3; i++)
                     s_trans_[i] = s_t[i];
-                for(int i = 0; i < 2; i++){
+                for(int i = 0; i < 3; i++){
                     size_[i] = table_size[i];
                     printf("table = %f\n", table_size[i]);
                 }
