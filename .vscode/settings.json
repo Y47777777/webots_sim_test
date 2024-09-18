@@ -79,7 +79,8 @@
         "geometry": "cpp",
         "*.ipp": "cpp",
         "charconv": "cpp",
-        "filesystem": "cpp"
+        "filesystem": "cpp",
+        "regex": "cpp"
     },
     // 头部注释
     "fileheader.customMade": {

@@ -60,10 +60,10 @@ AGVController::AGVController() : BaseLidarControl("webots_shadow_perception") {
     reflector_check_ptr_->setSensorMatrix4d(
         "lidar_0", lidar_0_ptr_->getMatrixFromLidar());
 
-    v_while_spin_.push_back(bind(&WBase::spin, lidar_3_ptr_));
-    v_while_spin_.push_back(bind(&WBase::spin, lidar_0_ptr_));
-    v_while_spin_.push_back(bind(&WBase::spin, pose_ptr_));
-    v_while_spin_.push_back(bind(&WBase::spin, transfer_ptr_));
+    whileSpinPushBack(bind(&WBase::spin, lidar_3_ptr_));
+    whileSpinPushBack(bind(&WBase::spin, lidar_0_ptr_));
+    whileSpinPushBack(bind(&WBase::spin, pose_ptr_));
+    whileSpinPushBack(bind(&WBase::spin, transfer_ptr_));
 
     // creat publish
     ecal_ptr_->addEcal(lidar_3_webots_topic.c_str());

@@ -23,7 +23,10 @@ namespace VNSim {
 class BaseLidarControl : public BaseController {
    protected:
     explicit BaseLidarControl(std::string ecal_name, QObject *parent = nullptr)
-        : BaseController(ecal_name, parent) {}
+        : BaseController(ecal_name, parent) {
+            step_timeout_ = 40;
+            all_timeout_ = 50;
+        }
 
     bool sendPointCloud(std::string topic, std::shared_ptr<WLidar> lidar_ptr,
                         std::shared_ptr<WPose> pose_ptr,

@@ -68,17 +68,20 @@ class BaseController : public QThread {
 
         // 注册休眠闹钟
         alarm_.alarmTimerInit(step_duration_);
-        elapsed_timer_.restart();
+        all_elapsed_timer_.restart();
+        step_elapsed_timer_.restart();
 
         // 当前系统时间 + webots增长
         time_stamp_ = Timer::getInstance()->getCurrentFromSystem() +
                       step_duration_ * 1000;
-        Timer copy_elapsed_;
+
+        // 超时判断
+        LOG_INFO("all overtime = %d ms", all_timeout_);
+        whileSpinPushBack(std::bind(&BaseController::whileSpin, this));
+
         while (supervisor_->step(step_duration_) != -1) {
-            uint32_t els = elapsed_timer_.elapsed<std::chrono::milliseconds>();
-            if (els > 15) {
-                LOG_INFO("step elapsed = %u ms, BAD\n", els);
-            }
+            uint32_t els =
+                step_elapsed_timer_.elapsed<std::chrono::milliseconds>();
 
             // if (supervisor_->simulationGetMode() !=
             //     Supervisor::SIMULATION_MODE_FAST) {
@@ -86,37 +89,39 @@ class BaseController : public QThread {
             //         Supervisor::SIMULATION_MODE_FAST);
             // }
 
-            copy_elapsed_.restart();
             // 循环遍历注册的任务
             for (int i = 0; i < v_while_spin_.size(); ++i) {
+                elapsed_timer_.restart();
+                // task
                 v_while_spin_[i]();
+
+                v_while_timeout_[i] =
+                    elapsed_timer_.elapsed<std::chrono::milliseconds>();
             }
 
-            // 保证周期为 10ms
-            serial_counter_++;
-            if (serial_counter_ >= (10 / step_duration_)) {
-                serial_counter_ = 0;
-
-                // 特殊的需要执行的任务
-                this->whileSpin();
-            }
-            
-            uint32_t copy_spend =
-                copy_elapsed_.elapsed<std::chrono::milliseconds>();
-            if (copy_spend > 6) {
-                LOG_INFO("while spend = %d ms,  BAD\n", copy_spend);
-            }
-
-            // 休眠直到目标时间
-            // 与仿真时间同步
-            time_stamp_ += step_duration_ * 1000;
-            alarm_.wait();
-
-            // 当前系统时间 + webots增长 TODO: 修改为步长*步数
+            // 当前系统时间 + webots增长
             // time_stamp_ = Timer::getInstance()->getCurrentFromSystem() +
             //               step_duration_ * 1000;
 
-            elapsed_timer_.restart();
+            // 与仿真时间同步
+            time_stamp_ += step_duration_ * 1000;
+
+            // 计算总耗时
+            uint32_t all_spend =
+                all_elapsed_timer_.elapsed<std::chrono::milliseconds>();
+            if (all_spend > all_timeout_) {
+                for (int i = 0; i < v_while_timeout_.size(); i++) {
+                    LOG_INFO("while %d spend = %d ms", i, v_while_timeout_[i]);
+                }
+                LOG_INFO("step + while spend = %d ms,  BAD", all_spend);
+                LOG_INFO("step  = %d ms,  BAD\n", els);
+            }
+
+            // 休眠直到目标时间
+            alarm_.wait();
+
+            all_elapsed_timer_.restart();
+            step_elapsed_timer_.restart();
         }
         webotsExited_ = true;
 
@@ -129,6 +134,11 @@ class BaseController : public QThread {
     // 机器差异部分在该函数下实现
     virtual void whileSpin() = 0;
 
+    void whileSpinPushBack(std::function<void()> task) {
+        v_while_spin_.push_back(task);
+        v_while_timeout_.push_back(0);
+    }
+
    protected:
     bool isManual_ = false;
     // webots
@@ -138,15 +148,19 @@ class BaseController : public QThread {
 
     std::map<std::string, std::thread> m_thread_;
     std::vector<std::function<void(void)>> v_while_spin_;
+
     std::shared_ptr<Timer> timer_ptr_;
     std::shared_ptr<EcalWrapper> ecal_ptr_;
-    Timer alarm_;
-
-    int serial_counter_ = 0;
-    Timer elapsed_timer_;
-    Timer SerialElapsedTimer_;
 
     uint64_t time_stamp_;
+
+    Timer alarm_;
+    uint32_t step_timeout_ = 6;
+    uint32_t all_timeout_ = 10;
+    Timer step_elapsed_timer_;
+    Timer all_elapsed_timer_;
+    Timer elapsed_timer_;
+    std::vector<uint32_t> v_while_timeout_;
 };
 
 }  // namespace VNSim

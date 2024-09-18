@@ -41,24 +41,27 @@ AGVController::AGVController() : BaseController("webots_master") {
     pose_ptr_ = std::make_shared<WPose>("RobotNode");
     lidar_pose_ptr_ = std::make_shared<WLidar>("lidar_0", 100, false);
     transfer_ptr_ = std::make_shared<WTransfer>();
+    collision_ptr_ = std::make_shared<WCollision>(false);
     liftdoor_ptr_ = std::make_shared<WLiftDoor>(false);
-    hswitchL_ptr_ = std::make_shared<photoelectric>("HL","HSwitchL");
+    hswitchL_ptr_ = std::make_shared<photoelectric>("HL", "HSwitchL");
     hswitchR_ptr_ = std::make_shared<photoelectric>("HR", "HSwitchR");
     vswitchL_ptr_ = std::make_shared<manchanical>("VL", "VSwitchL");
     vswitchR_ptr_ = std::make_shared<manchanical>("VR", "VSwitchR");
 
-    v_while_spin_.push_back(bind(&WBase::spin, stree_ptr_));
-    v_while_spin_.push_back(bind(&WBase::spin, l_ptr_));
-    v_while_spin_.push_back(bind(&WBase::spin, r_ptr_));
-    v_while_spin_.push_back(bind(&WBase::spin, fork_ptr_));
-    v_while_spin_.push_back(bind(&WBase::spin, imu_ptr_));
-    v_while_spin_.push_back(bind(&WBase::spin, pose_ptr_));
-    v_while_spin_.push_back(bind(&WBase::spin, transfer_ptr_));
-    v_while_spin_.push_back(bind(&WBase::spin, liftdoor_ptr_));
-    v_while_spin_.push_back(bind(&WBase::spin, hswitchL_ptr_));
-    v_while_spin_.push_back(bind(&WBase::spin, hswitchR_ptr_));
-    v_while_spin_.push_back(bind(&WBase::spin, vswitchL_ptr_));
-    v_while_spin_.push_back(bind(&WBase::spin, vswitchR_ptr_));
+    whileSpinPushBack(bind(&WBase::spin, stree_ptr_));
+    whileSpinPushBack(bind(&WBase::spin, l_ptr_));
+    whileSpinPushBack(bind(&WBase::spin, r_ptr_));
+    whileSpinPushBack(bind(&WBase::spin, fork_ptr_));
+    whileSpinPushBack(bind(&WBase::spin, imu_ptr_));
+    whileSpinPushBack(bind(&WBase::spin, pose_ptr_));
+    whileSpinPushBack(bind(&WBase::spin, transfer_ptr_));
+    whileSpinPushBack(bind(&WBase::spin, collision_ptr_));
+
+    whileSpinPushBack(bind(&WBase::spin, liftdoor_ptr_));
+    whileSpinPushBack(bind(&WBase::spin, hswitchL_ptr_));
+    whileSpinPushBack(bind(&WBase::spin, hswitchR_ptr_));
+    whileSpinPushBack(bind(&WBase::spin, vswitchL_ptr_));
+    whileSpinPushBack(bind(&WBase::spin, vswitchR_ptr_));
 
     // pub
     ecal_ptr_->addEcal("webot/P_msg");
@@ -76,14 +79,14 @@ void AGVController::manualSetState(const std::map<std::string, double> &msg) {
     static double steer_speed = 0;
     static double steer_yaw = 0;
     static double fork_speed = 0;
-    if(msg.find("refresh_world") != msg.end()){
-            transfer_ptr_->noticeAll();
+    if (msg.find("refresh_world") != msg.end()) {
+        transfer_ptr_->noticeAll();
     }
     if (isManual_) {
         steer_speed = msg.at("steer_speed");
         steer_yaw = msg.at("steer_yaw");
         fork_speed = msg.at("fork_speed");
-        
+
         stree_ptr_->setSpeed(steer_speed, steer_yaw);
         fork_ptr_->setVelocityAll(fork_speed);
     }
@@ -184,15 +187,15 @@ void AGVController::pubSerialSpin() {
     payload.set_vswitchr(vswitchR_ptr_->getValue());
 
     // double *rotation = pose_ptr_->getRotaion();
-    // LOG_INFO("imu: %.2f, robot: %.2f", imu_ptr_->getInertialYaw(), rotation[3]);
+    // LOG_INFO("imu: %.2f, robot: %.2f", imu_ptr_->getInertialYaw(),
+    // rotation[3]);
 
     uint8_t buf[payload.ByteSize()];
     payload.SerializePartialToArray(buf, payload.ByteSize());
     ecal_ptr_->send("webot/P_msg", buf, payload.ByteSize());
 }
 
-void VNSim::AGVController::pubLiftDoorTag()
-{
+void VNSim::AGVController::pubLiftDoorTag() {
     sim_data_flow::MTransfer payload;
     liftdoor_ptr_->getTag(payload);
 

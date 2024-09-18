@@ -128,18 +128,18 @@ AGVController::AGVController() : BaseController("webots_master") {
     collision_ptr_ = std::make_shared<WCollision>(false);
     liftdoor_ptr_ = std::make_shared<WLiftDoor>(false);
 
-    v_while_spin_.push_back(bind(&WBase::spin, streeR_ptr_));
-    v_while_spin_.push_back(bind(&WBase::spin, streeL_ptr_));
-    v_while_spin_.push_back(bind(&WBase::spin, l_ptr_));
-    v_while_spin_.push_back(bind(&WBase::spin, r_ptr_));
-    v_while_spin_.push_back(bind(&WBase::spin, fork_ptr_));
-    v_while_spin_.push_back(bind(&WBase::spin, forkY_ptr_));
-    v_while_spin_.push_back(bind(&WBase::spin, forkP_ptr_));
-    v_while_spin_.push_back(bind(&WBase::spin, imu_ptr_));
-    v_while_spin_.push_back(bind(&WBase::spin, pose_ptr_));
-    v_while_spin_.push_back(bind(&WBase::spin, transfer_ptr_));
-    v_while_spin_.push_back(bind(&WBase::spin, collision_ptr_));
-    v_while_spin_.push_back(bind(&WBase::spin, liftdoor_ptr_));
+    whileSpinPushBack(bind(&WBase::spin, streeR_ptr_));
+    whileSpinPushBack(bind(&WBase::spin, streeL_ptr_));
+    whileSpinPushBack(bind(&WBase::spin, l_ptr_));
+    whileSpinPushBack(bind(&WBase::spin, r_ptr_));
+    whileSpinPushBack(bind(&WBase::spin, fork_ptr_));
+    whileSpinPushBack(bind(&WBase::spin, forkY_ptr_));
+    whileSpinPushBack(bind(&WBase::spin, forkP_ptr_));
+    whileSpinPushBack(bind(&WBase::spin, imu_ptr_));
+    whileSpinPushBack(bind(&WBase::spin, pose_ptr_));
+    whileSpinPushBack(bind(&WBase::spin, transfer_ptr_));
+    whileSpinPushBack(bind(&WBase::spin, collision_ptr_));
+    whileSpinPushBack(bind(&WBase::spin, liftdoor_ptr_));
 
     // pub
     ecal_ptr_->addEcal("webot/E_msg");

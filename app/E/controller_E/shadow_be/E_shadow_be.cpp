@@ -54,9 +54,9 @@ AGVController::AGVController() : BaseController("webots_shadow_be") {
     // reflector_check_ptr_->setSensorMatrix4d("HAP",
     //                                         HAP_ptr_->getMatrixFromLidar());
 
-    v_while_spin_.push_back(bind(&WBase::spin, HAP_ptr_));
-    v_while_spin_.push_back(bind(&WBase::spin, pose_ptr_));
-    v_while_spin_.push_back(bind(&WBase::spin, transfer_ptr_));
+    whileSpinPushBack(bind(&WBase::spin, HAP_ptr_));
+    whileSpinPushBack(bind(&WBase::spin, pose_ptr_));
+    whileSpinPushBack(bind(&WBase::spin, transfer_ptr_));
 
     // creat publish
     ecal_ptr_->addEcal(HAP_webots_topic.c_str());

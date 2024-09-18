@@ -60,13 +60,13 @@ NormalSTController::NormalSTController() : BaseController() {
                                             BP_ptr_->getMatrixFromLidar());
 
     // TODO: creat task
-    v_while_spin_.push_back(bind(&WBase::spin, stree_ptr_));
-    v_while_spin_.push_back(bind(&WBase::spin, fork_ptr_));
-    v_while_spin_.push_back(bind(&WBase::spin, imu_ptr_));
-    v_while_spin_.push_back(bind(&WBase::spin, BP_ptr_));
-    v_while_spin_.push_back(bind(&WBase::spin, mid360_ptr_));
-    // v_while_spin_.push_back(bind(&WBase::spin, mid3601_ptr_));
-    v_while_spin_.push_back(bind(&WBase::spin, pose_ptr_));
+    whileSpinPushBack(bind(&WBase::spin, stree_ptr_));
+    whileSpinPushBack(bind(&WBase::spin, fork_ptr_));
+    whileSpinPushBack(bind(&WBase::spin, imu_ptr_));
+    whileSpinPushBack(bind(&WBase::spin, BP_ptr_));
+    whileSpinPushBack(bind(&WBase::spin, mid360_ptr_));
+    // whileSpinPushBack(bind(&WBase::spin, mid3601_ptr_));
+    whileSpinPushBack(bind(&WBase::spin, pose_ptr_));
 
     ecal_ptr_->addEcal("webot/ST_msg");
     ecal_ptr_->addEcal("webot/pointCloud");
