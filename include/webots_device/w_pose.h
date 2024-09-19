@@ -56,8 +56,12 @@ class WPose : public WBase {
         return tf_rotation_;
     }
 
-    void setTransferWithTime(double *transfer, double *rotation,
-                             uint64_t time_stamp) {
+    Node *getRobotNode() {
+        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+        return node_;
+    }
+
+    void setTransferWithTime(double *transfer, double *rotation, uint64_t time_stamp) {
         std::shared_lock<std::shared_mutex> lock(rw_mutex_);
         had_recive_tran_ = true;
 

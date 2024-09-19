@@ -92,6 +92,7 @@ class WLidar : public WBase {
                    4 * sizeof(tf_rotation_[0]));
             memcpy(tf_translation_, translation_ptr_->getSFVec3f(),
                    3 * sizeof(tf_translation_[0]));
+            extrinsic_ = getExtrinsicFromDef();
 
             LOG_INFO("pose rotation %.3f, %.3f, %.3f, %.3f", tf_rotation_[0],
                      tf_rotation_[1], tf_rotation_[2], tf_rotation_[3]);
@@ -216,8 +217,22 @@ class WLidar : public WBase {
     }
 
     Eigen::Matrix4d getMatrixFromLidar() {
-        return createTransformMatrix(tf_rotation_, tf_translation_);
+        AutoAtomicLock lock(spin_mutex_);
+        return extrinsic_;
     }
+
+    Eigen::Matrix4d getExtrinsicFromDef(const std::string define = "RobotNode") {
+        AutoAtomicLock lock(spin_mutex_);
+
+        auto robot_node = super_->getFromDef(define);
+        if (robot_node == nullptr) {
+            return Eigen::Matrix4d::Identity();
+        }
+
+        Eigen::Matrix4d result = Eigen::Matrix4d(node_->getPose(robot_node)).transpose();
+        return result;
+    }
+
     /**
      * @brief 检查雷达数据更新状态
      *
@@ -304,6 +319,7 @@ class WLidar : public WBase {
 
     double tf_translation_[3] = {0, 0, 0};
     double tf_rotation_[4] = {0, 0, 0, 0};
+    Eigen::Matrix4d extrinsic_;
     std::shared_ptr<NRLS> NRLS_{nullptr};
     bool is_sim_NRLS_ = false;
     bool data_is_ready_ = false;
