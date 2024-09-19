@@ -26,8 +26,7 @@ class WBarcode {
         name = this_ptr_->getField("name")->getSFString();
         copyFrom(this_ptr_->getPose());
         QRCode = this_ptr_->getField("QRcode")->getSFString();
-        memcpy(size_, this_ptr_->getField("size")->getSFVec3f(),
-               sizeof(double) * 3);
+        memcpy(size_, this_ptr_->getField("size")->getSFVec3f(), sizeof(double) * 3);
 
         double size_x = size_[0] + 0.03;
         double size_y = size_[1] + 0.03;
@@ -35,23 +34,15 @@ class WBarcode {
 
         // 八个顶点 !顶点需要按照顺序
         point_list.clear();
-        point_list.push_back(
-            Eigen::Vector4d(size_x / 2, size_y / 2, size_z / 2, 1));
-        point_list.push_back(
-            Eigen::Vector4d(-size_x / 2, size_y / 2, size_z / 2, 1));
-        point_list.push_back(
-            Eigen::Vector4d(-size_x / 2, -size_y / 2, size_z / 2, 1));
-        point_list.push_back(
-            Eigen::Vector4d(size_x / 2, -size_y / 2, size_z / 2, 1));
+        point_list.push_back(Eigen::Vector4d(size_x / 2, size_y / 2, size_z / 2, 1));
+        point_list.push_back(Eigen::Vector4d(-size_x / 2, size_y / 2, size_z / 2, 1));
+        point_list.push_back(Eigen::Vector4d(-size_x / 2, -size_y / 2, size_z / 2, 1));
+        point_list.push_back(Eigen::Vector4d(size_x / 2, -size_y / 2, size_z / 2, 1));
 
-        point_list.push_back(
-            Eigen::Vector4d(size_x / 2, -size_y / 2, -size_z / 2, 1));
-        point_list.push_back(
-            Eigen::Vector4d(-size_x / 2, -size_y / 2, -size_z / 2, 1));
-        point_list.push_back(
-            Eigen::Vector4d(-size_x / 2, size_y / 2, -size_z / 2, 1));
-        point_list.push_back(
-            Eigen::Vector4d(size_x / 2, size_y / 2, -size_z / 2, 1));
+        point_list.push_back(Eigen::Vector4d(size_x / 2, -size_y / 2, -size_z / 2, 1));
+        point_list.push_back(Eigen::Vector4d(-size_x / 2, -size_y / 2, -size_z / 2, 1));
+        point_list.push_back(Eigen::Vector4d(-size_x / 2, size_y / 2, -size_z / 2, 1));
+        point_list.push_back(Eigen::Vector4d(size_x / 2, size_y / 2, -size_z / 2, 1));
 
         calculateBoundingBox();
 
@@ -60,8 +51,7 @@ class WBarcode {
 
     void transferCheck() {
         auto pose_itr = this_ptr_->getPose();
-        if (fabs(pose_itr[3] - tran_matrix(0, 3)) > 0.01 ||
-            fabs(pose_itr[7] - tran_matrix(1, 3)) > 0.01 ||
+        if (fabs(pose_itr[3] - tran_matrix(0, 3)) > 0.01 || fabs(pose_itr[7] - tran_matrix(1, 3)) > 0.01 ||
             fabs(pose_itr[11] - tran_matrix(2, 3)) > 0.01) {
             // xyz发生变化
             copyFrom(pose_itr);
@@ -98,8 +88,7 @@ class WBarcode {
     void copyFrom(const double *pose_itr) {
         double pose[16];
         memcpy(pose, pose_itr, 16 * sizeof(double));
-        tran_matrix =
-            Eigen::Map<Eigen::Matrix<double, 4, 4, Eigen::RowMajor>>(pose);
+        tran_matrix = Eigen::Map<Eigen::Matrix<double, 4, 4, Eigen::RowMajor>>(pose);
     }
 
     void calculateBoundingBox() {
@@ -114,8 +103,7 @@ class WBarcode {
         }
         // 创建中心
         center = tran_matrix.col(3);
-        LOG_INFO("center: %.2f, %.2f, %.2f", center.x(), center.y(), center.z(),
-                 center.w());
+        LOG_INFO("center: %.2f, %.2f, %.2f", center.x(), center.y(), center.z(), center.w());
 
         // 计算包围盒的轴
         min_list.clear();
@@ -181,8 +169,7 @@ class WBarcodeScan : public WBase {
      * @brief Construct a new WBarcodeScan object
      *
      */
-    WBarcodeScan(std::shared_ptr<CoderNotifyer> notifyer,
-                 std::string scaner_name, int frequency = 500,
+    WBarcodeScan(std::shared_ptr<CoderNotifyer> notifyer, std::string scaner_name, int frequency = 500,
                  int success_size = 10) {
         notifyer_ = notifyer;
         name_ = scaner_name;
@@ -220,9 +207,8 @@ class WBarcodeScan : public WBase {
     ~WBarcodeScan() {}
 
     const char *getQRCode() {
-        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
-        // TODO: 获取码值
-        // return "1";
+        AutoAtomicLock lock(spin_mutex_);
+
         if (target_barcode_ != nullptr) {
             return target_barcode_->getQRcode();
         }
@@ -230,12 +216,11 @@ class WBarcodeScan : public WBase {
     }
 
     void scanEnableSet(bool enable) {
-        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+        AutoAtomicLock lock(spin_mutex_);
         enable_ = enable;
     }
 
     void spin() {
-        std::unique_lock<std::shared_mutex> lock(rw_mutex_);
         if (enable_ == false) {
             return;
         }
@@ -261,8 +246,7 @@ class WBarcodeScan : public WBase {
         double pose[16];
         auto pose_itr = this_node_->getPose();
         memcpy(pose, pose_itr, 16 * sizeof(double));
-        Eigen::Matrix4d tran_matrix =
-            Eigen::Map<Eigen::Matrix<double, 4, 4, Eigen::RowMajor>>(pose);
+        Eigen::Matrix4d tran_matrix = Eigen::Map<Eigen::Matrix<double, 4, 4, Eigen::RowMajor>>(pose);
         target_barcode_.reset();
         target_barcode_ = nullptr;
         for (auto &barcode : v_barcode_) {
@@ -271,16 +255,13 @@ class WBarcodeScan : public WBase {
                 double x = address[i].x;
                 double y = address[i].y;
                 double z = address[i].z;
-                if (std::abs(x) != INFINITY && std::abs(y) != INFINITY &&
-                    std::abs(z) != INFINITY) {
+                if (std::abs(x) != INFINITY && std::abs(y) != INFINITY && std::abs(z) != INFINITY) {
                     Eigen::Vector4d point(x, y, z, 1);
                     point = tran_matrix * point;
                     if (barcode->checkBeScanned(point)) {
                         if (++point_in_barcode_size > success_size_) {
-                            // TODO: 扫码成功
-                            LOG_INFO("barcode size ,%d ; scaner = %s",
-                                     point_in_barcode_size, name_.c_str());
-                            LOG_INFO("find QRcode ,%s ; name = %s", barcode->getQRcode(), name_.c_str());
+                            LOG_DEBUG("barcode size ,%d ; scaner = %s", point_in_barcode_size, name_.c_str());
+                            LOG_DEBUG("find QRcode ,%s ; name = %s", barcode->getQRcode(), name_.c_str());
                             target_barcode_ = barcode;
                             notifyer_->onCode();
                             return;

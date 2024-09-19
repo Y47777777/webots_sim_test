@@ -78,13 +78,13 @@ AGVController::AGVController() : BaseLidarControl("webots_shadow_lidar") {
     reflector_check_ptr_->setSensorMatrix4d(
         "lidar_4", mid360Two_ptr_->getMatrixFromLidar());
 
-    // whileSpinPushBack(bind(&WBase::spin, BP_ptr_));
-    whileSpinPushBack(bind(&WBase::spin, mid360_ptr_));
-    whileSpinPushBack(bind(&WBase::spin, mid360Two_ptr_));
-    // whileSpinPushBack(bind(&WBase::spin, mid360_perception_ptr_));
-    whileSpinPushBack(bind(&WBase::spin, pose_ptr_));
-    whileSpinPushBack(bind(&WBase::spin, transfer_ptr_));
-    whileSpinPushBack(bind(&WBase::spin, liftdoor_ptr_));
+    // whileSpinPushBack((BP_ptr_));
+    whileSpinPushBack((mid360_ptr_));
+    whileSpinPushBack((mid360Two_ptr_));
+    // whileSpinPushBack((mid360_perception_ptr_));
+    whileSpinPushBack((pose_ptr_));
+    whileSpinPushBack((transfer_ptr_));
+    whileSpinPushBack((liftdoor_ptr_));
 
     // creat publish
     // ecal_ptr_->addEcal(BP_webots_topic.c_str());

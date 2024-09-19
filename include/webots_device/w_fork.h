@@ -38,10 +38,10 @@ class WFork : public WBase {
      * @param[in] break_name        break 如果有motor 可输入为空
      * @param[in] slower_move       每次移动时随机减少一定值
      */
-    WFork(std::string fork_motor_name = "", std::string solid_name = "",
-          std::string sensor_name = "", std::string brake_name = "",
-          bool isNeedShadowMove = false, double slower_move = 0.0,
-          bool isNeedReadForce = false, double force_sample_frequency = 100, bool isNeedAddExtraPoints = false, double unit_factor = TOTAL_MAX_FORCE_UNITS_NUMBER)
+    WFork(std::string fork_motor_name = "", std::string solid_name = "", std::string sensor_name = "",
+          std::string brake_name = "", bool isNeedShadowMove = false, double slower_move = 0.0,
+          bool isNeedReadForce = false, double force_sample_frequency = 100, bool isNeedAddExtraPoints = false,
+          double unit_factor = TOTAL_MAX_FORCE_UNITS_NUMBER)
         : WBase() {
         // creat fork
         isShadowMove_ = isNeedShadowMove;
@@ -124,18 +124,18 @@ class WFork : public WBase {
      * @param[in] v  Velocity
      */
     void setVelocityAll(double v) {
-        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+        AutoAtomicLock lock(spin_mutex_);
         if (random_generator_ != nullptr) {
             if (fabs(v) > 0.001) {
                 double random = random_generator_->generate();
                 if (v > 0) {
                     v = v - random;
-                    if(v < 0){
+                    if (v < 0) {
                         v = v + random;
                     }
                 } else {
                     v = v + random;
-                    if(v > 0){
+                    if (v > 0) {
                         v = v - random;
                     }
                 }
@@ -146,8 +146,8 @@ class WFork : public WBase {
         set_speed_iter_ = 1;
     }
 
-    int isOnBoundary(){
-        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+    int isOnBoundary() {
+        AutoAtomicLock lock(spin_mutex_);
         if ((std::fabs(pos_sensor_value_ - high_bound_) < 0.002) || (pos_sensor_value_ > high_bound_)) {
             return -1;
         }
@@ -157,8 +157,8 @@ class WFork : public WBase {
         return 0;
     }
 
-    void forceReset(bool reset){
-        std::unique_lock<std::shared_mutex> lock(rw_mutex_);
+    void forceReset(bool reset) {
+        AutoAtomicLock lock(spin_mutex_);
         forceReset_ = reset;
     }
 
@@ -168,7 +168,7 @@ class WFork : public WBase {
      * @param[in] v  Velocity
      */
     void setVelocity(double v) {
-        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+        AutoAtomicLock lock(spin_mutex_);
 
         if (random_generator_ != nullptr) {
             if (fabs(v) > 0.001) {
@@ -205,7 +205,7 @@ class WFork : public WBase {
      * @param[in] y Y pos
      */
     void setShadowPos(double y) {
-        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+        AutoAtomicLock lock(spin_mutex_);
         shadowPos[1] = y;
         translation_ptr_->setSFVec3f(shadowPos);
     }
@@ -216,7 +216,7 @@ class WFork : public WBase {
      * @return double sensor value
      */
     double getSenosorValue() {
-        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+        AutoAtomicLock lock(spin_mutex_);
         return pos_sensor_value_;
     }
 
@@ -227,32 +227,30 @@ class WFork : public WBase {
      */
     // TODO: is this necessary?
     double getVelocityValue() {
-        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+        AutoAtomicLock lock(spin_mutex_);
         return v_delay_speed_[set_speed_iter_];
     }
 
     double getForce() {
+        AutoAtomicLock lock(spin_mutex_);
         double force = 0;
-        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
-        if(!isNeedExtraForce_){
+        if (!isNeedExtraForce_) {
             if (motor_ != nullptr) {
                 force = std::fabs(motor_->getForceFeedback());
             }
-        }else{
+        } else {
             force = output_feedback_force_;
         }
         return force;
     }
 
     void spin() {
-        std::unique_lock<std::shared_mutex> lock(rw_mutex_);
-
         set_speed_iter_ = sub_speed_iter_ + 1;
         if (set_speed_iter_ >= FORK_DELAY) {
             set_speed_iter_ = 0;
         }
         double speed = v_delay_speed_[set_speed_iter_];
-        if(forceReset_){
+        if (forceReset_) {
             LOG_INFO("%s --> forceReset_ on", solid_name_.c_str());
             speed = 0;
         }
@@ -314,18 +312,18 @@ class WFork : public WBase {
                 last_pos_ = pos_sensor_value_;
             }
 
-            if(isNeedExtraForce_ && isNeedReadForce_){
-                if((pos_sensor_value_ > (low_bound_ - 0.0002)) && (pos_sensor_value_ < (high_bound_ + 0.0002) ))
+            if (isNeedExtraForce_ && isNeedReadForce_) {
+                if ((pos_sensor_value_ > (low_bound_ - 0.0002)) && (pos_sensor_value_ < (high_bound_ + 0.0002)))
                     target_feedback_force_ = std::fabs(motor_->getForceFeedback());
-                if(std::fabs(target_feedback_force_ - output_feedback_force_) > unit_force_){
-                    if((target_feedback_force_ - output_feedback_force_) >= 0){
+                if (std::fabs(target_feedback_force_ - output_feedback_force_) > unit_force_) {
+                    if ((target_feedback_force_ - output_feedback_force_) >= 0) {
                         // increase
                         output_feedback_force_ += unit_force_;
-                    }else{
+                    } else {
                         // decrease
                         output_feedback_force_ -= unit_force_;
                     }
-                }else{
+                } else {
                     output_feedback_force_ = target_feedback_force_;
                 }
             }

@@ -116,7 +116,7 @@ class WLidar : public WBase {
      */
     void setSimulationNRLS(std::string path,
                            size_t nrls_cloud_size = MID360_ONCE_CLOUD_SIZE) {
-        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+        AutoAtomicLock lock(spin_mutex_);
 
         is_sim_NRLS_ = true;
         const char *base_path = "../../plugins/lidar_scan_mode_config/";
@@ -196,7 +196,7 @@ class WLidar : public WBase {
      * @param[values]  Vec3f
      */
     void moveLidar(const double &values) {
-        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+        AutoAtomicLock lock(spin_mutex_);
         // check lidar can be move
 
         if (translation_ptr_ == nullptr) {
@@ -234,14 +234,12 @@ class WLidar : public WBase {
      */
     void getLocalPointCloud(sim_data_flow::WBPointCloud &result,
                             int target_size = -1) {
-        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+        AutoAtomicLock lock(spin_mutex_);
         result.CopyFrom(point_cloud_);
         data_is_ready_ = false;
     }
 
     void spin() {
-        std::unique_lock<std::shared_mutex> lock(rw_mutex_);
-
         // 根据频率拷贝数据
         int cur_step_cnt = super_->getStepCnt() - start_step_;
         if (cur_step_cnt % frequency_cnt_ != 0) {

@@ -48,20 +48,20 @@ AGVController::AGVController() : BaseController("webots_master") {
     vswitchL_ptr_ = std::make_shared<manchanical>("VL", "VSwitchL");
     vswitchR_ptr_ = std::make_shared<manchanical>("VR", "VSwitchR");
 
-    whileSpinPushBack(bind(&WBase::spin, stree_ptr_));
-    whileSpinPushBack(bind(&WBase::spin, l_ptr_));
-    whileSpinPushBack(bind(&WBase::spin, r_ptr_));
-    whileSpinPushBack(bind(&WBase::spin, fork_ptr_));
-    whileSpinPushBack(bind(&WBase::spin, imu_ptr_));
-    whileSpinPushBack(bind(&WBase::spin, pose_ptr_));
-    whileSpinPushBack(bind(&WBase::spin, transfer_ptr_));
-    whileSpinPushBack(bind(&WBase::spin, collision_ptr_));
+    whileSpinPushBack((stree_ptr_));
+    whileSpinPushBack((l_ptr_));
+    whileSpinPushBack((r_ptr_));
+    whileSpinPushBack((fork_ptr_));
+    whileSpinPushBack((imu_ptr_));
+    whileSpinPushBack((pose_ptr_));
+    whileSpinPushBack((transfer_ptr_));
+    whileSpinPushBack((collision_ptr_));
 
-    whileSpinPushBack(bind(&WBase::spin, liftdoor_ptr_));
-    whileSpinPushBack(bind(&WBase::spin, hswitchL_ptr_));
-    whileSpinPushBack(bind(&WBase::spin, hswitchR_ptr_));
-    whileSpinPushBack(bind(&WBase::spin, vswitchL_ptr_));
-    whileSpinPushBack(bind(&WBase::spin, vswitchR_ptr_));
+    whileSpinPushBack((liftdoor_ptr_));
+    whileSpinPushBack((hswitchL_ptr_));
+    whileSpinPushBack((hswitchR_ptr_));
+    whileSpinPushBack((vswitchL_ptr_));
+    whileSpinPushBack((vswitchR_ptr_));
 
     // pub
     ecal_ptr_->addEcal("webot/P_msg");

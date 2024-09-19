@@ -49,13 +49,36 @@ class BaseController : public QThread {
         }
     }
 
+    /**
+     * @brief
+     *
+     * @param[in] base_ptr WBase 指针
+     */
+    void whileSpinPushBack(std::shared_ptr<WBase> base_ptr) {
+        v_while_spin_.push_back(bind(&WBase::spinWithAtomicMutex, base_ptr));
+        v_while_timeout_.push_back(0);
+    }
+
+    /**
+     * @brief 加入任务队列
+     *
+     * @param[in] task
+     */
+    void whileSpinPushBack(std::function<void()> task) {
+        v_while_spin_.push_back(task);
+        v_while_timeout_.push_back(0);
+    }
+
     // 控制菜单相关，每个车型需要自己实现菜单控制相关部分
     virtual void manualGetState(std::map<std::string, double> &msg) = 0;
     virtual void manualSetState(const std::map<std::string, double> &msg) = 0;
     void shiftControlMode(bool mode) { isManual_ = mode; }
 
    protected:
-    // ctrl while 循环
+    /**
+     * @brief 主控线程
+     *
+     */
     void run() {
         // init
         if (supervisor_ == nullptr) {
@@ -130,14 +153,12 @@ class BaseController : public QThread {
         // delete supervisor_;
     }
 
-    // spin task
-    // 机器差异部分在该函数下实现
+    /**
+     * @brief  spin task
+     *          机器差异部分在该函数下实现
+     *
+     */
     virtual void whileSpin() = 0;
-
-    void whileSpinPushBack(std::function<void()> task) {
-        v_while_spin_.push_back(task);
-        v_while_timeout_.push_back(0);
-    }
 
    protected:
     bool isManual_ = false;

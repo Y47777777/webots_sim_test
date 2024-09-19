@@ -55,8 +55,10 @@ class WWheel : public WBase {
         if (yaw_node != nullptr) {
             yaw_rotation_ptr_ = yaw_node->getField("rotation");
 
-            memcpy(&set_yaw_rotation_, yaw_rotation_ptr_->getSFRotation(), 4 * sizeof(set_yaw_rotation_[0]));
-            memcpy(&get_yaw_rotation_, set_yaw_rotation_, 4 * sizeof(get_yaw_rotation_[0]));
+            memcpy(&set_yaw_rotation_, yaw_rotation_ptr_->getSFRotation(),
+                   4 * sizeof(set_yaw_rotation_[0]));
+            memcpy(&get_yaw_rotation_, set_yaw_rotation_,
+                   4 * sizeof(get_yaw_rotation_[0]));
 
             LOG_INFO("yaw node :", yaw_node_name.c_str());
             LOG_INFO("yaw rotation %.3f, %.3f, %.3f, %.3f", set_yaw_rotation_[0], set_yaw_rotation_[1],
@@ -69,8 +71,10 @@ class WWheel : public WBase {
             solid_rotation_ptr_ = soild_node->getField("rotation");
             solid_translation_ptr_ = soild_node->getField("translation");
 
-            memcpy(solid_init_rotation_, solid_rotation_ptr_->getSFRotation(), 4 * sizeof(solid_init_rotation_[0]));
-            memcpy(solid_init_translation_, solid_translation_ptr_->getSFVec3f(),
+            memcpy(solid_init_rotation_, solid_rotation_ptr_->getSFRotation(),
+                   4 * sizeof(solid_init_rotation_[0]));
+            memcpy(solid_init_translation_,
+                   solid_translation_ptr_->getSFVec3f(),
                    3 * sizeof(solid_translation_ptr_[0]));
 
             LOG_INFO("soild node :", solid_name.c_str());
@@ -111,48 +115,43 @@ class WWheel : public WBase {
     ~WWheel(){};
 
     void setVelocity(double v) {
-        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+        AutoAtomicLock lock(spin_mutex_);
         speed_ = v / radius_;
     }
 
     void setYaw(double yaw) {
-        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+        AutoAtomicLock lock(spin_mutex_);
         set_yaw_rotation_[3] = yaw;
     }
 
     void setSpeed(double v, double yaw) {
-        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+        AutoAtomicLock lock(spin_mutex_);
         setVelocity(v);
         setYaw(yaw);
     }
-
 
     // TODO: 这个接口定义的不好，要改一下
     double getWheelArcLength() { return getSenosorValue() * radius_; }
 
     double getSenosorValue() {
-        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+        AutoAtomicLock lock(spin_mutex_);
         double result = pos_sensor_value_;
         pos_sensor_value_ = 0;
         return result;
     }
 
-    //TODO: 同上
+    // TODO: 同上
     double getSpeed() {
-        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+        AutoAtomicLock lock(spin_mutex_);
         return speed_ * radius_;
     }
 
     double getMotorYaw() {
-        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+        AutoAtomicLock lock(spin_mutex_);
         return get_yaw_rotation_[3];
     }
 
-    
-
     void spin() {
-        std::unique_lock<std::shared_mutex> lock(rw_mutex_);
-
         // get wheel pos value
         if (position_sensor_ != nullptr) {
             // 增量式编码器，只计算增量

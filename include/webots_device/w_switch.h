@@ -25,11 +25,10 @@ class manchanical : public WSwitch {
    public:
     manchanical(const std::string &device_name, const std::string &robot_def, int freq = 100) {
         device = super_->getTouchSensor(device_name);
-        if (device){
+        if (device) {
             deviceNode = super_->getFromDevice(device);
             device->enable(freq);
-        }
-        else
+        } else
             deviceNode = nullptr;
         robotNode = super_->getFromDef(robot_def);
 
@@ -52,7 +51,7 @@ class manchanical : public WSwitch {
     }
 
     bool getValue() override {
-        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+        AutoAtomicLock lock(spin_mutex_);
         return switchTag;
     }
 
@@ -63,7 +62,7 @@ class manchanical : public WSwitch {
      * @throw  if the inputed robot_def or device not found
      */
     Eigen::Matrix4d getToBase() override {
-        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+        AutoAtomicLock lock(spin_mutex_);
         Eigen::Matrix4d ret = Eigen::Matrix4d::Identity();
         if (deviceNode == nullptr) {
             char error_str[256];
@@ -97,7 +96,7 @@ class manchanical : public WSwitch {
      * @throw  if the inputed device not found
      */
     Eigen::Matrix4d getToWorld() override {
-        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+        AutoAtomicLock lock(spin_mutex_);
         Eigen::Matrix4d ret = Eigen::Matrix4d::Identity();
         if (deviceNode == nullptr) {
             char error_str[256];
@@ -126,16 +125,14 @@ class photoelectric : public WSwitch {
                   const std::string &robot_def, int freq = 100) {
         device = super_->getDistanceSensor(device_name);
         robotNode = super_->getFromDef(robot_def);
-        if (device){
+        if (device) {
             deviceNode = super_->getFromDevice(device);
             device->enable(freq);
-        }
-        else
+        } else
             deviceNode = nullptr;
-        if (deviceNode){
+        if (deviceNode) {
             deviceField = deviceNode->getField("signThreshold");
-        }
-        else{
+        } else {
             deviceField = nullptr;
         }
         deviceName = device_name;
@@ -144,7 +141,6 @@ class photoelectric : public WSwitch {
     }
 
     void spin() override {
-        std::unique_lock<std::shared_mutex> lock(rw_mutex_);
         if (device) {
             if (deviceNode == nullptr) {
                 deviceNode = super_->getFromDevice(device);
@@ -163,7 +159,7 @@ class photoelectric : public WSwitch {
     }
 
     bool getValue() override {
-        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+        AutoAtomicLock lock(spin_mutex_);
         return switchTag;
     }
 
@@ -174,7 +170,7 @@ class photoelectric : public WSwitch {
      * @throw  if the inputed robot_def or device not found
      */
     Eigen::Matrix4d getToBase() override {
-        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+        AutoAtomicLock lock(spin_mutex_);
         Eigen::Matrix4d ret = Eigen::Matrix4d::Identity();
         if (deviceNode == nullptr) {
             char error_str[256];
@@ -208,7 +204,7 @@ class photoelectric : public WSwitch {
      * @throw  if the inputed device not found
      */
     Eigen::Matrix4d getToWorld() override {
-        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+        AutoAtomicLock lock(spin_mutex_);
         Eigen::Matrix4d ret = Eigen::Matrix4d::Identity();
         if (deviceNode == nullptr) {
             char error_str[256];

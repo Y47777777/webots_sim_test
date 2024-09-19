@@ -47,7 +47,7 @@ class WImu : public WBase {
     ~WImu() {}
 
     foxglove::Vector3 getGyroValue() {
-        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+        AutoAtomicLock lock(spin_mutex_);
         foxglove::Vector3 result;
         getVector3(result, gyro_);
 
@@ -55,7 +55,7 @@ class WImu : public WBase {
     }
 
     foxglove::Vector3 getAccValue() {
-        std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+        AutoAtomicLock lock(spin_mutex_);
         foxglove::Vector3 result;
         getVector3(result, acc_);
 
@@ -63,7 +63,7 @@ class WImu : public WBase {
     }
 
     // foxglove::Quaternion getInertialValue() {
-    //     std::shared_lock<std::shared_mutex> lock(rw_mutex_);
+    //     AutoAtomicLock lock(spin_mutex_);
     //     foxglove::Quaternion result;
     //     getRollPitchYaw(result);
     //     return result;
@@ -72,7 +72,6 @@ class WImu : public WBase {
     double getInertialYaw() { return angles_[2]; }
 
     void spin() {
-        std::unique_lock<std::shared_mutex> lock(rw_mutex_);
         memcpy(gyro_.data(), gyro_ptr_->getValues(), 3 * sizeof(gyro_[0]));
         memcpy(acc_.data(), acc_ptr_->getValues(), 3 * sizeof(acc_[0]));
         memcpy(angles_.data(), inertial_unit_ptr_->getRollPitchYaw(), 3 * sizeof(acc_[0]));

@@ -13,16 +13,18 @@
 #include <webots/Supervisor.hpp>
 #include <shared_mutex>
 #include "logvn/logvn.h"
+#include "atomic_lock.h"
 
 namespace VNSim {
 using namespace webots;
+
 class WSupervisor : public Supervisor {
    public:
-   /**
-    * @brief Get the Supervisor Instance object
-    * 
-    * @return WSupervisor* 
-    */
+    /**
+     * @brief Get the Supervisor Instance object
+     *
+     * @return WSupervisor*
+     */
     static WSupervisor *getSupervisorInstance() {
         if (cInstance) {
             if (!dynamic_cast<WSupervisor *>(cInstance)) {
@@ -36,11 +38,11 @@ class WSupervisor : public Supervisor {
     }
 
     /**
-     * @brief webots step  
+     * @brief webots step
      *        webots 数据生成在step函数中完成，读取数据应该在step中完成
-     * 
+     *
      * @param[in] duration step 的步长(ms) webots执行一步
-     * @return int 
+     * @return int
      */
     int step(int duration) {
         // 计算方针总步数
@@ -50,8 +52,8 @@ class WSupervisor : public Supervisor {
 
     /**
      * @brief Get the Step Cnt object
-     * 
-     * @return uint64_t 
+     *
+     * @return uint64_t
      */
     uint64_t getStepCnt() { return step_cnt; }
 
@@ -69,6 +71,11 @@ class WBase {
     }
     ~WBase() {}
 
+    virtual void spinWithAtomicMutex(void) {
+        AutoAtomicLock lock(spin_mutex_);
+        spin();
+    }
+
     virtual void spin() = 0;
 
    protected:
@@ -76,5 +83,6 @@ class WBase {
     int start_step_ = 0;
     WSupervisor *super_;
     std::shared_mutex rw_mutex_;  // 读写锁
+    SpinLock spin_mutex_;
 };
 }  // namespace VNSim

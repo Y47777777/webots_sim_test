@@ -41,13 +41,13 @@ AGVController::AGVController() : BaseController("webots_master") {
     collision_ptr_ = std::make_shared<WCollision>(false);
     liftdoor_ptr_ = std::make_shared<WLiftDoor>(false);
 
-    whileSpinPushBack(bind(&WBase::spin, stree_ptr_));
-    whileSpinPushBack(bind(&WBase::spin, fork_ptr_));
-    whileSpinPushBack(bind(&WBase::spin, imu_ptr_));
-    whileSpinPushBack(bind(&WBase::spin, pose_ptr_));
-    whileSpinPushBack(bind(&WBase::spin, transfer_ptr_));
-    whileSpinPushBack(bind(&WBase::spin, collision_ptr_));
-    whileSpinPushBack(bind(&WBase::spin, liftdoor_ptr_));
+    whileSpinPushBack((stree_ptr_));
+    whileSpinPushBack((fork_ptr_));
+    whileSpinPushBack((imu_ptr_));
+    whileSpinPushBack((pose_ptr_));
+    whileSpinPushBack((transfer_ptr_));
+    whileSpinPushBack((collision_ptr_));
+    whileSpinPushBack((liftdoor_ptr_));
 
     // pub
     ecal_ptr_->addEcal("webot/ST_msg");
