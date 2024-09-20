@@ -22,12 +22,16 @@ class ConvoyerKeyboard : public QWidget {
 
    private slots:
     void on_pushButton_clicked();
+    void on_pushButton_remove_clicked();
+    // void on_checkBox_stateChanged(int arg1);
 
 
    private:
     void sendMsg();
     struct ManualState {
         std::string selected = "";
+        std::string manual = "false";
+        std::string function = "";
     };
     ManualState manual_state_;
 

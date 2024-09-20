@@ -17,8 +17,11 @@ namespace VNSim{
     class VoyerBeltManager; 
     class VoyerBeltServer{
         private:
-            int state_{-1};
+            int state_{-1}; // -1 is none, 0 is onPallet, 1 is offPallet
+            int direction_ = {0}; // 0 is output, 1 is input 
             bool isOnTimer_{false};
+            bool isOnStart_{true};
+            bool isManual_{false};
             std::mutex isOnTimer_mutex_;
             std::string group_name_;
             std::list<Node*> input_pallets_;
@@ -31,29 +34,31 @@ namespace VNSim{
             double maxX = 0;
             double minY = 0;
             double maxY = 0;
-            double storage_offsetZ_ = 0;
+            double storage_offset_[3] = {0, 0, 0};
         public:
             VoyerBeltServer(){}
             ~VoyerBeltServer(){}
         public:
             void init(Node* node){
-                printf("%s --> add Pallet\n", group_name_.c_str());
                 input_pallets_.push_back(node);
                 return;
             }
             void addPallet(){
                 // TODO:
-                std::cout << __FUNCTION__ << std::endl;
                 if(!input_pallets_.empty()){
-                    double trans[3] = { s_trans_[0], s_trans_[1], size_[2] + storage_offsetZ_};
+                    LOG_INFO("trigger add pallet --> %s, lX = %f lY = %f lZ = %f", group_name_.c_str(), s_trans_[0], s_trans_[1], size_[2]);
+                    double trans[3] = { s_trans_[0] + storage_offset_[0], s_trans_[1] + storage_offset_[1], size_[2] + storage_offset_[2] };
                     input_pallets_.front()->getField("translation")->setSFVec3f(trans);
+                    Singleton<PossibleSolidData>::getInstance()->addNode(input_pallets_.front());
                     input_pallets_.erase(input_pallets_.begin());
                 }
                 return;
             }
             void setBeltNode(Node* node){Server_ = node;
-                time_ = Server_->getField("disapper")->getSFInt32();
-                storage_offsetZ_ = Server_->getField("storage_offsetZ")->getSFFloat();
+                time_ = Server_->getField("delay")->getSFInt32();
+                const double* offset = Server_->getField("storage_offset")->getSFVec3f();
+                direction_ = Server_->getField("direction")->getSFInt32();
+                isManual_ = Server_->getField("manual")->getSFBool();
                 if(time_ < 1000){
                     time_ = 1000;
                 }
@@ -62,16 +67,15 @@ namespace VNSim{
                 const double* table_size = Server_->getField("size")->getSFVec3f();
                 const double* translation = Server_->getField("translation")->getSFVec3f();
                 const double* rotation = Server_->getField("rotation")->getSFRotation();
-                for(int i = 0; i < 3; i++)
-                    s_trans_[i] = s_t[i];
                 for(int i = 0; i < 3; i++){
+                    s_trans_[i] = s_t[i];
                     size_[i] = table_size[i];
-                    printf("table = %f\n", table_size[i]);
+                    storage_offset_[i] = offset[i];
                 }
                     
                 Eigen::Matrix4d tran_matrix =
                     createTransformMatrix(rotation, translation);
-                printf("oX = %f, oY = %f, oZ = %f\n", translation[0], translation[1], translation[2]);
+                LOG_INFO("oX = %f, oY = %f, oZ = %f", translation[0], translation[1], translation[2]);
                 std::vector<Eigen::Vector4d> p_list;
                 p_list.push_back(
                     Eigen::Vector4d(size_[0] / 2, size_[1] / 2, size_[2], 1));
@@ -83,7 +87,7 @@ namespace VNSim{
                     Eigen::Vector4d(size_[0] / 2, -size_[1] / 2, size_[2], 1));
                 for (int i = 0; i < p_list.size(); i++) {
                     p_list[i] = tran_matrix * p_list[i];
-                    printf("pointsX = %f, pointY = %f, pointZ = %f\n", p_list[i].x(), p_list[i].y(), p_list[i].z());
+                    LOG_INFO("pointsX = %f, pointY = %f, pointZ = %f", p_list[i].x(), p_list[i].y(), p_list[i].z());
                     if(i == 0){
                         minX = p_list[i].x();
                         maxX = p_list[i].x();
@@ -104,23 +108,20 @@ namespace VNSim{
                 }
                 // LOG_INFO("i = %d,  %f,  %f,  %f", i, p_list[i].x(),
                 //          p_list[i].y(), p_list[i].z());
-                printf("minX = %f, maxX = %f, minY = %f, maxY = %f\n", minX, maxX, minY, maxY);
+                LOG_INFO("minX = %f, maxX = %f, minY = %f, maxY = %f", minX, maxX, minY, maxY);
             }
             std::string getGroup(){return group_name_;}
             void setGroup(std::string group){group_name_ = group;}
             int getState(){return state_;}
+            void setOnStart(bool onStart){isOnStart_ = onStart;}
+            bool isOnStart(){return isOnStart_;}
             void removePallet(){
-                std::cout << __FUNCTION__ << std::endl;
                 static double more = 0;
                 static double base = 100;
-                const std::list<Node*>* l_node_list = Singleton<PossibleSolidData>::getInstance()->getNode();
-                if(l_node_list->empty()){
-                    printf("BAD, empty list...\n");
-                }
-                for(const auto &it: *l_node_list){
+                std::list<Node*> l_node_list;
+                Singleton<PossibleSolidData>::getInstance()->getNode(l_node_list);
+                for(const auto &it: l_node_list){
                     const double* w_pos = it->getPosition();
-                    // if((std::fabs(w_pos[0] - s_trans_[0]) < 1.05/2) &&
-                    //     (std::fabs(w_pos[1] - s_trans_[1]) < 1.3/2)){
                     if( ((minX - 0.002 < w_pos[0]) && (w_pos[0] < maxX + 0.002)) && ((minY - 0.002 < w_pos[1]) && (w_pos[1] < maxY + 0.002))){
                         // x, y in range, possibly no Z
                         Field* field = it->getField("translation");
@@ -130,13 +131,14 @@ namespace VNSim{
                             field->setSFVec3f(trans);
                             more += 1;
                         }
-                        printf("remove name = %s, x = %f, y = %f, x1 = %f, y1 = %f\n", it->getField("name")->getSFString().c_str(), w_pos[0], w_pos[1], s_trans_[0], s_trans_[1]);
+                        LOG_INFO("remove name = %s, x = %f, y = %f, x1 = %f, y1 = %f", it->getField("name")->getSFString().c_str(), w_pos[0], w_pos[1], s_trans_[0], s_trans_[1]);
                     }
                 }
                 return;
             }
             bool setOnTimer(bool flag){
                 std::unique_lock<std::mutex> lock(isOnTimer_mutex_);
+                //printf("%s --> set onTimer = %d, isOnTimer = %d\n", group_name_.c_str(), flag, isOnTimer_);
                 bool result = true;
                 if(flag == true && isOnTimer_ == true){
                     result = false;
@@ -144,12 +146,18 @@ namespace VNSim{
                 isOnTimer_ = flag;
                 return result;
             }
+            bool isCorrectDirection(uint32_t direction){
+                return direction_ == direction;
+            }
+            bool isManual(){return isManual_;}
+            int getDelayTime(){return time_;}
     };
     class RingTimer{
         public:
             struct Msg{
                 std::shared_ptr<VoyerBeltServer> server;
                 std::chrono::high_resolution_clock::time_point start;
+                int event; // 0 add pallet, 1 remove pallet
                 uint64_t trigger_time;
             };
         private:
@@ -168,19 +176,19 @@ namespace VNSim{
             }
         public:
             void init(){
-                // shadow_manager_ = l_manager;
                 std::thread l_thread(std::bind(&RingTimer::run, this));
                 palletRemoveTimer_ = std::move(l_thread);
             }
-            void addMsg(std::shared_ptr<VoyerBeltServer> ptr, const VoyerBeltManager* ptr2, uint64_t time = 2000){
+            void addMsg(std::shared_ptr<VoyerBeltServer> ptr, int event, const VoyerBeltManager* ptr2, uint64_t time = 2000){
                 std::unique_lock<std::mutex> lock(msg_list_mutex_);
-                msg_list_.push_back({.server = ptr, .start = std::chrono::high_resolution_clock::now(), .trigger_time = time});
+                msg_list_.push_back({.server = ptr, .start = std::chrono::high_resolution_clock::now(), \
+                                     .event = event, .trigger_time = time});
             }
             void removeMsg(){
                 bool trigger_next = true;
                 std::shared_ptr<VoyerBeltServer> ptr = nullptr;
                 std::list<std::list<Msg>::iterator> remove_it_list;
-                std::list<std::shared_ptr<VoyerBeltServer>> call_back_list;
+                std::list<Msg> call_back_list;
                 std::list<Msg>::iterator b_it;
                 std::list<std::list<Msg>::iterator>::iterator rb_it;
                 {
@@ -188,25 +196,27 @@ namespace VNSim{
                     for(b_it = msg_list_.begin(); b_it != msg_list_.end(); b_it++){
                         auto end = std::chrono::high_resolution_clock::now();
                         auto diff = std::chrono::duration_cast<milliseconds>(end - b_it->start);
-                        printf("high resolution duration = %lu ms\n", diff);
+                        LOG_DEBUG("high resolution duration = %lu ms", diff);
                         if(diff >= (std::chrono::milliseconds(b_it->trigger_time) )){
-                            printf("push_back...\n");
-                            call_back_list.push_back(b_it->server);
+                            call_back_list.push_back(*b_it);
                             remove_it_list.push_back(b_it);
                         }
                     }
                     for(rb_it = remove_it_list.begin(); rb_it != remove_it_list.end(); rb_it++){
-                        printf("Erase...\n");
                         msg_list_.erase(*rb_it);
                     }
                 }
                 for(auto &it: call_back_list){
-                    it->removePallet();
-                    it->setOnTimer(false);
+                    if(it.event == 0)
+                        it.server->addPallet();
+                    else
+                        it.server->removePallet();
+                    it.server->setOnTimer(false);
                 }
             }
     };
     class VoyerBeltManager{
+        // TODO: Optimize a thread pool here
         private:
             std::map<std::string, std::shared_ptr<VoyerBeltServer>> belts_;
             RingTimer timer_;
@@ -218,7 +228,6 @@ namespace VNSim{
         public:
             void addBelt(std::string belt, std::string group, Node* server){
                 if(belts_.find(belt) == belts_.end()){
-                    printf("belt = %s, group = %s\n", belt.c_str(), group.c_str());
                     std::shared_ptr ptr = std::make_shared<VoyerBeltServer>();
                     ptr->setGroup(group);
                     ptr->setBeltNode(server);
@@ -226,7 +235,6 @@ namespace VNSim{
                 }
             }
             void initPallets(std::string groups, Node* node){
-                printf("groups = %s\n", groups.c_str());
                 for(const auto& [key, value] : belts_){
                     if(value->getGroup() == groups){
                         value->init(node); 
@@ -239,20 +247,75 @@ namespace VNSim{
             void removeBelt(std::string belt){
                 belts_.erase(belt);
             }
-            void addRemovePallet(std::string belt){
+            int addRemovePallet(std::string belt, bool isManual = false, uint32_t who = 0){
+                int ret = -1;
                 auto it = belts_.find(belt);
                 if(it != belts_.end()){
-                    if(it->second->setOnTimer(true)){
-                        std::cout << "add timer...." << std::endl;
-                        timer_.addMsg(it->second, this);
-                    }
+                    do{
+                        ret = it->second->isOnStart() ? 1 : 0;
+                        if(ret && (who == 1)){
+                            it->second->setOnStart(false);
+                        }
+                        if(isManual != it->second->isManual())break;
+                        if(!it->second->isCorrectDirection(1))break;
+                        if(isManual){
+                            LOG_INFO("trigger remove pallet immediately --> %s", belt.c_str());
+                            it->second->removePallet();
+                        }else{
+                            int delay = it->second->getDelayTime();
+                            if(it->second->setOnTimer(true)){
+                                LOG_INFO("trigger remove pallet timer --> %s, delay = %d ms", belt.c_str(), delay);
+                                timer_.addMsg(it->second, 1, this, delay);
+                            }
+                        }
+                        // int delay = it->second->getDelayTime();
+                        // LOG_INFO("tigger remove pallet delay = %d ms", isManual ? delay : 0);
+                        // printf("tigger remove pallet delay = %d ms\n", isManual ? delay : 0);
+                        // if(it->second->setOnTimer(true)){
+                        //     timer_.addMsg(it->second, 1, this, delay);
+                        // }
+                    }while(0);
                 }
+                return ret;
             }
-            void addRandomPallet(std::string belt){
+            int addRandomPallet(std::string belt, bool isManual = false, bool isDelay = true, uint32_t who = 0){
+                int ret = -1;
                 auto it = belts_.find(belt);
                 if(it != belts_.end()){
-                    it->second->addPallet();
+                    do{
+                        ret = it->second->isOnStart() ? 1 : 0;
+                        if(!isManual && ret && (who == 1)){
+                            it->second->setOnStart(false);
+                        }
+                        if(isManual != it->second->isManual())break;
+                        if(!it->second->isCorrectDirection(0))break;
+                        if(!isDelay){
+                            LOG_INFO("trigger add pallet immediately --> %s", belt.c_str());
+                            it->second->addPallet();
+                        }
+                        else{
+                            int delay = it->second->getDelayTime();
+                            if(it->second->setOnTimer(true)){
+                                LOG_INFO("trigger add pallet timer --> %s, delay = %d ms", belt.c_str(), delay);
+                                //printf("trigger add pallet timer --> %s, delay = %d ms\n", belt.c_str(), delay);
+                                timer_.addMsg(it->second, 0, this, delay);
+                            }
+                        }
+                        // int delay = it->second->getDelayTime();
+                        // LOG_INFO("tigger add pallet delay = %d ms", isDelay ? delay : 0);
+                        // printf("tigger add pallet delay = %d ms\n", isDelay ? delay : 0);
+                        // if(it->second->setOnTimer(true)){
+                        //     timer_.addMsg(it->second, 0, this, isDelay ? delay : 0);
+                        // }
+                    }while(0);
                 }
+                return ret;
+            }
+            int getServerList(std::list<std::string>& server_list){
+                std::map<std::string, std::shared_ptr<VoyerBeltServer>>::const_iterator it;
+                int ret = 0;
+                for(it = belts_.begin(); it != belts_.end(); it++) server_list.push_back(it->first);
+                return ret;
             }
     };
 }

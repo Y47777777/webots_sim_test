@@ -26,6 +26,13 @@
         </widget>
        </item>
        <item>
+        <widget class="QPushButton" name="pushButton_remove">
+         <property name="text">
+          <string>RemovePallet</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QLineEdit" name="TargetConveyorText"/>
        </item>
       </layout>

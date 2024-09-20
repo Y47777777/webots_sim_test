@@ -40,31 +40,34 @@ enum EVENTS{
     NO_GOODS = 1
 };
 
-class Convoyer : public WRobot {
+class ConvoyerBelt : public WRobot {
    public:
    /**
     * @brief Get the Supervisor Instance object
     * 
     * @return WSupervisor* 
     */
-    Convoyer(std::string robot_name, std::string name):WRobot(robot_name){
-        printf("Name = %s\n", this->Robot::getName().c_str());
+    ConvoyerBelt(std::string robot_name, std::string name):WRobot(robot_name){
         device = this->getDistanceSensor(std::string(this->Robot::getName() + "_D"));
-        sensor_name_ = name;
+        sensor_name_ = std::string(this->Robot::getName() + "_D");
         if(device){
+            double max_value = device->getMaxValue();
+            if(max_value > 2){
+                threshold_ = max_value - 0.5;
+            }
             device->enable(100);
         }
         //robot_name_ = this->getName();
     }
 
-    ~Convoyer(){}
+    ~ConvoyerBelt(){}
 
     void spin(){
         this->step(this->getBasicTimeStep());
         if(device){
             double curr_val = device->getValue();
             //std::cout << "Robot = " << this->getName() << ", sensor = " << sensor_name_ << "read value = " << device->getValue() << std::endl;
-            VoyarEvent_ = curr_val < 2 ? HAVE_GOODS : NO_GOODS;
+            VoyarEvent_ = curr_val <= threshold_ ? HAVE_GOODS : NO_GOODS;
         }
     }
 
@@ -76,6 +79,7 @@ class Convoyer : public WRobot {
         webots::DistanceSensor *device{nullptr};
         std::string sensor_name_{""};
         int VoyarEvent_{NOT_EVENTS};
+        double threshold_{1.35};
         
 };  
 }  // namespace VNSim

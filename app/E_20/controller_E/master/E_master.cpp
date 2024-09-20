@@ -142,11 +142,23 @@ AGVController::AGVController() : BaseController("webots_master") {
     whileSpinPushBack((liftdoor_ptr_));
     whileSpinPushBack(bind(&WBase::spin, pose_ptr_));
 
+    // must get server after tranfer init finish...
+    std::list<std::string> convoyer_list;
+    manager_ptr_->getServerList(convoyer_list);
+
     // pub
     ecal_ptr_->addEcal("webot/E_msg");
     ecal_ptr_->addEcal("webot/transfer");
     ecal_ptr_->addEcal("webot/pose");
     ecal_ptr_->addEcal("webot/liftdoor");
+    for(auto const& it:convoyer_list){
+        LOG_INFO("E20 cmd topic = %s, state stopic = %s", std::string(it + "/CmdInfo").c_str(), std::string(it + "/Goods/Events").c_str());
+        ecal_ptr_->addEcal(std::string(it + "/CmdInfo").c_str());
+        ecal_ptr_->addEcal(std::string(it + "/Goods/Events").c_str(),
+                        std::bind(&AGVController::onConveyorStateMsg, this,
+                                std::placeholders::_1, std::placeholders::_2));
+    }
+        
 
     // sub
     ecal_ptr_->addEcal("svc/E_msg",
@@ -406,17 +418,36 @@ void VNSim::AGVController::pubLiftDoorTag() {
 
 void AGVController::onConveyorKeyboardMsg(const std::map<std::string, std::string> &msg){
     // TODO: add state consideration....
-    manager_ptr_->addRandomPallet(msg.at("belt"));
+    std::string function = msg.at("belt");
+    if(function == "0")
+        manager_ptr_->addRandomPallet(msg.at("belt"),true,false);
+    else
+        manager_ptr_->addRemovePallet(msg.at("belt"),true);
 }
 
 void AGVController::onConveyorStateMsg(const char *topic_name,
                          const eCAL::SReceiveCallbackData *data){
     sim_data_flow::StateInfo payload;
     payload.ParseFromArray(data->buf, data->size);
-    printf("%s --> belt = %s, state = %d\n", __FUNCTION__, payload.belt_name().c_str(), payload.state());
+    int ret = 1;
     if(payload.state() == 0){
         // belt is full
         // TODO: may be add more topic
-        manager_ptr_->addRemovePallet(payload.belt_name());
+        ret = manager_ptr_->addRemovePallet(payload.belt_name(), false, payload.who());
+    }else if(payload.state() == 1){
+        // belt is empty
+        ret = manager_ptr_->addRandomPallet(payload.belt_name(), false, true, payload.who());
+    }
+    if(ret == 1){
+        // convoyer belt initialization is over
+        std::string res_topic = "";
+        res_topic = payload.belt_name() + "/CmdInfo";
+        LOG_INFO("%s --> try send stop cmd to %s", __FUNCTION__, res_topic.c_str());
+        //printf("%s --> try send stop cmd to %s\n", __FUNCTION__, res_topic.c_str());
+        sim_data_flow::CmdInfo res_payload;
+        res_payload.set_cmd(0);
+        uint8_t buf[res_payload.ByteSize()];
+        res_payload.SerializePartialToArray(buf, res_payload.ByteSize());
+        ecal_ptr_->send(res_topic.c_str(), buf, res_payload.ByteSize());
     }
 }

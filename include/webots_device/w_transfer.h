@@ -200,10 +200,8 @@ class WTransfer : public WBase {
             int cnt = children->getCount();
             for (int i = 0; i < cnt; i++) {
                 Node *iter = children->getMFNode(i);
-                printf("name = %s\n", iter->getTypeName().c_str());
                 if(manager_ != nullptr){
-                    if((iter->getTypeName().compare("VoyarBelt") == 0) && (manager_ != nullptr)){
-                        std::cout << "name = " << iter->getField("name")->getSFString() << ", p_groups = " << iter->getField("p_groups")->getSFString() << std::endl;
+                    if((iter->getTypeName().compare("ConvoyerBelt") == 0) && (manager_ != nullptr)){
                         manager_->addBelt(iter->getField("name")->getSFString(), \
                         iter->getField("p_groups")->getSFString(), iter);
                     }
@@ -211,7 +209,6 @@ class WTransfer : public WBase {
                     && (this_ptr->getTypeName().compare("Solid") == 0) && (this_ptr->getParentNode()->getTypeName().compare("Robot") !=  0)){
                         // has translation and is the first solid
                         l_root_solid_name = this_ptr->getField("name")->getSFString();
-                        // printf("TRY ADD SOLID = %s\n", l_root_solid_name.c_str());
                     }
                 }
                 getChildNode(iter, l_root_solid_name);
@@ -258,17 +255,15 @@ class WTransfer : public WBase {
             std::regex pattern("Pallets_[a-zA-Z0-9]+");
             bool IsPallet = false;
             if(manager_ != nullptr){
-                printf("CURRENT IDX = %d\n", idx - 1);
                 if(std::regex_match(parent_node->getDef(), pattern) && (node_type.compare("Solid") == 0)){
                     manager_->initPallets(parent_node->getDef(), this_ptr);
                     IsPallet = true;
                 }
-                printf("CURRENT_TYPE = %s\n", this_ptr->getTypeName().c_str());
+                //printf("CURRENT_TYPE = %s\n", this_ptr->getTypeName().c_str());
                 Field* name_field = this_ptr->getField("name");
                 if(name_field != nullptr){
                     if(!IsPallet && (name_field->getSFString().compare(l_root_solid_name)) == 0){
                         // not input pallets not , not Robot node, possible item on the belt...
-                        printf("ADD IDX = %d, NAME = %s\n", idx - 1, name_field->getSFString().c_str());
                         manager_->addPossibleNode(this_ptr);
                     }
                 }
@@ -281,7 +276,6 @@ class WTransfer : public WBase {
     std::map<int32_t, WTransferNode> m_tanfer_;
     // master for pub,shadow for sub
     std::map<int32_t, WTransferNode> m_updated_trans_;
-    // std::list<int32_t> m_cargo_trans_;
     // idx specify node id
     int32_t idx = 0;
     bool send_all = false;

@@ -20,7 +20,7 @@ public:
             this_ptr = nullptr;
         }
     }
-private:
+protected:
     Singleton(){}
     virtual ~Singleton(){}
 private:
