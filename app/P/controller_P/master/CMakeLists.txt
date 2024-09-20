@@ -67,6 +67,7 @@ target_link_libraries(${PROJECT_NAME}_${CONTROL_NAME}
     ${LIBRARY_INSTALL_DIR}/libkeyboardform.a
     ${LIBRARY_INSTALL_DIR}/libfoxglove-vn.a
     ${LIBRARY_INSTALL_DIR}/libsim_data_flow.a
+    ${LIBRARY_INSTALL_DIR}/libSingleton.a
     eCAL::core
     Qt${QT_VERSION_MAJOR}::Core 
     Qt${QT_VERSION_MAJOR}::Widgets
