@@ -70,7 +70,7 @@ double computeInsideWheelSpeed(double steer, double outside_wheel_speed) {
         return outside_wheel_speed;
     }
 
-    double back_radius_c = steer;
+    double back_radius_c = WHEELBASE / tan(steer);
 
     // std::cout << "11 back_radius_c1 = " << back_radius_c1
     //           << "  back_radius_c2 = " << back_radius_c2
