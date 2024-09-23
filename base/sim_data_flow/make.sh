@@ -25,7 +25,9 @@ echo "cp libraries"
 cp *.a* ../../../../../simulation_world/webots/libraries/
 
 echo "cp include"
+rm -rf ../../../include/sim_data_flow/
 mkdir -p ../../../include/sim_data_flow/
+
 cp *.h ../../../include/sim_data_flow/
 cp *.cc ../../../include/sim_data_flow/
 

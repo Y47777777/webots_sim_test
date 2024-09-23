@@ -28,10 +28,8 @@
 using namespace VNSim;
 using namespace webots;
 
-const double WHEELBASE = 1.7;     // 前后轮间距
-const double FRONT_TREAD = 0.78;  // 定向轮间距
-const double REAR_TREAD = 1.1;    // 驱动轮间距
-const double FOLLOW_START = 0.4;
+const double WHEELBASE = 1.46;       // 前后轮间距
+const double REAR_TREAD = 1.0;       // 驱动轮间距
 const double FROK_MIN_SPAC = 0.666;  //外叉内间距最小值 FIXME: E20
 const double CLAMP_FACTOR = 48;
 
@@ -147,7 +145,7 @@ AGVController::AGVController() : BaseController("webots_master") {
     manager_ptr_->getServerList(convoyer_list);
 
     // pub
-    ecal_ptr_->addEcal("webot/E_msg");
+    ecal_ptr_->addEcal("webot/E20_msg");
     ecal_ptr_->addEcal("webot/transfer");
     ecal_ptr_->addEcal("webot/pose");
     ecal_ptr_->addEcal("webot/liftdoor");
@@ -161,7 +159,7 @@ AGVController::AGVController() : BaseController("webots_master") {
         
 
     // sub
-    ecal_ptr_->addEcal("svc/E_msg",
+    ecal_ptr_->addEcal("svc/E20_msg",
                        std::bind(&AGVController::subEMsgCallBack, this,
                                  std::placeholders::_1, std::placeholders::_2));
     ecal_ptr_->addEcal("Goods/Events",
@@ -191,7 +189,6 @@ void AGVController::manualSetState(const std::map<std::string, double> &msg) {
         double r_v, l_v;
 
         computeSteeringAndDrive(steer_speed, steer_yaw, l_v, r_v);
-
 
         stree_ptr_->setYaw(steer_yaw);
         l_ptr_->setVelocity(l_v);
@@ -354,8 +351,6 @@ void AGVController::subEMsgCallBack(const char *topic_name,
             r_speed = computeInsideWheelSpeed(steeting_theta, speed);
             l_speed = speed;
         }
-        // LOG_INFO("L l_yaw: %lf, r_yaw = %lf , l_v = %lf r_v = %lf", l_theta,
-        //          r_theta, l_speed, r_speed);
 
         stree_ptr_->setYaw(steeting_theta);
         l_ptr_->setVelocity(l_speed);
@@ -404,7 +399,7 @@ void AGVController::pubSerialSpin() {
     // rotation[3]);
     uint8_t buf[payload.ByteSize()];
     payload.SerializePartialToArray(buf, payload.ByteSize());
-    ecal_ptr_->send("webot/E_msg", buf, payload.ByteSize());
+    ecal_ptr_->send("webot/E20_msg", buf, payload.ByteSize());
 }
 
 void VNSim::AGVController::pubLiftDoorTag() {

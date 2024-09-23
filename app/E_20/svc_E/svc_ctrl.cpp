@@ -14,11 +14,11 @@ SVCMaster::~SVCMaster() {}
 int SVCMaster::onInitService() {
     // publisher
     ecal_ptr_->addEcal("Sensor/read");
-    ecal_ptr_->addEcal("svc/E_msg");
+    ecal_ptr_->addEcal("svc/E20_msg");
     ecal_ptr_->addEcal("svc/pose");
 
     // Receive
-    ecal_ptr_->addEcal("webot/E_msg",
+    ecal_ptr_->addEcal("webot/E20_msg",
                        std::bind(&SVCMaster::subEMsgCallBack, this,
                                  std::placeholders::_1, std::placeholders::_2));
 
@@ -83,6 +83,7 @@ void SVCMaster::pubEMsgsToWebots() {
     decoder_.getValue("ForkDevice", &ForkDeviceP, "P");
     decoder_.getValue("ForkDevice", &ForkDeviceC, "C");
 
+    msg_to_webots_.set_timestamp(Timer::getInstance()->getCurrentFromSystem());
     msg_to_webots_.set_steering_speed(MoveDevice);
     msg_to_webots_.set_steering_theta(SteeringDevice);
     msg_to_webots_.set_forkspeedz(ForkDeviceZ);
@@ -93,7 +94,7 @@ void SVCMaster::pubEMsgsToWebots() {
     // publish
     uint8_t buf[msg_to_webots_.ByteSize()];
     msg_to_webots_.SerializePartialToArray(buf, msg_to_webots_.ByteSize());
-    ecal_ptr_->send("svc/E_msg", buf, msg_to_webots_.ByteSize());
+    ecal_ptr_->send("svc/E20_msg", buf, msg_to_webots_.ByteSize());
 }
 
 void SVCMaster::pubUpStream() {
