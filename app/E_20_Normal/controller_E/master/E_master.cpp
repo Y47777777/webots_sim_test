@@ -148,14 +148,13 @@ AGVController::AGVController() : BaseController("webots_master") {
                                  std::placeholders::_1, std::placeholders::_2));
 }
 
-static double forkY_speed = 0;
-
 void AGVController::manualSetState(const std::map<std::string, double> &msg) {
     static double steer_speed = 0;
     static double steer_yaw = 0;
     static double fork_speed = 0;
     static double forkP_speed = 0;
     static double forkC_speed = 0;
+    static double forkY_speed = 0;
     if (msg.find("refresh_world") != msg.end()) {
         transfer_ptr_->noticeAll();
     }
@@ -196,7 +195,7 @@ void AGVController::manualGetState(std::map<std::string, double> &msg) {
     msg["steer_speed"] = l_ptr_->getSpeed();
     msg["steer_yaw"] = stree_ptr_->getMotorYaw();
     msg["fork_speed"] = fork_ptr_->getVelocityValue();
-    msg["forkY_speed"] = forkY_speed;
+    msg["forkY_speed"] = forkY_ptr_->getMemorySpeed();
     msg["forkP_speed"] = forkP_ptr_->getVelocityValue();
     msg["forkC_speed"] = forkCLF1_ptr_->getVelocityValue();
     msg["fork_height"] = fork_ptr_->getSenosorValue();
