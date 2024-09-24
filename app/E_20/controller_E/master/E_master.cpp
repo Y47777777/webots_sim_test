@@ -107,8 +107,7 @@ AGVController::AGVController() : BaseController("webots_master") {
 
     fork_ptr_ = std::make_shared<WFork>("fork height motor", "ForkZAxis",
                                         "fork height");
-    // forkY_ptr_ = std::make_shared<WFork>("YMotor", "ShadowY","","",false,0.0,
-    // false, 100, true);
+    forkY_ptr_ = std::make_shared<WFork>("", "", "");
     forkP_ptr_ = std::make_shared<WFork>("PMotor", "ForkPAxis");
     forkCLF1_ptr_ = std::make_shared<WFork>("CLMotor", "LF1", "", "", false,
                                             0.0, true, 200, true, 10);
@@ -167,14 +166,13 @@ AGVController::AGVController() : BaseController("webots_master") {
                                 std::placeholders::_1, std::placeholders::_2));
 }
 
-static double forkY_speed = 0;
-
 void AGVController::manualSetState(const std::map<std::string, double> &msg) {
     static double steer_speed = 0;
     static double steer_yaw = 0;
     static double fork_speed = 0;
     static double forkP_speed = 0;
     static double forkC_speed = 0;
+    static double forkY_speed = 0;
     if (msg.find("refresh_world") != msg.end()) {
         transfer_ptr_->noticeAll();
     }
@@ -196,6 +194,7 @@ void AGVController::manualSetState(const std::map<std::string, double> &msg) {
 
         fork_ptr_->setVelocityAll(fork_speed);
         forkP_ptr_->setVelocityAll(forkP_speed);
+        forkY_ptr_->setMemorySpeed(forkC_speed);
         double CL_T = forkC_speed - forkY_speed;
         double CR_T = forkC_speed + forkY_speed;
         if (determineForceCAxisReset(CL_T, CR_T)) {
@@ -214,11 +213,11 @@ void AGVController::manualGetState(std::map<std::string, double> &msg) {
     msg["steer_speed"] = l_ptr_->getSpeed();
     msg["steer_yaw"] = stree_ptr_->getMotorYaw();
     msg["fork_speed"] = fork_ptr_->getVelocityValue();
-    msg["forkY_speed"] = forkY_speed;
+    msg["forkY_speed"] = forkY_ptr_->getMemorySpeed();
     msg["forkP_speed"] = forkP_ptr_->getVelocityValue();
     msg["forkC_speed"] = forkCLF1_ptr_->getVelocityValue();
     msg["fork_height"] = fork_ptr_->getSenosorValue();
-    msg["forkY_height"] = 0;
+    msg["forkY_height"] = forkY_ptr_->getMemoryHeight();
     msg["forkP_height"] = forkP_ptr_->getSenosorValue();
     msg["forkC_height"] = forkCLF1_ptr_->getSenosorValue();
     msg["real_speed"] = forkCRF1_ptr_->getSenosorValue();
@@ -228,6 +227,8 @@ void AGVController::whileSpin() {
     /* 主循环 在super_->step()后*/
     // determine whether we should reset C speed to 0
     determineForceCAxisReset();
+
+    moveShadowForkSpin();
 
     // 发送至svc
     pubSerialSpin();
@@ -358,6 +359,7 @@ void AGVController::subEMsgCallBack(const char *topic_name,
 
         fork_ptr_->setVelocity(payload.forkspeedz());
         forkP_ptr_->setVelocity(payload.forkspeedp());
+        forkY_ptr_->setMemorySpeed(payload.forkspeedy());
         double CL_T = payload.forkspeedc() + payload.forkspeedy();
         double CR_T = payload.forkspeedc() - payload.forkspeedy();
         if (determineForceCAxisReset(CL_T, CR_T)) {
@@ -369,6 +371,12 @@ void AGVController::subEMsgCallBack(const char *topic_name,
         forkCLF1_ptr_->setVelocity(CL_T);
         forkCRF1_ptr_->setVelocity(CR_T);
     }
+}
+
+void AGVController::moveShadowForkSpin() {
+    double forkLC = forkCLF1_ptr_->getSenosorValue();
+    double forkLR = forkCRF1_ptr_->getSenosorValue();
+    forkY_ptr_->setMemoryHeight((forkLC - forkLR)/2);
 }
 
 void AGVController::pubSerialSpin() {
