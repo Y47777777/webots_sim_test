@@ -10,6 +10,9 @@
 #include <webots/Node.hpp>
 #include "geometry/geometry.h"
 #include "singleton/singleton_soliddata.h"
+#include "threadpool.h"
+
+#define DEFAULT_THREAD_POOL 4
 
 namespace VNSim{
     class VoyerBeltServer;
@@ -151,6 +154,14 @@ namespace VNSim{
             }
             bool isManual(){return isManual_;}
             int getDelayTime(){return time_;}
+            void onRemoveCallback(){
+                this->removePallet();
+                this->setOnTimer(false);
+            }
+            void onAddCallback(){
+                this->addPallet();
+                this->setOnTimer(false);
+            }
     };
     class RingTimer{
         public:
@@ -161,6 +172,7 @@ namespace VNSim{
                 uint64_t trigger_time;
             };
         private:
+            std::unique_ptr<ThreadPool> th_pool_ptr_;
             std::thread palletRemoveTimer_;
             std::mutex msg_list_mutex_;
             bool running_{true};
@@ -174,8 +186,15 @@ namespace VNSim{
                     this->removeMsg();
                 }
             }
+            void triggerEvent(int event, std::shared_ptr<VoyerBeltServer> ptr){
+                if(event == 0)
+                    th_pool_ptr_->enqueue(std::bind(&VoyerBeltServer::onAddCallback, ptr));
+                else
+                    th_pool_ptr_->enqueue(std::bind(&VoyerBeltServer::onRemoveCallback, ptr));
+            }
         public:
             void init(){
+                th_pool_ptr_ = std::make_unique<ThreadPool>(DEFAULT_THREAD_POOL);
                 std::thread l_thread(std::bind(&RingTimer::run, this));
                 palletRemoveTimer_ = std::move(l_thread);
             }
@@ -207,16 +226,14 @@ namespace VNSim{
                     }
                 }
                 for(auto &it: call_back_list){
-                    if(it.event == 0)
-                        it.server->addPallet();
-                    else
-                        it.server->removePallet();
-                    it.server->setOnTimer(false);
+                    this->triggerEvent(it.event, it.server);
                 }
+            }
+            void trigger(int event, std::shared_ptr<VoyerBeltServer> ptr){
+                this->triggerEvent(event, ptr);
             }
     };
     class VoyerBeltManager{
-        // TODO: Optimize a thread pool here
         private:
             std::map<std::string, std::shared_ptr<VoyerBeltServer>> belts_;
             RingTimer timer_;
@@ -260,7 +277,7 @@ namespace VNSim{
                         if(!it->second->isCorrectDirection(1))break;
                         if(isManual){
                             LOG_INFO("trigger remove pallet immediately --> %s", belt.c_str());
-                            it->second->removePallet();
+                            timer_.trigger(1, it->second);
                         }else{
                             int delay = it->second->getDelayTime();
                             if(it->second->setOnTimer(true)){
@@ -268,12 +285,6 @@ namespace VNSim{
                                 timer_.addMsg(it->second, 1, this, delay);
                             }
                         }
-                        // int delay = it->second->getDelayTime();
-                        // LOG_INFO("tigger remove pallet delay = %d ms", isManual ? delay : 0);
-                        // printf("tigger remove pallet delay = %d ms\n", isManual ? delay : 0);
-                        // if(it->second->setOnTimer(true)){
-                        //     timer_.addMsg(it->second, 1, this, delay);
-                        // }
                     }while(0);
                 }
                 return ret;
@@ -291,7 +302,7 @@ namespace VNSim{
                         if(!it->second->isCorrectDirection(0))break;
                         if(!isDelay){
                             LOG_INFO("trigger add pallet immediately --> %s", belt.c_str());
-                            it->second->addPallet();
+                            timer_.trigger(0, it->second);
                         }
                         else{
                             int delay = it->second->getDelayTime();
@@ -301,12 +312,6 @@ namespace VNSim{
                                 timer_.addMsg(it->second, 0, this, delay);
                             }
                         }
-                        // int delay = it->second->getDelayTime();
-                        // LOG_INFO("tigger add pallet delay = %d ms", isDelay ? delay : 0);
-                        // printf("tigger add pallet delay = %d ms\n", isDelay ? delay : 0);
-                        // if(it->second->setOnTimer(true)){
-                        //     timer_.addMsg(it->second, 0, this, isDelay ? delay : 0);
-                        // }
                     }while(0);
                 }
                 return ret;
