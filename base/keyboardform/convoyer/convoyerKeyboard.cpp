@@ -44,5 +44,6 @@ void ConvoyerKeyboard::sendMsg() {
     }
     std::map<std::string, std::string> msg;
     msg["belt"] = manual_state_.selected;
+    msg["function"] = manual_state_.function;
     model_ptr_->onConveyorKeyboardMsg(msg);
 }

@@ -418,7 +418,7 @@ void VNSim::AGVController::pubLiftDoorTag() {
 
 void AGVController::onConveyorKeyboardMsg(const std::map<std::string, std::string> &msg){
     // TODO: add state consideration....
-    std::string function = msg.at("belt");
+    std::string function = msg.at("function");
     if(function == "0")
         manager_ptr_->addRandomPallet(msg.at("belt"),true,false);
     else
