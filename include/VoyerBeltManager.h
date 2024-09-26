@@ -259,6 +259,7 @@ namespace VNSim{
                 }
             }
             void addPossibleNode(Node* node){
+                LOG_INFO("addPossibleNode = [%s]", node->getField("name")->getSFString().c_str());
                 Singleton<PossibleSolidData>::getInstance()->addNode(node);
             }
             void removeBelt(std::string belt){
