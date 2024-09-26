@@ -205,6 +205,9 @@ class WTransfer : public WBase {
                         manager_->addBelt(iter->getField("name")->getSFString(), \
                         iter->getField("p_groups")->getSFString(), iter);
                     }
+                    if(this_ptr->getTypeName().compare("Robot") == 0){
+                        l_root_solid_name = "NOTUSE";
+                    }
                     if((l_root_solid_name == "") && (this_ptr->getField("translation") != nullptr) \
                     && (this_ptr->getTypeName().compare("Solid") == 0) && (this_ptr->getParentNode()->getTypeName().compare("Robot") !=  0)){
                         // has translation and is the first solid
