@@ -125,7 +125,6 @@ class WWheel : public WBase {
     }
 
     void setSpeed(double v, double yaw) {
-        AutoAtomicLock lock(spin_mutex_);
         setVelocity(v);
         setYaw(yaw);
     }

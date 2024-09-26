@@ -293,7 +293,7 @@ class WLidar : public WBase {
                     point->set_time(address[i].time);
                     point->set_layer_id(address[i].layer_id);
 
-                    point->set_intensity(150);
+                    point->set_intensity(100);
                 }
             }
         }

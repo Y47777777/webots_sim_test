@@ -22,6 +22,7 @@ std::string lidar_4_webots_topic = "webots/Lidar/.113/PointCloud";
 std::string lidar_3_webots_topic = "webots/Lidar/.112/PointCloud";
 std::string lidar_0_webots_topic = "webots/Lidar/.109/PointCloud";
 std::string be_webots_topic = "webots/Lidar/.200/PointCloud";
+std::string bp_webots_topic = "webots/Lidar/.55/PointCloud";
 
 std::string lidar_2_webots_base_topic = "webots/LidarToBase/.111/PointCloud";
 std::string lidar_4_webots_base_topic = "webots/LidarToBase/.113/PointCloud";
@@ -32,6 +33,7 @@ std::string lidar_4_real_topic = "192.168.1.113";
 std::string lidar_3_real_topic = "192.168.1.112";
 std::string lidar_0_real_topic = "192.168.1.109";
 std::string be_real_topic = "192.168.1.200";
+std::string bp_real_topic = "192.168.1.55";
 
 std::string multi_mid360_topic = "multi_mid360";
 
@@ -47,6 +49,7 @@ int SVCShadow::initService() {
     ecal_ptr_->addEcal(lidar_0_real_topic.c_str());
     ecal_ptr_->addEcal(be_real_topic.c_str());
     ecal_ptr_->addEcal(multi_mid360_topic.c_str());
+    ecal_ptr_->addEcal(bp_real_topic.c_str());
 
     // sub
     // TODO: 可以用匿名函数套一手
@@ -79,6 +82,10 @@ int SVCShadow::initService() {
 
     ecal_ptr_->addEcal(lidar_3_webots_base_topic.c_str(),
                        std::bind(&SVCShadow::onMultiMid360Msg, this,
+                                 std::placeholders::_1, std::placeholders::_2));
+
+    ecal_ptr_->addEcal(bp_webots_topic.c_str(),
+                        std::bind(&SVCShadow::onBPMsg, this,
                                  std::placeholders::_1, std::placeholders::_2));
 
     return 0;
@@ -156,6 +163,22 @@ void SVCShadow::onBrighteyeMsg(const char *topic_name,
     payload_send.SerializePartialToArray(buf, payload_send.ByteSize());
     ecal_ptr_->send(be_real_topic.c_str(), buf, payload_send.ByteSize());
 }
+
+void SVCShadow::onBPMsg(const char *topic_name,
+                               const eCAL::SReceiveCallbackData *data) {
+    sim_data_flow::WBPointCloud payload;
+    pb::PointCloud2 payload_send;
+    static uint64_t seq = 0;
+
+    payload.ParseFromArray(data->buf, data->size);
+
+    // 转pointcloud2
+    pbTopb2(payload, payload_send, seq++);
+    uint8_t buf[payload_send.ByteSize()];
+    payload_send.SerializePartialToArray(buf, payload_send.ByteSize());
+    ecal_ptr_->send(bp_real_topic.c_str(), buf, payload_send.ByteSize());
+}
+
 
 void SVCShadow::onMultiMid360Msg(const char *topic_name,
                                  const eCAL::SReceiveCallbackData *data) {

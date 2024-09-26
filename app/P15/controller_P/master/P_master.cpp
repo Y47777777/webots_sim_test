@@ -53,7 +53,6 @@ AGVController::AGVController() : BaseController("webots_master") {
     whileSpinPushBack((r_ptr_));
     whileSpinPushBack((fork_ptr_));
     whileSpinPushBack((imu_ptr_));
-    whileSpinPushBack((pose_ptr_));
     whileSpinPushBack((transfer_ptr_));
     whileSpinPushBack((collision_ptr_));
 
@@ -62,6 +61,8 @@ AGVController::AGVController() : BaseController("webots_master") {
     whileSpinPushBack((hswitchR_ptr_));
     whileSpinPushBack((vswitchL_ptr_));
     whileSpinPushBack((vswitchR_ptr_));
+    whileSpinPushBack(bind(&WBase::spin, pose_ptr_));
+    
 
     // pub
     ecal_ptr_->addEcal("webot/P_msg");
