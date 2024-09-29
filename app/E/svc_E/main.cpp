@@ -21,7 +21,7 @@ using namespace VNSim;
 int main(int argc, char *argv[]) {
     // serial service
     // TODO: 生成不同的log
-    g_Logger.initLog("../../plugins/log_config/general_svc.ini");
+    g_Logger.initLog("../../configs/log_config/general_svc.ini");
     LOG_INFO("start svc_E");
 
     std::shared_ptr<BaseSvc> serial_service = std::make_shared<SVCMaster>();

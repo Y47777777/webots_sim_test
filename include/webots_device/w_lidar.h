@@ -121,7 +121,8 @@ class WLidar : public WBase {
         AutoAtomicLock lock(spin_mutex_);
 
         is_sim_NRLS_ = true;
-        const char *base_path = "../../plugins/lidar_scan_mode_config/";
+        //const char *base_path = "../../plugins/lidar_scan_mode_config/";
+        const char *base_path = "../../configs/lidar_scan_mode_config/";
         std::string file = std::string(base_path) + path;
         LOG_INFO(file.c_str());
         point_cloud_.clear_point_cloud();

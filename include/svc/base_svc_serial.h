@@ -30,11 +30,9 @@ class BaseSerialSvc : public BaseSvc {
     // TODO: config 路径修改
     int initService() {
         const char *decoder_file =
-            "../../../../../AGVServices/general/config/"
-            "Actuators.config";  // use General config files...
+            "/home/visionnav/AGVServices/general/config/Actuators.config";  // use General config files...
         const char *encoder_file =
-            "../../../../../AGVServices/general/config/"
-            "Sencers.config";  // use General config files...
+            "/homve/visionnav/AGVServices/general/config/Sencers.config";  // use General config files...
         int ret = 0;
         do { /*load config*/
             int l_ret = decoder_.loadConfig(decoder_file);

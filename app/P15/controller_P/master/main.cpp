@@ -1,4 +1,5 @@
 #include <QApplication>
+#include <unistd.h>
 #include "keyboardform/keyboardform.h"
 #include "P_master.h"
 #include "logvn/logvn.h"
@@ -8,11 +9,14 @@ using namespace VNSim;
 int main(int argc, char *argv[]) {
     // init glog
     // TODO:FIXME path....
-    g_Logger.initLog("../../plugins/log_config/webots_master.ini");
+    g_Logger.initLog("../../configs/log_config/webots_master.ini");
     
     LOG_INFO("log init...");
     LOG_INFO("try start svc_P15");
     system("./../svc_P15/svc_P15 &");
+    char tmp[256];
+    getcwd(tmp, 256);
+    printf("current working dir = %s\n", tmp);
     QApplication a(argc, argv);
     // init ctrl
     std::shared_ptr<BaseController> ctrl_ptr = std::make_shared<AGVController>();
