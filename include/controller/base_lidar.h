@@ -47,7 +47,7 @@ class BaseLidarControl : public BaseController {
 
         lidar_ptr->getLocalPointCloud(payload);
 
-        payload.set_timestamp(pose_ptr->getTimeStamp());
+        // payload.set_timestamp(pose_ptr->getTimeStamp());
 
         // 在数量大的情况下约为10ms
         for (int i = 0; i < payload.point_cloud_size(); i++) {

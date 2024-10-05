@@ -120,8 +120,10 @@ AGVController::AGVController() : BaseController("webots_master") {
     l_ptr_ = std::make_shared<WWheel>("FL", "", "", "RS", "");
     r_ptr_ = std::make_shared<WWheel>("FR", "", "", "RS", "");
     pose_ptr_ = std::make_shared<WPose>("RobotNode");
-    lidar_pose_ptr_ = std::make_shared<WLidar>("lidar_0", 100, false);
+
+    lidar_pose_ptr_ = std::make_shared<WLidar>("lidar_0", nullptr,100, false);
     transfer_ptr_ = std::make_shared<WTransfer>(manager_ptr_);
+
     collision_ptr_ = std::make_shared<WCollision>(false);
     liftdoor_ptr_ = std::make_shared<WLiftDoor>(false);
 

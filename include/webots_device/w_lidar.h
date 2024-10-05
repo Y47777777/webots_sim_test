@@ -43,7 +43,7 @@ class WLidar : public WBase {
      * @param[in] frequency   ladir 频率 (ms)
      * @param[in] connecting_rod   连杆长度
      */
-    WLidar(std::string lidar_name, int frequency = 100, bool enable = true,
+    WLidar(std::string lidar_name, std::shared_ptr<WPose> pose_ptr, int frequency = 100, bool enable = true,
            double connecting_rod = 0.241)
         : WBase() {
         // creat lidar
@@ -51,6 +51,7 @@ class WLidar : public WBase {
             lidar_name_ = lidar_name;
             frequency_ = frequency;
             frequency_cnt_ = std::round(double(frequency_ / step_duration_));
+            pose_ptr_ = pose_ptr;
 
             lidar_ = super_->getLidar(lidar_name);
             if (lidar_ == nullptr) {
@@ -251,6 +252,7 @@ class WLidar : public WBase {
                             int target_size = -1) {
         AutoAtomicLock lock(spin_mutex_);
         result.CopyFrom(point_cloud_);
+        result.set_timestamp(time_stamp_);
         data_is_ready_ = false;
     }
 
@@ -297,6 +299,8 @@ class WLidar : public WBase {
                 }
             }
         }
+        if (pose_ptr_ != nullptr)
+            time_stamp_ = pose_ptr_->getTimeStamp();
     }
 
    private:
@@ -308,6 +312,9 @@ class WLidar : public WBase {
 
     int frequency_ = 0;
     int frequency_cnt_ = 0;
+
+    uint64_t time_stamp_ = 0;
+    std::shared_ptr<WPose> pose_ptr_;
 
     int size_of_layer_ = 0;
     int size_of_point_cloud_ = 0;
