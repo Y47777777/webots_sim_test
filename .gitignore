@@ -6,5 +6,6 @@ include/keyboardform
 include/logvn
 include/geometry
 include/Parser
+include/singleton
 .vscode
 *.user
