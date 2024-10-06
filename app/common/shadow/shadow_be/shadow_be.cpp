@@ -21,7 +21,7 @@
 
 #include "logvn/logvn.h"
 
-#include "E_shadow_be.h"
+#include "shadow_be.h"
 
 using namespace VNSim;
 using namespace webots;
@@ -34,13 +34,13 @@ std::shared_ptr<ReflectorChecker> ReflectorChecker::instance_ptr_ = nullptr;
 std::string HAP_webots_topic = "webots/Lidar/.200/PointCloud";
 
 AGVController::AGVController() : BaseController("webots_shadow_be") {
-    // Sensor
-    HAP_ptr_ = std::make_shared<WLidar>("HAP", 100);
-    HAP_ptr_->setSimulationNRLS("HAP.csv", HAP_ONCE_CLOUD_SIZE);
-
     // 机器人位姿
     pose_ptr_ = std::make_shared<WPose>("RobotNode");
     transfer_ptr_ = std::make_shared<WTransfer>();
+
+    // Sensor
+    HAP_ptr_ = std::make_shared<WLidar>("HAP", pose_ptr_, 100);
+    HAP_ptr_->setSimulationNRLS("HAP.csv", HAP_ONCE_CLOUD_SIZE);
 
     // 删除所有物理属性，碰撞属性
     collision_ptr_ = std::make_shared<WCollision>();
@@ -54,46 +54,41 @@ AGVController::AGVController() : BaseController("webots_shadow_be") {
     // reflector_check_ptr_->setSensorMatrix4d("HAP",
     //                                         HAP_ptr_->getMatrixFromLidar());
 
-    whileSpinPushBack((HAP_ptr_));
-    whileSpinPushBack((pose_ptr_));
     whileSpinPushBack((transfer_ptr_));
+    whileSpinPushBack(bind(&WBase::spin, pose_ptr_));
+
+    whileSpinPushBack((HAP_ptr_));
 
     // creat publish
     ecal_ptr_->addEcal(HAP_webots_topic.c_str());
 
     // creat subscribe
     ecal_ptr_->addEcal("webot/pose",
-                       std::bind(&AGVController::poseCallBack, this,
-                                 std::placeholders::_1, std::placeholders::_2));
+                       std::bind(&AGVController::poseCallBack, this, std::placeholders::_1, std::placeholders::_2));
 
     ecal_ptr_->addEcal("webot/transfer",
-                       std::bind(&AGVController::transferCallBack, this,
-                                 std::placeholders::_1, std::placeholders::_2));
+                       std::bind(&AGVController::transferCallBack, this, std::placeholders::_1, std::placeholders::_2));
 
     // 创建线程
-    m_thread_.insert(std::pair<std::string, std::thread>(
-        "HAP_report", std::bind(&AGVController::HapReportSpin, this)));
+    m_thread_.insert(std::pair<std::string, std::thread>("HAP_report", std::bind(&AGVController::HapReportSpin, this)));
 }
 
 void AGVController::whileSpin() {
     // 主循环 在super_->step()后
 }
 
-void AGVController::poseCallBack(const char *topic_name,
-                                 const eCAL::SReceiveCallbackData *data) {
+void AGVController::poseCallBack(const char *topic_name, const eCAL::SReceiveCallbackData *data) {
     sim_data_flow::Pose pose;
     pose.ParseFromArray(data->buf, data->size);
 
-    double transfer[3] = {pose.position().x(), pose.position().y(),
-                          pose.position().z()};
-    double rotation[4] = {pose.orientation().x(), pose.orientation().y(),
-                          pose.orientation().z(), pose.orientation().w()};
+    double transfer[3] = {pose.position().x(), pose.position().y(), pose.position().z()};
+    double rotation[4] = {pose.orientation().x(), pose.orientation().y(), pose.orientation().z(),
+                          pose.orientation().w()};
 
     pose_ptr_->setTransferWithTime(transfer, rotation, pose.timestamp());
 }
 
-void AGVController::transferCallBack(const char *topic_name,
-                                     const eCAL::SReceiveCallbackData *data) {
+void AGVController::transferCallBack(const char *topic_name, const eCAL::SReceiveCallbackData *data) {
     sim_data_flow::MTransfer transfer;
     transfer.ParseFromArray(data->buf, data->size);
     transfer_ptr_->setTransfer(transfer);
@@ -101,14 +96,11 @@ void AGVController::transferCallBack(const char *topic_name,
 
 void AGVController::HapReportSpin() {
     LOG_INFO("HapReportSpin start\n");
-    while (!webotsExited_) {
-        sendPointCloud(HAP_webots_topic, HAP_ptr_);
-    }
+    while (!webotsExited_) { sendPointCloud(HAP_webots_topic, HAP_ptr_); }
 }
 
 // TODO:可以放到base中
-bool AGVController::sendPointCloud(std::string topic,
-                                   std::shared_ptr<WLidar> lidar_ptr) {
+bool AGVController::sendPointCloud(std::string topic, std::shared_ptr<WLidar> lidar_ptr) {
     if (lidar_ptr == nullptr) {
         return false;
     }
