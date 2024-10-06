@@ -41,8 +41,7 @@ inline double CalcAngle(double tangent) {
 }
 
 // 函数1：计算转向角和驱动轮速度
-void computeSteeringAndDrive(double v, double yaw, double &steer_l,
-                             double &steer_r, double &driver_l,
+void computeSteeringAndDrive(double v, double yaw, double &steer_l, double &steer_r, double &driver_l,
                              double &driver_r) {
     if (fabs(0 - yaw) < 0.001) {
         steer_l = 0;
@@ -71,8 +70,7 @@ void computeSteeringAndDrive(double v, double yaw, double &steer_l,
 }
 
 // 函数2：计算内侧驱动轮的转速
-double computeInsideWheelSpeed(double steer_l, double steer_r,
-                               double outside_wheel_speed) {
+double computeInsideWheelSpeed(double steer_l, double steer_r, double outside_wheel_speed) {
     double steer_c = (steer_l + steer_r) / 2;
     if (fabs(steer_c) < 0.001) {
         return outside_wheel_speed;
@@ -112,18 +110,15 @@ std::shared_ptr<ReflectorChecker> ReflectorChecker::instance_ptr_ = nullptr;
 
 AGVController::AGVController() : BaseController("webots_master") {
     imu_ptr_ = std::make_shared<WImu>("inertial unit", "gyro", "accelerometer");
-    fork_ptr_ = std::make_shared<WFork>("fork height motor", "ForkZAxis",
-                                        "fork height");
+    fork_ptr_ = std::make_shared<WFork>("fork height motor", "ForkZAxis", "fork height");
     forkY_ptr_ = std::make_shared<WFork>("YMotor", "ForkYAxis", "YSensor");
     forkP_ptr_ = std::make_shared<WFork>("PMotor", "ForkPAxis", "PSensor");
-    streeR_ptr_ =
-        std::make_shared<WWheel>("", "SteerWheelR", "SteerSolidL", "FLWheel");
-    streeL_ptr_ =
-        std::make_shared<WWheel>("", "SteerWheelL", "SteerSolidR", "FLWheel");
+    streeR_ptr_ = std::make_shared<WWheel>("", "SteerWheelR", "SteerSolidL", "FLWheel");
+    streeL_ptr_ = std::make_shared<WWheel>("", "SteerWheelL", "SteerSolidR", "FLWheel");
     l_ptr_ = std::make_shared<WWheel>("FL", "", "", "RS", "");
     r_ptr_ = std::make_shared<WWheel>("FR", "", "", "RS", "");
     pose_ptr_ = std::make_shared<WPose>("RobotNode");
-    lidar_pose_ptr_ = std::make_shared<WLidar>("perception", 100, false);
+    lidar_pose_ptr_ = std::make_shared<WLidar>("perception", nullptr, 100, false);
     transfer_ptr_ = std::make_shared<WTransfer>();
     collision_ptr_ = std::make_shared<WCollision>(false);
     liftdoor_ptr_ = std::make_shared<WLiftDoor>(false);
@@ -149,8 +144,7 @@ AGVController::AGVController() : BaseController("webots_master") {
 
     // sub
     ecal_ptr_->addEcal("svc/E_msg",
-                       std::bind(&AGVController::subEMsgCallBack, this,
-                                 std::placeholders::_1, std::placeholders::_2));
+                       std::bind(&AGVController::subEMsgCallBack, this, std::placeholders::_1, std::placeholders::_2));
 }
 
 void AGVController::manualSetState(const std::map<std::string, double> &msg) {
@@ -203,8 +197,7 @@ void AGVController::manualSetState(const std::map<std::string, double> &msg) {
 }
 
 void AGVController::manualGetState(std::map<std::string, double> &msg) {
-    double steer_c =
-        (streeR_ptr_->getMotorYaw() + streeL_ptr_->getMotorYaw()) / 2;
+    double steer_c = (streeR_ptr_->getMotorYaw() + streeL_ptr_->getMotorYaw()) / 2;
 
     msg["steer_speed_r"] = r_ptr_->getSpeed();
     msg["steer_speed"] = l_ptr_->getSpeed();
@@ -276,8 +269,7 @@ void AGVController::pubRobotPoseSpin() {
     ecal_ptr_->send("webot/pose", buf, pose.ByteSize());
 }
 
-void AGVController::subEMsgCallBack(const char *topic_name,
-                                    const eCAL::SReceiveCallbackData *data) {
+void AGVController::subEMsgCallBack(const char *topic_name, const eCAL::SReceiveCallbackData *data) {
     if (!isManual_) {
         sim_data_flow::EMsgDown payload;
         payload.ParseFromArray(data->buf, data->size);

@@ -43,8 +43,7 @@ inline double CalcAngle(double tangent) {
 }
 
 // 函数1：计算转向角和驱动轮速度
-void computeSteeringAndDrive(double v, double yaw, double &steer_l,
-                             double &steer_r, double &driver_l,
+void computeSteeringAndDrive(double v, double yaw, double &steer_l, double &steer_r, double &driver_l,
                              double &driver_r) {
     if (fabs(0 - yaw) < 0.001) {
         steer_l = 0;
@@ -73,8 +72,7 @@ void computeSteeringAndDrive(double v, double yaw, double &steer_l,
 }
 
 // 函数2：计算内侧驱动轮的转速
-double computeInsideWheelSpeed(double steer_l, double steer_r,
-                               double outside_wheel_speed) {
+double computeInsideWheelSpeed(double steer_l, double steer_r, double outside_wheel_speed) {
     double steer_c = (steer_l + steer_r) / 2;
     if (fabs(steer_c) < 0.001) {
         return outside_wheel_speed;
@@ -114,22 +112,19 @@ std::shared_ptr<ReflectorChecker> ReflectorChecker::instance_ptr_ = nullptr;
 
 AGVController::AGVController() : BaseController("webots_master") {
     imu_ptr_ = std::make_shared<WImu>("inertial unit", "gyro", "accelerometer");
-    fork_ptr_ = std::make_shared<WFork>("fork height motor", "ForkZAxis",
-                                        "fork height");
+    fork_ptr_ = std::make_shared<WFork>("fork height motor", "ForkZAxis", "fork height");
     forkY_ptr_ = std::make_shared<WFork>("", "", "");
     forkP_ptr_ = std::make_shared<WFork>("PMotor", "ForkPAxis", "PSensor");
     forkCLF1_ptr_ = std::make_shared<WFork>("CLMotor", "LF1", "CLSensor");
     forkCLF2_ptr_ = std::make_shared<WFork>("", "LF2_M", "", "", true);
     forkCRF1_ptr_ = std::make_shared<WFork>("CRMotor", "RF1", "CRSensor", "", false, 0.03);
     forkCRF2_ptr_ = std::make_shared<WFork>("", "RF2_M", "", "", true);
-    streeR_ptr_ =
-        std::make_shared<WWheel>("", "SteerWheelR", "SteerSolidL", "FLWheel");
-    streeL_ptr_ =
-        std::make_shared<WWheel>("", "SteerWheelL", "SteerSolidR", "FLWheel");
+    streeR_ptr_ = std::make_shared<WWheel>("", "SteerWheelR", "SteerSolidL", "FLWheel");
+    streeL_ptr_ = std::make_shared<WWheel>("", "SteerWheelL", "SteerSolidR", "FLWheel");
     l_ptr_ = std::make_shared<WWheel>("FL", "", "", "RS", "");
     r_ptr_ = std::make_shared<WWheel>("FR", "", "", "RS", "");
     pose_ptr_ = std::make_shared<WPose>("RobotNode");
-    lidar_pose_ptr_ = std::make_shared<WLidar>("lidar_0", 100, false);
+    lidar_pose_ptr_ = std::make_shared<WLidar>("lidar_0", nullptr, 100, false);
     transfer_ptr_ = std::make_shared<WTransfer>();
     collision_ptr_ = std::make_shared<WCollision>(false);
     liftdoor_ptr_ = std::make_shared<WLiftDoor>(false);
@@ -156,8 +151,7 @@ AGVController::AGVController() : BaseController("webots_master") {
 
     // sub
     ecal_ptr_->addEcal("svc/E_msg",
-                       std::bind(&AGVController::subEMsgCallBack, this,
-                                 std::placeholders::_1, std::placeholders::_2));
+                       std::bind(&AGVController::subEMsgCallBack, this, std::placeholders::_1, std::placeholders::_2));
 }
 
 void AGVController::manualSetState(const std::map<std::string, double> &msg) {
@@ -208,7 +202,7 @@ void AGVController::manualSetState(const std::map<std::string, double> &msg) {
 
         double CL_T = forkC_speed - forkY_speed;
         double CR_T = forkC_speed + forkY_speed;
-        if(determineForceCAxisReset(CL_T, CR_T)){
+        if (determineForceCAxisReset(CL_T, CR_T)) {
             CL_T = 0;
             CR_T = 0;
         }
@@ -220,8 +214,7 @@ void AGVController::manualSetState(const std::map<std::string, double> &msg) {
 }
 
 void AGVController::manualGetState(std::map<std::string, double> &msg) {
-    double steer_c =
-        (streeR_ptr_->getMotorYaw() + streeL_ptr_->getMotorYaw()) / 2;
+    double steer_c = (streeR_ptr_->getMotorYaw() + streeL_ptr_->getMotorYaw()) / 2;
 
     msg["steer_speed_r"] = r_ptr_->getSpeed();
     msg["steer_speed"] = l_ptr_->getSpeed();
@@ -262,43 +255,51 @@ void AGVController::whileSpin() {
     pubLiftDoorTag();
 }
 
-bool AGVController::determineForceCAxisReset(double CL_T, double CR_T){
+bool AGVController::determineForceCAxisReset(double CL_T, double CR_T) {
     bool flag = false;
     int clf1_bound = forkCLF1_ptr_->isOnBoundary();
     int crf1_bound = forkCRF1_ptr_->isOnBoundary();
-    if((CL_T * CR_T) < 0){
-        if((CL_T > 0) && ((clf1_bound == -1) || (crf1_bound == -2))){
+    if ((CL_T * CR_T) < 0) {
+        if ((CL_T > 0) && ((clf1_bound == -1) || (crf1_bound == -2))) {
             // Y left
-            LOG_INFO("%s1 --> CL_T = %lf, CR_T = %lf, forkCLF1_ptr_->isOnBoundary() = %d, forkCRF1_ptr_->isOnBoundary() = %d", __FUNCTION__, CL_T, CR_T, 
-            clf1_bound, crf1_bound);
+            LOG_INFO(
+                "%s1 --> CL_T = %lf, CR_T = %lf, forkCLF1_ptr_->isOnBoundary() = %d, forkCRF1_ptr_->isOnBoundary() = "
+                "%d",
+                __FUNCTION__, CL_T, CR_T, clf1_bound, crf1_bound);
             flag = true;
-        }else if((CL_T < 0) && ((clf1_bound == -2) || (crf1_bound == -1))){
+        } else if ((CL_T < 0) && ((clf1_bound == -2) || (crf1_bound == -1))) {
             // Y right
-            LOG_INFO("%s1 --> CL_T = %lf, CR_T = %lf, forkCLF1_ptr_->isOnBoundary() = %d, forkCRF1_ptr_->isOnBoundary() = %d", __FUNCTION__, CL_T, CR_T, 
-            clf1_bound, crf1_bound);
+            LOG_INFO(
+                "%s1 --> CL_T = %lf, CR_T = %lf, forkCLF1_ptr_->isOnBoundary() = %d, forkCRF1_ptr_->isOnBoundary() = "
+                "%d",
+                __FUNCTION__, CL_T, CR_T, clf1_bound, crf1_bound);
             flag = true;
         }
     }
     return flag;
 }
 
-void AGVController::determineForceCAxisReset(){
+void AGVController::determineForceCAxisReset() {
     double CL_T = forkCLF1_ptr_->getVelocityValue();
     double CR_T = forkCRF1_ptr_->getVelocityValue();
     bool flag = false;
     int clf1_bound = forkCLF1_ptr_->isOnBoundary();
     int crf1_bound = forkCRF1_ptr_->isOnBoundary();
-    if((CL_T * CR_T) < 0){
-        if((CL_T > 0) && ((clf1_bound == -1) || (crf1_bound == -2))){
+    if ((CL_T * CR_T) < 0) {
+        if ((CL_T > 0) && ((clf1_bound == -1) || (crf1_bound == -2))) {
             // Y left
             flag = true;
-            LOG_DEBUG("%s2 --> CL_T = %lf, CR_T = %lf, forkCLF1_ptr_->isOnBoundary() = %d, forkCRF1_ptr_->isOnBoundary() = %d", __FUNCTION__, CL_T, CR_T, 
-            clf1_bound, crf1_bound);
-        }else if((CL_T < 0) && ((clf1_bound == -2) || (crf1_bound == -1))){
+            LOG_DEBUG(
+                "%s2 --> CL_T = %lf, CR_T = %lf, forkCLF1_ptr_->isOnBoundary() = %d, forkCRF1_ptr_->isOnBoundary() = "
+                "%d",
+                __FUNCTION__, CL_T, CR_T, clf1_bound, crf1_bound);
+        } else if ((CL_T < 0) && ((clf1_bound == -2) || (crf1_bound == -1))) {
             // Y right
             flag = true;
-            LOG_DEBUG("%s2 --> CL_T = %lf, CR_T = %lf, forkCLF1_ptr_->isOnBoundary() = %d, forkCRF1_ptr_->isOnBoundary() = %d", __FUNCTION__, CL_T, CR_T, 
-            clf1_bound, crf1_bound);
+            LOG_DEBUG(
+                "%s2 --> CL_T = %lf, CR_T = %lf, forkCLF1_ptr_->isOnBoundary() = %d, forkCRF1_ptr_->isOnBoundary() = "
+                "%d",
+                __FUNCTION__, CL_T, CR_T, clf1_bound, crf1_bound);
         }
     }
     forkCLF1_ptr_->forceReset(flag);
@@ -318,11 +319,11 @@ void AGVController::moveShadowForkSpin() {
     double forkLR = forkCRF1_ptr_->getSenosorValue();
     double forkLCSpeed = forkCLF1_ptr_->getVelocityValue();
     double forkRCSpeed = forkCRF1_ptr_->getVelocityValue();
-    if(std::fabs(forkLC) > FOLLOW_START)
+    if (std::fabs(forkLC) > FOLLOW_START)
         forkCLF2_ptr_->setShadowPos(-(fabs(forkLC) - FOLLOW_START));
-    if(std::fabs(forkLR) > FOLLOW_START)
+    if (std::fabs(forkLR) > FOLLOW_START)
         forkCRF2_ptr_->setShadowPos((fabs(forkLR) - FOLLOW_START));
-    forkY_ptr_->setMemoryHeight((forkLC - forkLR)/2);
+    forkY_ptr_->setMemoryHeight((forkLC - forkLR) / 2);
 }
 
 void AGVController::pubTransferSpin() {
@@ -354,13 +355,12 @@ void AGVController::pubRobotPoseSpin() {
     ecal_ptr_->send("webot/pose", buf, pose.ByteSize());
 }
 
-void AGVController::subEMsgCallBack(const char *topic_name,
-                                    const eCAL::SReceiveCallbackData *data) {
+void AGVController::subEMsgCallBack(const char *topic_name, const eCAL::SReceiveCallbackData *data) {
     if (!isManual_) {
         sim_data_flow::E40MsgDown payload;
         payload.ParseFromArray(data->buf, data->size);
         bool isPowerOff = payload.ispoweroff();
-        if(!isPowerOff){
+        if (!isPowerOff) {
             double l_theta = payload.steering_theta_l();
             double r_theta = payload.steering_theta_r();
             double speed = payload.steering_speed();
@@ -386,14 +386,14 @@ void AGVController::subEMsgCallBack(const char *topic_name,
             forkP_ptr_->setVelocity(payload.forkspeedp());
             double CL_T = payload.forkspeedc() + payload.forkspeedy();
             double CR_T = payload.forkspeedc() - payload.forkspeedy();
-            if(determineForceCAxisReset(CL_T, CR_T)){
+            if (determineForceCAxisReset(CL_T, CR_T)) {
                 CL_T = 0;
                 CR_T = 0;
             }
             forkY_ptr_->setMemorySpeed(payload.forkspeedy());
             forkCLF1_ptr_->setVelocity(CL_T);
             forkCRF1_ptr_->setVelocity(CR_T);
-        }else{
+        } else {
             l_ptr_->setVelocity(0);
             r_ptr_->setVelocity(0);
 
@@ -410,13 +410,11 @@ void AGVController::pubSerialSpin() {
     sim_data_flow::E40MsgUp payload;
     payload.set_timestamp(time_stamp_);
     payload.set_forkposez(fork_ptr_->getSenosorValue());
-    //payload.set_forkposey(forkY_ptr_->getSenosorValue());
+    // payload.set_forkposey(forkY_ptr_->getSenosorValue());
     payload.set_forkposey(0);
     payload.set_forkposep(forkP_ptr_->getSenosorValue());
-    payload.set_forkposecl(forkCLF1_ptr_->getSenosorValue() +
-                           (FROK_MIN_SPAC / 2));
-    payload.set_forkposecr(forkCRF1_ptr_->getSenosorValue() +
-                           (FROK_MIN_SPAC / 2));
+    payload.set_forkposecl(forkCLF1_ptr_->getSenosorValue() + (FROK_MIN_SPAC / 2));
+    payload.set_forkposecr(forkCRF1_ptr_->getSenosorValue() + (FROK_MIN_SPAC / 2));
 
     payload.set_steering_theta_l(streeL_ptr_->getMotorYaw());
     payload.set_steering_theta_r(streeR_ptr_->getMotorYaw());

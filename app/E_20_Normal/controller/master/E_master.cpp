@@ -43,8 +43,7 @@ inline double CalcAngle(double tangent) {
 }
 
 // 函数1：计算转向角和驱动轮速度
-void computeSteeringAndDrive(double v, double yaw, double &driver_l,
-                             double &driver_r) {
+void computeSteeringAndDrive(double v, double yaw, double &driver_l, double &driver_r) {
     if (fabs(0 - yaw) < 0.001) {
         driver_l = v;
         driver_r = v;
@@ -102,22 +101,18 @@ std::shared_ptr<ReflectorChecker> ReflectorChecker::instance_ptr_ = nullptr;
 AGVController::AGVController() : BaseController("webots_master") {
     imu_ptr_ = std::make_shared<WImu>("inertial unit", "gyro", "accelerometer");
 
-    fork_ptr_ = std::make_shared<WFork>("fork height motor", "ForkZAxis",
-                                        "fork height");
+    fork_ptr_ = std::make_shared<WFork>("fork height motor", "ForkZAxis", "fork height");
     forkY_ptr_ = std::make_shared<WFork>("", "", "");
     forkP_ptr_ = std::make_shared<WFork>("PMotor", "ForkPAxis");
-    forkCLF1_ptr_ = std::make_shared<WFork>("CLMotor", "LF1", "CLSensor", "", false,
-                                            0.0, true, 200, true, 10);
-    forkCRF1_ptr_ = std::make_shared<WFork>("CRMotor", "RF1", "CRSensor", "", false,
-                                            0.0, false, 200);
+    forkCLF1_ptr_ = std::make_shared<WFork>("CLMotor", "LF1", "CLSensor", "", false, 0.0, true, 200, true, 10);
+    forkCRF1_ptr_ = std::make_shared<WFork>("CRMotor", "RF1", "CRSensor", "", false, 0.0, false, 200);
 
-    stree_ptr_ =
-        std::make_shared<WWheel>("", "SteerWheel", "SteerSolid", "FLWheel");
+    stree_ptr_ = std::make_shared<WWheel>("", "SteerWheel", "SteerSolid", "FLWheel");
 
     l_ptr_ = std::make_shared<WWheel>("FL", "", "", "RS", "");
     r_ptr_ = std::make_shared<WWheel>("FR", "", "", "RS", "");
     pose_ptr_ = std::make_shared<WPose>("RobotNode");
-    lidar_pose_ptr_ = std::make_shared<WLidar>("lidar_0", 100, false);
+    lidar_pose_ptr_ = std::make_shared<WLidar>("lidar_0", nullptr, 100, false);
     transfer_ptr_ = std::make_shared<WTransfer>();
     collision_ptr_ = std::make_shared<WCollision>(false);
     liftdoor_ptr_ = std::make_shared<WLiftDoor>(false);
@@ -144,8 +139,7 @@ AGVController::AGVController() : BaseController("webots_master") {
 
     // sub
     ecal_ptr_->addEcal("svc/E20_msg",
-                       std::bind(&AGVController::subEMsgCallBack, this,
-                                 std::placeholders::_1, std::placeholders::_2));
+                       std::bind(&AGVController::subEMsgCallBack, this, std::placeholders::_1, std::placeholders::_2));
 }
 
 void AGVController::manualSetState(const std::map<std::string, double> &msg) {
@@ -316,8 +310,7 @@ void AGVController::pubRobotPoseSpin() {
     ecal_ptr_->send("webot/pose", buf, pose.ByteSize());
 }
 
-void AGVController::subEMsgCallBack(const char *topic_name,
-                                    const eCAL::SReceiveCallbackData *data) {
+void AGVController::subEMsgCallBack(const char *topic_name, const eCAL::SReceiveCallbackData *data) {
     if (!isManual_) {
         sim_data_flow::E20MsgDown payload;
         payload.ParseFromArray(data->buf, data->size);
@@ -358,7 +351,7 @@ void AGVController::subEMsgCallBack(const char *topic_name,
 void AGVController::moveShadowForkSpin() {
     double forkLC = forkCLF1_ptr_->getSenosorValue();
     double forkLR = forkCRF1_ptr_->getSenosorValue();
-    forkY_ptr_->setMemoryHeight((forkLC - forkLR)/2);
+    forkY_ptr_->setMemoryHeight((forkLC - forkLR) / 2);
 }
 
 void AGVController::pubSerialSpin() {
@@ -367,10 +360,8 @@ void AGVController::pubSerialSpin() {
     payload.set_forkposez(fork_ptr_->getSenosorValue());
     payload.set_forkposey(0);
     payload.set_forkposep(forkP_ptr_->getSenosorValue());
-    payload.set_forkposecl(forkCLF1_ptr_->getSenosorValue() +
-                           FROK_MIN_SPAC / 2);
-    payload.set_forkposecr(forkCRF1_ptr_->getSenosorValue() +
-                           FROK_MIN_SPAC / 2);
+    payload.set_forkposecl(forkCLF1_ptr_->getSenosorValue() + FROK_MIN_SPAC / 2);
+    payload.set_forkposecr(forkCRF1_ptr_->getSenosorValue() + FROK_MIN_SPAC / 2);
     double origin_force = forkCLF1_ptr_->getForce() * CLAMP_FACTOR;
     payload.set_clamppressure(origin_force);
     payload.set_steering_theta(stree_ptr_->getMotorYaw());

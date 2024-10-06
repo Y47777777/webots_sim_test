@@ -34,12 +34,11 @@ std::shared_ptr<ReflectorChecker> ReflectorChecker::instance_ptr_ = nullptr;
 AGVController::AGVController() : BaseController("webots_master") {
     imu_ptr_ = std::make_shared<WImu>("inertial unit", "gyro", "accelerometer");
     fork_ptr_ = std::make_shared<WFork>("fork height motor");
-    stree_ptr_ =
-        std::make_shared<WWheel>("FL", "SteerWheel", "SteerSolid", "FLWheel");
+    stree_ptr_ = std::make_shared<WWheel>("FL", "SteerWheel", "SteerSolid", "FLWheel");
     l_ptr_ = std::make_shared<WWheel>("", "", "", "RS", "BRPS");
     r_ptr_ = std::make_shared<WWheel>("", "", "", "LS", "BLPS");
     pose_ptr_ = std::make_shared<WPose>("RobotNode");
-    lidar_pose_ptr_ = std::make_shared<WLidar>("lidar_0", 100, false);
+    lidar_pose_ptr_ = std::make_shared<WLidar>("lidar_0", nullptr, 100, false);
     transfer_ptr_ = std::make_shared<WTransfer>();
     collision_ptr_ = std::make_shared<WCollision>(false);
     liftdoor_ptr_ = std::make_shared<WLiftDoor>(false);
@@ -62,7 +61,6 @@ AGVController::AGVController() : BaseController("webots_master") {
     whileSpinPushBack((vswitchL_ptr_));
     whileSpinPushBack((vswitchR_ptr_));
     whileSpinPushBack(bind(&WBase::spin, pose_ptr_));
-    
 
     // pub
     ecal_ptr_->addEcal("webot/P_msg");
@@ -72,8 +70,7 @@ AGVController::AGVController() : BaseController("webots_master") {
 
     // sub
     ecal_ptr_->addEcal("svc/P_msg",
-                       std::bind(&AGVController::subPMsgCallBack, this,
-                                 std::placeholders::_1, std::placeholders::_2));
+                       std::bind(&AGVController::subPMsgCallBack, this, std::placeholders::_1, std::placeholders::_2));
 }
 
 void AGVController::manualSetState(const std::map<std::string, double> &msg) {
@@ -157,14 +154,12 @@ void AGVController::pubRobotPoseSpin() {
     ecal_ptr_->send("webot/pose", buf, pose.ByteSize());
 }
 
-void AGVController::subPMsgCallBack(const char *topic_name,
-                                    const eCAL::SReceiveCallbackData *data) {
+void AGVController::subPMsgCallBack(const char *topic_name, const eCAL::SReceiveCallbackData *data) {
     if (!isManual_) {
         sim_data_flow::PMsgDown payload;
         payload.ParseFromArray(data->buf, data->size);
 
-        stree_ptr_->setSpeed(payload.steering_speed(),
-                             payload.steering_theta());
+        stree_ptr_->setSpeed(payload.steering_speed(), payload.steering_theta());
         fork_ptr_->setVelocity(payload.forkspeedz());
     }
 }
