@@ -12,8 +12,8 @@ cd build
 cmake -DCMAKE_BUILD_TYPE=Release ..
 make -j12
 echo "cp libraries"
-#cp *.so* ../../../../../simulation_world/webots/libraries/
-cp *.a* ../../../../../simulation_world/webots/libraries/
+#cp *.so* ../../../../../sim_mode_pkg/libraries/
+cp *.a* ../../../../../sim_mode_pkg/libraries/
 
 echo "cp include"
 cd ..

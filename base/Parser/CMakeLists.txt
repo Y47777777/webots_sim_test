@@ -8,7 +8,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 
 set(LIBRARY_INSTALL_DIR 
-    ${CMAKE_SOURCE_DIR}/../../../../simulation_world/webots/libraries)
+    ../../../../sim_mode_pkg/libraries)
 
 file(GLOB src_files "src/*.c*")  
 file(GLOB header_files "src/*.h*")

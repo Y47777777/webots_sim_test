@@ -26,7 +26,7 @@ add_library(sim_data_flow STATIC
    make_clean.sh
 )
 
-set(LIBRARY_INSTALL_DIR ${CMAKE_SOURCE_DIR}/../../../../simulation_world/webots/libraries)
+set(LIBRARY_INSTALL_DIR ../../../../sim_mode_pkg/libraries)
 target_link_libraries(sim_data_flow ${LIBRARY_INSTALL_DIR}/libfoxglove-vn.a)
 target_compile_definitions(sim_data_flow PRIVATE PROTO_LIBRARY)
 

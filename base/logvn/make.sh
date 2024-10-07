@@ -12,12 +12,12 @@ cd build
 cmake -DCMAKE_BUILD_TYPE=Release ..
 make -j12
 echo "cp libraries"
-cp *.so* ../../../../../simulation_world/webots/libraries/
-cp *.a* ../../../../../simulation_world/webots/libraries/
-cp ../glog.ini ../../../../../simulation_world/webots/plugins/log_config/general_controller.ini
+cp *.so* ../../../../../sim_mode_pkg/libraries/
+cp *.a* ../../../../../sim_mode_pkg/libraries/
+cp ../glog.ini .../../../../sim_mode_pkg/plugins/log_config/general_controller.ini
 
 # create log folder
-mkdir -p  ../../../../../simulation_world/webots/log
+mkdir -p  .../../../../sim_mode_pkg/log
 
 echo "cp include"
 cd ..

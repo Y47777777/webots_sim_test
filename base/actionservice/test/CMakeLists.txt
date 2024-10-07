@@ -23,7 +23,7 @@ SET(SYSTEM_SO
 SET(VN_INCLUDE
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../include)
 SET(VNLIB_SO
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../../../simulation_world/webots/libraries/)
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../../../sim_mode_pkg/libraries/)
 
 
 

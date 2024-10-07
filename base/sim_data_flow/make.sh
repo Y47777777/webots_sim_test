@@ -22,7 +22,7 @@ cmake -DCMAKE_BUILD_TYPE=Release ..
 make 
 
 echo "cp libraries"
-cp *.a* ../../../../../simulation_world/webots/libraries/
+cp *.a* ../../../../../sim_mode_pkg/libraries/
 
 echo "cp include"
 rm -rf ../../../include/sim_data_flow/

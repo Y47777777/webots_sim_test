@@ -17,7 +17,7 @@ add_library(${PROJECT_NAME} STATIC
 )
 set(WEBOTSLIB_SO
     /usr/local/webots/lib/controller)
-set(LIBRARY_INSTALL_DIR ${CMAKE_SOURCE_DIR}/../../../../simulation_world/webots/libraries)
+set(LIBRARY_INSTALL_DIR ../../../../sim_mode_pkg/libraries)
 target_link_libraries(${PROJECT_NAME} ${WEBOTSLIB_SO}/libCppController.so)
 
 #target_compile_definitions(sim_data_flow PRIVATE PROTO_LIBRARY)

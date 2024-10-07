@@ -28,13 +28,13 @@ set(KEYBOARD_INCLUDE
 set(WEBOTSLIB_SO
     /usr/local/webots/lib/controller)
 
-set(LIBRARY_INSTALL_DIR ${CMAKE_SOURCE_DIR}/../../../../simulation_world/webots/libraries)
+set(LIBRARY_INSTALL_DIR ${CMAKE_SOURCE_DIR}/../../../../sim_mode_pkg/libraries)
 
 set(BUILD_DIR ${CMAKE_SOURCE_DIR}/build)
 
 set(CMAKE_INSTALL_RPATH "../../libraries")
 
-set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/../../../../simulation_world/webots/controllers)
+set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/../../../../sim_mode_pkg/controllers)
 
 set(CONTROLLER_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME})
 
