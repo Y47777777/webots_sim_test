@@ -8,7 +8,7 @@ using namespace VNSim;
 int main(int argc, char *argv[]) {
     // init glog
     // TODO:FIXME path....
-    g_Logger.initLog("../../configs/log_config/webots_shadow.ini");
+    g_Logger.initLog("../../configs/log_config/webots_log_config.ini","/home/visionnav/logs/shadow_lidar0_and_lidar2.log");
     LOG_INFO("log init...");
     QApplication a(argc, argv);
     // init ctrl
@@ -19,7 +19,5 @@ int main(int argc, char *argv[]) {
     QObject::connect(ctrl_ptr.get(), SIGNAL(finished()), &a, SLOT(quit()));
 
     a.exec();
-    // LOG_INFO("try stop svc_P");
-    // system("killall svc_P");
     return 0;
 }

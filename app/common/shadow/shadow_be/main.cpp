@@ -8,7 +8,7 @@ using namespace VNSim;
 int main(int argc, char *argv[]) {
     // init glog
     // TODO:FIXME path....
-    g_Logger.initLog("../../configs/log_config/webots_shadow_be.ini");
+    g_Logger.initLog("../../configs/log_config/webots_log_config.ini","/home/visionnav/logs/shadow_be.log");
     LOG_INFO("log init...");
     QApplication a(argc, argv);
     // init ctrl

@@ -1,7 +1,7 @@
 #!/bin/sh
 # 不能用循坏，要确定顺序
 
-SIMULATION_LIB_DIR=../../../simulation_world/webots/libraries
+SIMULATION_LIB_DIR=../../../sim_mode_pkg/libraries
 if [ ! -d ${SIMULATION_LIB_DIR} ]; then
 	echo "create SIMULATION_LIB_DIR=${SIMULATION_LIB_DIR}"
 	mkdir -p ${SIMULATION_LIB_DIR}

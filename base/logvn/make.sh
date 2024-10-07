@@ -13,14 +13,11 @@ cmake -DCMAKE_BUILD_TYPE=Release ..
 make -j12
 echo "cp libraries"
 cp *.so* ../../../../../sim_mode_pkg/libraries/
-cp *.a* ../../../../../sim_mode_pkg/libraries/
-cp ../glog.ini .../../../../sim_mode_pkg/plugins/log_config/general_controller.ini
-
-# create log folder
-mkdir -p  .../../../../sim_mode_pkg/log
+# cp *.a* ../../../../../sim_mode_pkg/libraries/
 
 echo "cp include"
 cd ..
 current_folder_name=$(basename "$(pwd)")
 mkdir -p ../../include/"$current_folder_name"
 cp *.h ../../include/"$current_folder_name"/
+cp  glog.ini ../../configs/log_config/webots_log_config.ini

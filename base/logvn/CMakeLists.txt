@@ -22,8 +22,6 @@ SET(LIB_SO
 
 SET(VN_INCLUDE
     ${CMAKE_CURRENT_SOURCE_DIR}../../include)
-SET(VNLIB_SO
-    ${CMAKE_CURRENT_SOURCE_DIR}../../../../simulation_world/webots/libraries/)
 
 
 target_link_libraries(logvn ${LIB_SO}/liblog4cplus.so)

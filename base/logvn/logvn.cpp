@@ -4,6 +4,7 @@
 #include <log4cplus/configurator.h>
 #include <log4cplus/helpers/loglog.h>
 #include <log4cplus/helpers/stringhelper.h>
+#include <log4cplus/fileappender.h>
 #include <log4cplus/loggingmacros.h>
 #include <log4cplus/logger.h>
 #include <string>
@@ -112,23 +113,29 @@ void Logvn::Trace( const char* filename, const int fileline,  const char * func,
     DO_LOGGER(log4cplus::TRACE_LOG_LEVEL, filename, fileline, func, pFormat, 1024);
 }
 
-void Logvn::initLog( const char* logCfgFileName )
+void Logvn::initLog( const char* logCfgFileName ,const char* logFileName)
 {
-    if (logCfgFileName==NULL) return;
+    if (logCfgFileName == nullptr) return;
+    
+    log4cplus::initialize();
+    log4cplus::helpers::Properties props;
 
-    tstring path=LOG4CPLUS_TEXT("");
-#ifdef win32
-    size_t len = strlen(logCfgFileName) + 1;
-    size_t converted = 0;
-    wchar_t *WStr;
-    WStr=(wchar_t*)malloc(len*sizeof(wchar_t));
-    mbstowcs_s(&converted, WStr, len, logCfgFileName, _TRUNCATE);
-    path.append(WStr);
-#else
-    path.append(logCfgFileName);
-#endif
-    log4cplus::helpers::LogLog::getLogLog()->setInternalDebugging(false);
-    log4cplus::PropertyConfigurator::doConfigure(path);
+    try {
+        // 從配置文件加載屬性
+        props = log4cplus::helpers::Properties(logCfgFileName);
+        if (logFileName != nullptr) {
+            // 设置 tofile appender的 File 属性
+            tstring tofile_key = LOG4CPLUS_TEXT("log4cplus.appender.tofile.File");
+            props.setProperty(tofile_key, LOG4CPLUS_STRING_TO_TSTRING(logFileName));
+        }
+        // 使用更新后的属性重新配置
+        log4cplus::PropertyConfigurator config(props);
+        config.configure();
+    } catch(...) {
+        log4cplus::Logger _logger = log4cplus::Logger::getRoot();
+        LOG4CPLUS_ERROR(_logger, LOG4CPLUS_TEXT("Error configuring log system"));
+    }
+
     log4cplus::Logger _logger = log4cplus::Logger::getRoot();
     LOG4CPLUS_INFO(_logger, "Logger Start.");
 }

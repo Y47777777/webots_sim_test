@@ -32,7 +32,7 @@ public:
 
     /// 启动日志系统
     /// @param[in] properties_filename 日志系统配置文件文件名
-    void initLog(const char* logCfgFileName);
+    void initLog(const char* logCfgFileName,const char* logFileName = nullptr);
 
 public:
     void Debug(const char* filename, const int fileline, const char * func,const char* pFormat,... );
