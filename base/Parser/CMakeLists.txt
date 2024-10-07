@@ -8,7 +8,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 
 set(LIBRARY_INSTALL_DIR 
-    ../../../../sim_mode_pkg/libraries)
+    ../../../../sim_module_pkg/libraries)
 
 file(GLOB src_files "src/*.c*")  
 file(GLOB header_files "src/*.h*")

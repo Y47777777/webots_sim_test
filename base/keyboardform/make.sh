@@ -12,8 +12,8 @@ cd build
 cmake -DCMAKE_BUILD_TYPE=Release ..
 make -j12
 echo "cp libraries"
-#cp *.so* ../../../../../sim_mode_pkg/libraries/
-cp *.a* ../../../../../sim_mode_pkg/libraries/
+#cp *.so* ../../../../../sim_module_pkg/libraries/
+cp *.a* ../../../../../sim_module_pkg/libraries/
 
 echo "cp include"
 cd ..

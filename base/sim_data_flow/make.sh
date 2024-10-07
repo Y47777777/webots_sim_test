@@ -22,7 +22,7 @@ cmake -DCMAKE_BUILD_TYPE=Release ..
 make 
 
 echo "cp libraries"
-cp *.a* ../../../../../sim_mode_pkg/libraries/
+cp *.a* ../../../../../sim_module_pkg/libraries/
 
 echo "cp include"
 rm -rf ../../../include/sim_data_flow/

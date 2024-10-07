@@ -17,7 +17,7 @@ set(WEBOTSLIB_SO
 set(VN_INCLUDE
     ${CMAKE_SOURCE_DIR}/../../include)
 set(LIBRARY_INSTALL_DIR 
-    ../../../../sim_mode_pkg/libraries)
+    ../../../../sim_module_pkg/libraries)
 
 file(GLOB src_files "*.c*")  
 file(GLOB header_files "*.h*")
