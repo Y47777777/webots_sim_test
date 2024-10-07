@@ -32,7 +32,7 @@ std::string lidar_2_webots_topic = "webots/Lidar/.111/PointCloud";
 std::string lidar_0_webots_topic = "webots/Lidar/.109/PointCloud";
 std::string lidar_2_webots_base_topic = "webots/LidarToBase/.111/PointCloud";
 
-AGVController::AGVController() : BaseLidarControl("webots_shadow_lidar") {
+AGVController::AGVController() : BaseLidarControl("shadow_lidar0_and_lidar2") {
     // 机器人位姿
     pose_ptr_ = std::make_shared<WPose>("RobotNode");
     transfer_ptr_ = std::make_shared<WTransfer>();

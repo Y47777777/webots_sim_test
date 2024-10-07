@@ -35,7 +35,7 @@ std::string lidar_4_webots_topic = "webots/Lidar/.113/PointCloud";
 std::string lidar_3_webots_base_topic = "webots/LidarToBase/.112/PointCloud";
 std::string lidar_4_webots_base_topic = "webots/LidarToBase/.113/PointCloud";
 
-AGVController::AGVController() : BaseLidarControl("webots_shadow_perception") {
+AGVController::AGVController() : BaseLidarControl("shadow_lidar3_and_lidar4") {
     // 机器人位姿
     pose_ptr_ = std::make_shared<WPose>("RobotNode");
     transfer_ptr_ = std::make_shared<WTransfer>();
@@ -69,6 +69,7 @@ AGVController::AGVController() : BaseLidarControl("webots_shadow_perception") {
     ecal_ptr_->addEcal(lidar_3_webots_topic.c_str());
     ecal_ptr_->addEcal(lidar_4_webots_topic.c_str());
     ecal_ptr_->addEcal(lidar_3_webots_base_topic.c_str());
+    ecal_ptr_->addEcal(lidar_4_webots_base_topic.c_str());
 
     // creat subscribe
     ecal_ptr_->addEcal("webot/pose",
@@ -106,7 +107,7 @@ void AGVController::transferCallBack(const char *topic_name, const eCAL::SReceiv
 }
 
 void AGVController::Lidar3ReportSpin() {
-    LOG_INFO("Slam3ReportSpin start\n");
+    LOG_INFO("Lidar3ReportSpin start\n");
     while (!webotsExited_) { sendPointCloud(lidar_3_webots_topic, lidar_3_ptr_, pose_ptr_, lidar_3_webots_base_topic); }
 }
 
