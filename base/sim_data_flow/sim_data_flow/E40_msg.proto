@@ -1,11 +1,12 @@
 syntax = "proto3";
 import "Imu.proto";
+import "Vector3.proto";
 
 package sim_data_flow;
 
 message E40MsgUp {
     uint64 timestamp = 1;
-    double gyroscope = 2;
+    foxglove.Vector3 gyroscope = 2;
     double forkposeZ = 3;
     double forkposeY = 4;
     double forkposeP = 5;

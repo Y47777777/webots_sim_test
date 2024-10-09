@@ -71,6 +71,13 @@ class WImu : public WBase {
 
     double getInertialYaw() { return angles_[2]; }
 
+    foxglove::Vector3 getInertialRollPitchYaw(){
+        AutoAtomicLock lock(spin_mutex_);
+        foxglove::Vector3 result;
+        getVector3(result, angles_);
+        return result;
+    }
+
     void spin() {
         memcpy(gyro_.data(), gyro_ptr_->getValues(), 3 * sizeof(gyro_[0]));
         memcpy(acc_.data(), acc_ptr_->getValues(), 3 * sizeof(acc_[0]));
