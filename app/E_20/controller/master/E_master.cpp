@@ -221,7 +221,7 @@ void AGVController::manualGetState(std::map<std::string, double> &msg) {
     msg["fork_height"] = fork_ptr_->getSenosorValue();
     msg["forkY_height"] = forkY_ptr_->getMemoryHeight();
     msg["forkP_height"] = forkP_ptr_->getSenosorValue();
-    msg["forkC_height"] = forkCLF1_ptr_->getSenosorValue();
+    msg["forkC_height"] = forkCLF1_ptr_->getSenosorValue() + forkCRF1_ptr_->getSenosorValue() + FROK_MIN_SPAC;
     msg["real_speed"] = forkCRF1_ptr_->getSenosorValue();
 }
 
