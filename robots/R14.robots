@@ -1,0 +1,484 @@
+DEF RobotNode Robot {
+  translation 992.043833572309 84.87421677237617 -0.0006434204505477714
+  rotation 0.00010751327673917915 -0.00040559923275273 -0.999999911965075 1.555304217291186
+  children [
+    DEF IMU Group {
+      children [
+        Accelerometer {
+        }
+        InertialUnit {
+        }
+        Gyro {
+        }
+      ]
+    }
+    DEF Body Solid {
+      children [
+        R-Body {
+        }
+        Solid {
+          translation 1 0 0.73
+          children [
+            DEF BODYSHAPE Shape {
+              appearance PBRAppearance {
+                baseColor 0.447059 0.623529 0.811765
+                roughness 1
+                metalness 0
+              }
+              geometry Box {
+                size 0.8 1.3 1.1
+              }
+            }
+          ]
+          name "body_visable"
+        }
+      ]
+    }
+    DEF SteerWhel Pose {
+      translation 1.277 -0.017 0.17
+      children [
+        Pose {
+          children [
+            Pose {
+              rotation -1 0 0 1.57
+              children [
+                Hinge2Joint {
+                  jointParameters HingeJointParameters {
+                    position -1.8098770947962158e-10
+                    axis 0 1 0
+                  }
+                  jointParameters2 JointParameters {
+                    position 47.32380384169394
+                  }
+                  device [
+                    RotationalMotor {
+                      name "SteerTurn_Motor"
+                      maxVelocity 100
+                      maxTorque 1000
+                    }
+                    PositionSensor {
+                      name "SteerTurn_Sensor"
+                    }
+                    Brake {
+                    }
+                  ]
+                  device2 [
+                    RotationalMotor {
+                      name "SteerRun_Motor"
+                      maxVelocity 100
+                      maxTorque 1000
+                    }
+                    PositionSensor {
+                      name "SteerRun_Sensor"
+                    }
+                    Brake {
+                    }
+                  ]
+                  endPoint DEF SteerSolid Solid {
+                    translation 7.885871730537574e-07 2.1239781330239944e-06 2.330426154900903e-06
+                    rotation -0.0001327821609964688 -0.0001720276502430952 0.9999999763876923 1.7145251293450252
+                    children [
+                      Shape {
+                        appearance Appearance {
+                          material Material {
+                            diffuseColor 0 0 0
+                          }
+                        }
+                        geometry DEF StreeWheelRadius Cylinder {
+                          height 0.12
+                          radius 0.172
+                        }
+                      }
+                    ]
+                    name "SteerWheel(1)"
+                    contactMaterial "B"
+                    boundingObject Pose {
+                      children [
+                        Cylinder {
+                          height 0.12
+                          radius 0.172
+                        }
+                      ]
+                    }
+                    physics Physics {
+                      density 20
+                      centerOfMass [
+                        0 0 0
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+    DEF DrivenWheel Pose {
+      children [
+        Pose {
+          translation 0.004 0.5699 0.1434
+          rotation -1 0 0 1.57
+          children [
+            HingeJoint {
+              jointParameters HingeJointParameters {
+                position 55.89216959185705
+                axis 0 0 1
+              }
+              device [
+                PositionSensor {
+                  name "L_D_Sensor"
+                }
+                Brake {
+                }
+              ]
+              endPoint DEF L_D_SteerSolid Solid {
+                translation -1.1250505873951258e-05 -1.1531597996507086e-05 5.798926849820417e-07
+                rotation 0 0 0.9999999999999999 2.447754663691293
+                children [
+                  Shape {
+                    appearance Appearance {
+                      material Material {
+                        diffuseColor 0 0 0
+                      }
+                    }
+                    geometry DEF LDW_Radius Cylinder {
+                      height 0.1
+                      radius 0.145
+                    }
+                  }
+                ]
+                name "solid(1)"
+                contactMaterial "B"
+                boundingObject Pose {
+                  children [
+                    Cylinder {
+                      height 0.1
+                      radius 0.145
+                    }
+                  ]
+                }
+                physics Physics {
+                  density 20
+                  centerOfMass [
+                    0 0 0
+                  ]
+                }
+              }
+            }
+          ]
+        }
+        Pose {
+          translation 0.004 -0.5699 0.1434
+          rotation -1 0 0 1.57
+          children [
+            HingeJoint {
+              jointParameters HingeJointParameters {
+                position 56.01809343654201
+                axis 0 0 1
+              }
+              device [
+                PositionSensor {
+                  name "R_D_Sensor"
+                }
+                Brake {
+                }
+              ]
+              endPoint DEF R_D_SteerSolid Solid {
+                translation 8.865422730621284e-06 -0.00010367378204717877 7.677720077481352e-07
+                rotation 0 0 1 1.157024149641324
+                children [
+                  Shape {
+                    appearance Appearance {
+                      material Material {
+                        diffuseColor 0 0 0
+                      }
+                    }
+                    geometry DEF RDW_Radius Cylinder {
+                      height 0.1
+                      radius 0.145
+                    }
+                  }
+                ]
+                name "solid(2)"
+                contactMaterial "B"
+                boundingObject Pose {
+                  children [
+                    Cylinder {
+                      height 0.1
+                      radius 0.145
+                    }
+                  ]
+                }
+                physics Physics {
+                  density 20
+                  centerOfMass [
+                    0 0 0
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+    DEF Fork Pose {
+      translation 0 -0.02 0
+      children [
+        DEF Linear_forward_backward SliderJoint {
+          jointParameters JointParameters {
+            position 3.8404048482423846e-05
+            axis 1 0 0
+            minStop -0.1
+            maxStop 0.7
+          }
+          device [
+            Brake {
+            }
+            LinearMotor {
+              name "Linear_FB_Motor"
+              minPosition -0.1
+              maxPosition 0.7
+              maxForce 600
+            }
+            PositionSensor {
+              name "Linear_FB_Sensor"
+            }
+          ]
+          endPoint DEF ALL_Linear_FB_Solid Solid {
+            translation 2.2228557295237042e-05 -0.015 0
+            children [
+              R-Gantry {
+              }
+              DEF Forks_LiftingComponent Pose {
+                translation 0 0 0.158
+                children [
+                  DEF Lifting_movement SliderJoint {
+                    jointParameters JointParameters {
+                      position -0.00024889396104669955
+                      minStop -0.1
+                      maxStop 0.7
+                    }
+                    device [
+                      Brake {
+                      }
+                      LinearMotor {
+                        name "Lifting_Motor"
+                        minPosition -0.1
+                        maxPosition 0.7
+                        maxForce 1000
+                      }
+                      PositionSensor {
+                        name "Lifting_Sensor"
+                      }
+                    ]
+                    endPoint DEF Lifting_Component_Solid Solid {
+                      translation 0 0 -0.00012274738888522007
+                      rotation 0 0 1 4.692820414042842e-06
+                      children [
+                        DEF lidar_0 Pose {
+                          children [
+                            Mid360 {
+                              translation 0.022 0.034 0.0005414819874641444
+                              rotation 0 -1 0 2.79
+                              name "lidar_0"
+                            }
+                          ]
+                        }
+                        R-Attachments {
+                        }
+                        DEF Forks Pose {
+                          translation 0 0 0.69
+                          rotation 0 1 0 0
+                          children [
+                            DEF Forks_Pitching HingeJoint {
+                              jointParameters HingeJointParameters {
+                                position -5.838171146335864e-05
+                                axis 0 1 0
+                                minStop -0.1
+                                maxStop 0.7
+                              }
+                              device [
+                                RotationalMotor {
+                                  name "Forks_Pitching_Motor"
+                                  minPosition -0.1
+                                  maxPosition 0.7
+                                  maxTorque 600
+                                }
+                                PositionSensor {
+                                  name "Forks_Pitching_Sensor"
+                                }
+                                Brake {
+                                }
+                              ]
+                              endPoint DEF Picking_Component_Solid Solid {
+                                translation 2.226484627246691e-05 0 -0.7029999996474225
+                                rotation 0 -1 0 5.8381715064480124e-05
+                                children [
+                                  DEF Forks_YMove SliderJoint {
+                                    jointParameters JointParameters {
+                                      position -2.994083402482992e-08
+                                      axis 0 1 0
+                                      minStop -0.1
+                                      maxStop 0.7
+                                    }
+                                    device [
+                                      PositionSensor {
+                                        name "Fork_YMove_Sensor"
+                                      }
+                                      LinearMotor {
+                                        name "Fork_YMove_Motor"
+                                        minPosition -0.1
+                                        maxPosition 0.7
+                                        maxForce 450
+                                      }
+                                      Brake {
+                                      }
+                                    ]
+                                    endPoint DEF Forks_YMove_Solid Solid {
+                                      translation 0 -6.317474894519784e-08 0
+                                      children [
+                                        R-All-Forks {
+                                        }
+                                      ]
+                                      name "Fork_YMove_Solid"
+                                      boundingObject Group {
+                                        children [
+                                          DEF Left_Box Pose {
+                                            translation -0.64 0.33 -0.025
+                                            children [
+                                              Box {
+                                                size 1.1 0.12 0.05
+                                              }
+                                            ]
+                                          }
+                                          DEF Right_Box Pose {
+                                            translation -0.64 -0.26 -0.025
+                                            children [
+                                              Box {
+                                                size 1.1 0.12 0.05
+                                              }
+                                            ]
+                                          }
+                                        ]
+                                      }
+                                      physics Physics {
+                                        density 10
+                                        mass 1
+                                      }
+                                    }
+                                  }
+                                ]
+                                name "Picking_Component"
+                                boundingObject Group {
+                                  children [
+                                    DEF LeftBox Pose {
+                                      translation -0.045 0.332 0.1
+                                      children [
+                                        Box {
+                                          size 0.08 0.1 0.27
+                                        }
+                                      ]
+                                    }
+                                    DEF RightBox Pose {
+                                      translation -0.045 -0.26 0.1
+                                      children [
+                                        Box {
+                                          size 0.08 0.1 0.27
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                                physics Physics {
+                                  density -1
+                                  mass 2
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                      name "Lifting_Component"
+                      boundingObject Pose {
+                        translation 0.04 0.04 0.76
+                        children [
+                          Box {
+                            size 0.08 0.85 1.1
+                          }
+                        ]
+                      }
+                      physics Physics {
+                        density -1
+                        mass 3
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+            name "ALL_Linear_ FB"
+            boundingObject Group {
+              children [
+                Pose {
+                  translation 0.2 -0.47 1.42
+                  children [
+                    Box {
+                      size 0.2 0.1 2.1
+                    }
+                  ]
+                }
+                Pose {
+                  translation 0.2 0.28 1.42
+                  children [
+                    Box {
+                      size 0.2 0.1 2.1
+                    }
+                  ]
+                }
+              ]
+            }
+            physics Physics {
+              density 100
+              mass 10
+            }
+          }
+        }
+      ]
+    }
+    DEF Top_Mid360 Pose {
+      translation 1.56 0 2.2
+      children [
+        Mid360 {
+          translation 0 0 0.026
+          rotation 0 1 0 1.57
+          name "lidar_2"
+        }
+        Mid360 {
+          translation -0.105 -0.651 0.0259
+          rotation 0.4582188673577999 0.7584307804544193 -0.4634848658334331 1.82286
+          name "lidar_4"
+        }
+        Mid360 {
+          translation -0.105 0.651 0.032
+          rotation 0.46401111369897713 -0.7470471830527289 -0.47604011664650425 -1.82519
+          name "lidar_3"
+        }
+      ]
+    }
+  ]
+  name "robot(3)"
+  boundingObject Pose {
+    translation 1 0 0.73
+    children [
+      USE BODYSHAPE
+    ]
+  }
+  physics Physics {
+    density -1
+    mass 10
+  }
+  controller "R14_master"
+  customData "controller_list[R14_master,shadow_lidar0_and_lidar2,shadow_lidar3_and_lidar4,shadow_show_gui]"
+  supervisor TRUE
+}
