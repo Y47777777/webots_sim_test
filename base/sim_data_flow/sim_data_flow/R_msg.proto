@@ -1,0 +1,29 @@
+syntax = "proto3";
+package sim_data_flow;
+
+message RMsgUp{
+  uint64 timestamp = 1;
+  double gyroscope = 2;
+  double forkposeZ = 3;
+  double forkposeX = 4;
+  double forkposeY = 5;
+  double forkposeP = 6;
+  double steerPosition = 7;
+  double l_wheel = 8;
+  double r_wheel = 9;
+  double steering_theta = 10;
+  uint32 dataidx_upload = 11;
+}
+
+message RMsgDown{
+  uint64 timestamp = 1;                
+  double steering_theta = 2;           // 舵轮的角度
+  double steering_speed = 3;           // 舵轮的速度
+  double forkspeedZ = 4;               // fork speed 货叉上下移动
+  double forkspeedX = 5;               // fork speed 整个龙门架X方向前后进行平移
+  double forkspeedY = 6;               // fork speed Y方向平移 
+  double forkspeedP = 7;               // fork speed in pitch俯仰
+
+}
+
+

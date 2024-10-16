@@ -1,0 +1,37 @@
+#include <QApplication>
+#include <unistd.h>
+#include "keyboardform/keyboardform.h"
+#include "R_master.h"
+#include "logvn/logvn.h"
+
+using namespace VNSim;
+
+int main(int argc, char *argv[]) {
+    // init glog
+    // TODO:FIXME path....
+    g_Logger.initLog("../../configs/log_config/webots_log_config.ini","/home/visionnav/logs/master.log");
+    
+    LOG_INFO("log init...");
+    LOG_INFO("try start svc_R");
+    system("./../svc_R/svc_R &");
+    char tmp[256];
+    getcwd(tmp, 256);
+    printf("current working dir = %s\n", tmp);
+    QApplication a(argc, argv);
+    // init ctrl
+    std::shared_ptr<BaseController> ctrl_ptr = std::make_shared<AGVController>();
+
+    ctrl_ptr->start();
+
+    QObject::connect(ctrl_ptr.get(), SIGNAL(finished()), &a, SLOT(quit()));
+
+    // init keyboard
+    KeyboardForm f(ctrl_ptr);
+    f.show();
+
+    a.exec();
+    LOG_INFO("try stop svc_R");
+    system("killall svc_R");
+    
+    return 0;
+}
