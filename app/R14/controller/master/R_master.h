@@ -46,7 +46,7 @@ class AGVController : public BaseController {
     void pubLiftDoorTag();
 
    private:
-    //std::shared_ptr<WImu> imu_ptr_;
+    std::shared_ptr<WImu> imu_ptr_;
     std::shared_ptr<SWWheel> stree_ptr_;    //舵轮
     std::shared_ptr<WWheel> l_ptr_;         //从动左轮
     std::shared_ptr<WWheel> r_ptr_;         //从动右轮
@@ -62,7 +62,7 @@ class AGVController : public BaseController {
 
 
    public:
-    void subPMsgCallBack(const char *topic_name,
+    void subRMsgCallBack(const char *topic_name,
                          const eCAL::SReceiveCallbackData *data);
 };
 

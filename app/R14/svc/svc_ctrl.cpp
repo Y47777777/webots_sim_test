@@ -19,7 +19,7 @@ int SVCMaster::onInitService() {
 
     // Receive
     ecal_ptr_->addEcal("webot/R_msg",
-                       std::bind(&SVCMaster::subPMsgCallBack, this,
+                       std::bind(&SVCMaster::subRMsgCallBack, this,
                                  std::placeholders::_1, std::placeholders::_2));
 
     ecal_ptr_->addEcal("webot/pose",
@@ -28,7 +28,7 @@ int SVCMaster::onInitService() {
     return 0;
 }
 
-void SVCMaster::subPMsgCallBack(const char *topic_name,
+void SVCMaster::subRMsgCallBack(const char *topic_name,
                                 const eCAL::SReceiveCallbackData *data) {
     // 反序列化
     msg_from_webots_.ParseFromArray(data->buf, data->size);
@@ -64,10 +64,10 @@ void SVCMaster::subDownStreamCallBack(uint8_t *msg, int len) {
         decoder_.getValue2("DataIndex", &dataidx_sub_, 4);  // 回报
     }
 
-    pubPMsgsToWebots();
+    pubRMsgsToWebots();
 }
 
-void SVCMaster::pubPMsgsToWebots() {
+void SVCMaster::pubRMsgsToWebots() {
     double ForkDeviceZ;
     double SteeringDevice;
     double MoveDevice;

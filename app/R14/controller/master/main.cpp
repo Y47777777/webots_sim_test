@@ -14,9 +14,6 @@ int main(int argc, char *argv[]) {
     LOG_INFO("log init...");
     LOG_INFO("try start svc_R");
     system("./../svc_R/svc_R &");
-    char tmp[256];
-    getcwd(tmp, 256);
-    printf("current working dir = %s\n", tmp);
     QApplication a(argc, argv);
     // init ctrl
     std::shared_ptr<BaseController> ctrl_ptr = std::make_shared<AGVController>();

@@ -49,7 +49,7 @@ AGVController::AGVController() : BaseController("webots_master") {
 
 
     //世界信息控制指针
-    //imu_ptr_ = std::make_shared<WImu>("inertial unit", "gyro", "accelerometer");
+    imu_ptr_ = std::make_shared<WImu>("inertial unit", "gyro", "accelerometer");
     pose_ptr_ = std::make_shared<WPose>("RobotNode");
     lidar_pose_ptr_ = std::make_shared<WLidar>("lidar_0", nullptr, 100, false);
     transfer_ptr_ = std::make_shared<WTransfer>();
@@ -63,7 +63,7 @@ AGVController::AGVController() : BaseController("webots_master") {
     whileSpinPushBack((forkZ_ptr_));
     whileSpinPushBack((forkP_ptr_));
     whileSpinPushBack((forkY_ptr_));
-    //whileSpinPushBack((imu_ptr_));
+    whileSpinPushBack((imu_ptr_));
     //whileSpinPushBack((pose_ptr_));
     whileSpinPushBack((transfer_ptr_));
     whileSpinPushBack((collision_ptr_));
@@ -79,7 +79,7 @@ AGVController::AGVController() : BaseController("webots_master") {
 
     // sub
     ecal_ptr_->addEcal("svc/R_msg",
-                       std::bind(&AGVController::subPMsgCallBack, this, std::placeholders::_1, std::placeholders::_2));
+                       std::bind(&AGVController::subRMsgCallBack, this, std::placeholders::_1, std::placeholders::_2));
 }
 
 void AGVController::manualSetState(const std::map<std::string, double> &msg) {
@@ -178,16 +178,16 @@ void AGVController::pubRobotPoseSpin() {
     ecal_ptr_->send("webot/pose", buf, pose.ByteSize());
 }
 
-void AGVController::subPMsgCallBack(const char *topic_name, const eCAL::SReceiveCallbackData *data) {
+void AGVController::subRMsgCallBack(const char *topic_name, const eCAL::SReceiveCallbackData *data) {
     if (!isManual_) {
         sim_data_flow::RMsgDown payload;
         payload.ParseFromArray(data->buf, data->size);
 
         stree_ptr_->stree_run(payload.steering_speed(), payload.steering_theta());
-        forkX_ptr_->setVelocityAll(payload.forkspeedx());
-        forkZ_ptr_->setVelocityAll(payload.forkspeedz());
-        forkP_ptr_->setVelocityAll(payload.forkspeedp());
-        forkY_ptr_->setVelocityAll(payload.forkspeedy());
+        forkX_ptr_->setVelocity(payload.forkspeedx());
+        forkZ_ptr_->setVelocity(payload.forkspeedz());
+        forkP_ptr_->setVelocity(payload.forkspeedp());
+        forkY_ptr_->setVelocity(payload.forkspeedy());
     }
 }
 
@@ -205,12 +205,7 @@ void AGVController::pubSerialSpin() {
     payload.set_r_wheel(r_ptr_->getWheelArcLength());
 
     payload.set_steering_theta(stree_ptr_->getMotorYaw());
-    //payload.set_gyroscope(imu_ptr_->getInertialYaw());
-
-
-    // double *rotation = pose_ptr_->getRotaion();
-    // LOG_INFO("imu: %.2f, robot: %.2f", imu_ptr_->getInertialYaw(),
-    // rotation[3]);
+    payload.set_gyroscope(imu_ptr_->getInertialYaw());
 
     uint8_t buf[payload.ByteSize()];
     payload.SerializePartialToArray(buf, payload.ByteSize());

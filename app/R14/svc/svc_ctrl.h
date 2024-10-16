@@ -25,13 +25,13 @@ class SVCMaster : public BaseSerialSvc {
    private:
     int onInitService();
     void subDownStreamCallBack(uint8_t *msg, int len);
-    void subPMsgCallBack(const char *topic_name,
+    void subRMsgCallBack(const char *topic_name,
                          const eCAL::SReceiveCallbackData *data);
     void subPoseCallBakc(const char *topic_name,
                          const eCAL::SReceiveCallbackData *data);
 
     void pubUpStream();
-    void pubPMsgsToWebots();
+    void pubRMsgsToWebots();
 
    private:
     sim_data_flow::RMsgUp msg_from_webots_;
