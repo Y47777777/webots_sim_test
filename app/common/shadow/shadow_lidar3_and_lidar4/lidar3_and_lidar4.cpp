@@ -32,8 +32,6 @@ std::shared_ptr<ReflectorChecker> ReflectorChecker::instance_ptr_ = nullptr;
 
 std::string lidar_3_webots_topic = "webots/Lidar/.112/PointCloud";
 std::string lidar_4_webots_topic = "webots/Lidar/.113/PointCloud";
-std::string lidar_3_webots_base_topic = "webots/LidarToBase/.112/PointCloud";
-std::string lidar_4_webots_base_topic = "webots/LidarToBase/.113/PointCloud";
 
 AGVController::AGVController() : BaseLidarControl("shadow_lidar3_and_lidar4") {
     // 机器人位姿
@@ -73,8 +71,6 @@ AGVController::AGVController() : BaseLidarControl("shadow_lidar3_and_lidar4") {
     // creat publish
     ecal_ptr_->addEcal(lidar_3_webots_topic.c_str());
     ecal_ptr_->addEcal(lidar_4_webots_topic.c_str());
-    ecal_ptr_->addEcal(lidar_3_webots_base_topic.c_str());
-    ecal_ptr_->addEcal(lidar_4_webots_base_topic.c_str());
 
     // creat subscribe
     ecal_ptr_->addEcal("webot/liftdoor",
@@ -116,12 +112,12 @@ void AGVController::transferCallBack(const char *topic_name, const eCAL::SReceiv
 
 void AGVController::Lidar3ReportSpin() {
     LOG_INFO("Lidar3ReportSpin start\n");
-    while (!webotsExited_) { sendPointCloud(lidar_3_webots_topic, lidar_3_ptr_, pose_ptr_, lidar_3_webots_base_topic); }
+    while (!webotsExited_) { sendPointCloud(lidar_3_webots_topic, lidar_3_ptr_, pose_ptr_); }
 }
 
 void AGVController::Lidar4ReportSpin() {
     LOG_INFO("lidar_4ReportSpin start\n");
-    while (!webotsExited_) { sendPointCloud(lidar_4_webots_topic, lidar_4_ptr_, pose_ptr_, lidar_4_webots_base_topic); }
+    while (!webotsExited_) { sendPointCloud(lidar_4_webots_topic, lidar_4_ptr_, pose_ptr_); }
 }
 
 void VNSim::AGVController::liftdoorCallBack(const char *topic_name, const eCAL::SReceiveCallbackData *data) {

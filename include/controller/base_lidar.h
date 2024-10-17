@@ -74,7 +74,7 @@ class BaseLidarControl : public BaseController {
                             payload_multi.ByteSize());
         }
 
-        lidar_alarm.wait();
+        // lidar_alarm.wait();
         return true;
     }
 

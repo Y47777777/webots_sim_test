@@ -30,7 +30,6 @@ std::shared_ptr<ReflectorChecker> ReflectorChecker::instance_ptr_ = nullptr;
 
 std::string lidar_2_webots_topic = "webots/Lidar/.111/PointCloud";
 std::string lidar_0_webots_topic = "webots/Lidar/.109/PointCloud";
-std::string lidar_2_webots_base_topic = "webots/LidarToBase/.111/PointCloud";
 
 AGVController::AGVController() : BaseLidarControl("shadow_lidar0_and_lidar2") {
     // 机器人位姿
@@ -69,7 +68,6 @@ AGVController::AGVController() : BaseLidarControl("shadow_lidar0_and_lidar2") {
     // creat publish
     ecal_ptr_->addEcal(lidar_2_webots_topic.c_str());
     ecal_ptr_->addEcal(lidar_0_webots_topic.c_str());
-    ecal_ptr_->addEcal(lidar_2_webots_base_topic.c_str());
 
     // creat subscribe
     ecal_ptr_->addEcal("webot/pose",
@@ -116,7 +114,7 @@ void VNSim::AGVController::liftdoorCallBack(const char *topic_name, const eCAL::
 
 void AGVController::Lidar2ReportSpin() {
     LOG_INFO("Lidar2ReportSpin start\n");
-    while (!webotsExited_) { sendPointCloud(lidar_2_webots_topic, lidar_2_ptr_, pose_ptr_, lidar_2_webots_base_topic); }
+    while (!webotsExited_) { sendPointCloud(lidar_2_webots_topic, lidar_2_ptr_, pose_ptr_); }
 }
 
 void AGVController::Lidar0ReportSpin() {
