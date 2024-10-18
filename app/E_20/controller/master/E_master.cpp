@@ -112,7 +112,7 @@ AGVController::AGVController() : BaseController("webots_master") {
     forkCLF1_ptr_ = std::make_shared<WFork>("CLMotor", "LF1", "", "", false,
                                             0.0, true, 200, true, 10);
     forkCRF1_ptr_ = std::make_shared<WFork>("CRMotor", "RF1", "", "", false,
-                                            0.0, false, 200);
+                                            0.0, false, 200, true, 10);
 
     stree_ptr_ =
         std::make_shared<WWheel>("", "SteerWheel", "SteerSolid", "FLWheel");
@@ -224,6 +224,9 @@ void AGVController::manualGetState(std::map<std::string, double> &msg) {
     msg["forkY_height"] = forkY_ptr_->getMemoryHeight();
     msg["forkP_height"] = forkP_ptr_->getSenosorValue();
     msg["forkC_height"] = forkCLF1_ptr_->getSenosorValue() + forkCRF1_ptr_->getSenosorValue() + FROK_MIN_SPAC;
+    msg["forkCL_height"] = forkCLF1_ptr_->getSenosorValue() + 0.5 * FROK_MIN_SPAC;
+    msg["forkCR_height"] = forkCRF1_ptr_->getSenosorValue() + 0.5 * FROK_MIN_SPAC;
+    msg["forkC_force"] = (forkCLF1_ptr_->getForce() + forkCRF1_ptr_->getForce()) * 0.5 * CLAMP_FACTOR;
     msg["real_speed"] = forkCRF1_ptr_->getSenosorValue();
 }
 
@@ -393,7 +396,7 @@ void AGVController::pubSerialSpin() {
                            FROK_MIN_SPAC / 2);
     payload.set_forkposecr(forkCRF1_ptr_->getSenosorValue() +
                            FROK_MIN_SPAC / 2);
-    double origin_force = forkCLF1_ptr_->getForce() * CLAMP_FACTOR;
+    double origin_force = (forkCLF1_ptr_->getForce() + forkCRF1_ptr_->getForce()) * 0.5 * CLAMP_FACTOR;
     payload.set_clamppressure(origin_force);
     payload.set_steering_theta(stree_ptr_->getMotorYaw());
 

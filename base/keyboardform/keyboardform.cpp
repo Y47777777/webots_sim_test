@@ -76,6 +76,21 @@ void KeyboardForm::setStatus() {
             QString::number(msg["forkC_height"]));
     }
 
+    if (msg.find("forkCR_height") != msg.end()) {
+        ui->label_forkCRHeight_value->setText(
+            QString::number(msg["forkCR_height"]));
+    }
+
+    if (msg.find("forkCL_height") != msg.end()) {
+        ui->label_forkCLHeight_value->setText(
+            QString::number(msg["forkCL_height"]));
+    }
+    
+    if (msg.find("forkC_force") != msg.end()) {
+        ui->label_forkCForce_value->setText(
+            QString::number(msg["forkC_force"]));
+    }
+
     if (msg.find("real_speed") != msg.end()) {
         ui->label_realspeed_value->setText(QString::number(msg["real_speed"]));
     }

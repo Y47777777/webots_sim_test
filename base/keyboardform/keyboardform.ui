@@ -98,6 +98,13 @@
           </widget>
          </item>
          <item>
+          <widget class="QLabel" name="label">
+           <property name="text">
+            <string>forkCForce:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
           <widget class="QLabel" name="label_realSpeed">
            <property name="text">
             <string>RealSpeed:</string>
@@ -172,7 +179,32 @@
           </widget>
          </item>
          <item>
-          <widget class="QLabel" name="label_forkCHeight_value">
+          <layout class="QHBoxLayout" name="horizontalLayout_6">
+           <item>
+            <widget class="QLabel" name="label_forkCHeight_value">
+             <property name="text">
+              <string/>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="label_forkCLHeight_value">
+             <property name="text">
+              <string/>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="label_forkCRHeight_value">
+             <property name="text">
+              <string/>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_forkCForce_value">
            <property name="text">
             <string/>
            </property>
