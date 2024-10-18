@@ -18,6 +18,8 @@ message E20MsgUp{
   uint32 dataidx_upload = 13;
   foxglove.Imu imu = 14;
   double ClampPressure = 15;
+  bool HSwitchL = 16;
+  bool HSwitchR = 17;
 }
 
 message E20MsgDown{

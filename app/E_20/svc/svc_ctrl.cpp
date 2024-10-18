@@ -142,6 +142,7 @@ void SVCMaster::pubUpStream() {
                          imu->linear_acceleration().z());
     encoder_.updateValue("HydraulicPressureSensor", 1, "",
                          msg_from_webots_.clamppressure());
+    encoder_.updateSwitchValue("SwitchSencer", 50, msg_from_webots_.hswitchl());
     {
         // 该数据多线程读写
         std::lock_guard<std::mutex> lock(msgs_lock_);

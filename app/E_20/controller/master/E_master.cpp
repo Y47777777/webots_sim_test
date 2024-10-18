@@ -126,6 +126,7 @@ AGVController::AGVController() : BaseController("webots_master") {
 
     collision_ptr_ = std::make_shared<WCollision>(false);
     liftdoor_ptr_ = std::make_shared<WLiftDoor>(false);
+    hswitchL_ptr_ = std::make_shared<photoelectric>("HS1", "HSwitchL");
 
     whileSpinPushBack((stree_ptr_));
     whileSpinPushBack((l_ptr_));
@@ -139,6 +140,7 @@ AGVController::AGVController() : BaseController("webots_master") {
     whileSpinPushBack((transfer_ptr_));
     whileSpinPushBack((collision_ptr_));
     whileSpinPushBack((liftdoor_ptr_));
+    whileSpinPushBack((hswitchL_ptr_));
     whileSpinPushBack(bind(&WBase::spin, pose_ptr_));
 
     // must get server after tranfer init finish...
@@ -397,6 +399,7 @@ void AGVController::pubSerialSpin() {
 
     payload.set_l_wheel(l_ptr_->getWheelArcLength());
     payload.set_r_wheel(r_ptr_->getWheelArcLength());
+    payload.set_hswitchl(hswitchL_ptr_->getValue());
 
     payload.set_gyroscope(imu_ptr_->getInertialYaw());
 

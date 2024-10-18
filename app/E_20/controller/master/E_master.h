@@ -20,6 +20,7 @@
 #include "webots_device/w_transfer.h"
 #include "webots_device/w_collision.h"
 #include "webots_device/w_liftdoor.h"
+#include "webots_device/w_switch.h"
 
 namespace VNSim {
 
@@ -62,6 +63,7 @@ class AGVController : public BaseController {
     std::shared_ptr<WCollision> collision_ptr_;
     std::shared_ptr<WLiftDoor> liftdoor_ptr_;
     std::shared_ptr<VoyerBeltManager> manager_ptr_;
+    std::shared_ptr<photoelectric> hswitchL_ptr_;
 
    public:
     void subEMsgCallBack(const char *topic_name,
