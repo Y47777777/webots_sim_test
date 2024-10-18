@@ -11,14 +11,14 @@
 #pragma once
 #include <thread>
 
-#include "controller/base_ctrl.h"
+#include "controller/base_lidar.h"
 #include "webots_device/w_pose.h"
 #include "webots_device/w_transfer.h"
 #include "webots_device/w_collision.h"
 
 namespace VNSim {
 
-class AGVController : public BaseController {
+class AGVController : public BaseLidarControl {
    public:
     AGVController();
     ~AGVController(){};

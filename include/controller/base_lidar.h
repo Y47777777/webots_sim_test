@@ -26,6 +26,7 @@ class BaseLidarControl : public BaseController {
         : BaseController(ecal_name, parent) {
             step_timeout_ = 40;
             all_timeout_ = 50;
+            supervisor_->simulationSetMode(Supervisor::SIMULATION_MODE_REAL_TIME);
         }
 
     bool sendPointCloud(std::string topic, std::shared_ptr<WLidar> lidar_ptr,

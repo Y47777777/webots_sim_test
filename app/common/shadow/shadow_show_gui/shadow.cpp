@@ -31,7 +31,7 @@ std::shared_ptr<Timer> Timer::instance_ptr_ = nullptr;
 std::shared_ptr<EcalWrapper> EcalWrapper::instance_ptr_ = nullptr;
 std::shared_ptr<ReflectorChecker> ReflectorChecker::instance_ptr_ = nullptr;
 
-AGVController::AGVController() : BaseController("webots_shadow_show_gui") {
+AGVController::AGVController() : BaseLidarControl("webots_shadow_show_gui") {
     // 机器人位姿
     pose_ptr_ = std::make_shared<WPose>("RobotNode");
     transfer_ptr_ = std::make_shared<WTransfer>();
