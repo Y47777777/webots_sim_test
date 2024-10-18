@@ -60,15 +60,6 @@ int SVCShadow::initService() {
     ecal_ptr_->addEcal(be_webots_topic.c_str(),
                        std::bind(&SVCShadow::onBrighteyeMsg, this, std::placeholders::_1, std::placeholders::_2));
 
-    ecal_ptr_->addEcal(lidar_2_webots_base_topic.c_str(),
-                       std::bind(&SVCShadow::onMultiMid360Msg, this, std::placeholders::_1, std::placeholders::_2));
-
-    ecal_ptr_->addEcal(lidar_4_webots_base_topic.c_str(),
-                       std::bind(&SVCShadow::onMultiMid360Msg, this, std::placeholders::_1, std::placeholders::_2));
-
-    ecal_ptr_->addEcal(lidar_3_webots_base_topic.c_str(),
-                       std::bind(&SVCShadow::onMultiMid360Msg, this, std::placeholders::_1, std::placeholders::_2));
-
     ecal_ptr_->addEcal(bp_webots_topic.c_str(),
                        std::bind(&SVCShadow::onBPMsg, this, std::placeholders::_1, std::placeholders::_2));
 

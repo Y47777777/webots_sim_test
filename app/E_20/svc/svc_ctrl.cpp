@@ -19,17 +19,14 @@ int SVCMaster::onInitService() {
 
     // Receive
     ecal_ptr_->addEcal("webot/E20_msg",
-                       std::bind(&SVCMaster::subEMsgCallBack, this,
-                                 std::placeholders::_1, std::placeholders::_2));
+                       std::bind(&SVCMaster::subEMsgCallBack, this, std::placeholders::_1, std::placeholders::_2));
 
     ecal_ptr_->addEcal("webot/pose",
-                       std::bind(&SVCMaster::subPoseCallBakc, this,
-                                 std::placeholders::_1, std::placeholders::_2));
+                       std::bind(&SVCMaster::subPoseCallBakc, this, std::placeholders::_1, std::placeholders::_2));
     return 0;
 }
 
-void SVCMaster::subEMsgCallBack(const char *topic_name,
-                                const eCAL::SReceiveCallbackData *data) {
+void SVCMaster::subEMsgCallBack(const char *topic_name, const eCAL::SReceiveCallbackData *data) {
     // 反序列化
     msg_from_webots_.ParseFromArray(data->buf, data->size);
 
@@ -37,8 +34,7 @@ void SVCMaster::subEMsgCallBack(const char *topic_name,
     pubUpStream();
 }
 
-void SVCMaster::subPoseCallBakc(const char *topic_name,
-                                const eCAL::SReceiveCallbackData *data) {
+void SVCMaster::subPoseCallBakc(const char *topic_name, const eCAL::SReceiveCallbackData *data) {
     // 反序列化
     sim_data_flow::Pose pose;
     pose.ParseFromArray(data->buf, data->size);
@@ -146,8 +142,7 @@ void SVCMaster::pubUpStream() {
     {
         // 该数据多线程读写
         std::lock_guard<std::mutex> lock(msgs_lock_);
-        encoder_.updateValue2("DataIndexReturn", &dataidx_sub_,
-                              sizeof(uint32_t));
+        encoder_.updateValue2("DataIndexReturn", &dataidx_sub_, sizeof(uint32_t));
     }
 
     const struct Package *pack = encoder_.encodePackage();
