@@ -207,7 +207,7 @@ void AGVController::manualSetState(const std::map<std::string, double> &msg) {
             CL_T = 0;
             CR_T = 0;
         }
-        forkY_ptr_->setMemorySpeed(forkC_speed);
+        forkY_ptr_->setMemorySpeed(forkY_speed);
         forkP_ptr_->setVelocityAll(forkP_speed);
         forkCLF1_ptr_->setVelocityAll(CL_T);
         forkCRF1_ptr_->setVelocityAll(CR_T);
@@ -228,7 +228,8 @@ void AGVController::manualGetState(std::map<std::string, double> &msg) {
     msg["forkY_height"] = forkY_ptr_->getMemoryHeight();
     msg["forkP_height"] = forkP_ptr_->getSenosorValue();
     msg["forkC_height"] = forkCLF1_ptr_->getSenosorValue() + forkCRF1_ptr_->getSenosorValue() + FROK_MIN_SPAC;
-
+    msg["forkCL_height"] = forkCRF1_ptr_->getSenosorValue() + 0.5 * FROK_MIN_SPAC;
+    msg["forkCR_height"] = forkCLF1_ptr_->getSenosorValue() + 0.5 * FROK_MIN_SPAC;
     msg["real_speed"] = 0;
 }
 
@@ -385,8 +386,8 @@ void AGVController::subEMsgCallBack(const char *topic_name, const eCAL::SReceive
 
             fork_ptr_->setVelocity(payload.forkspeedz());
             forkP_ptr_->setVelocity(payload.forkspeedp());
-            double CL_T = payload.forkspeedc() + payload.forkspeedy();
-            double CR_T = payload.forkspeedc() - payload.forkspeedy();
+            double CL_T = payload.forkspeedc() - payload.forkspeedy();
+            double CR_T = payload.forkspeedc() + payload.forkspeedy();
             if (determineForceCAxisReset(CL_T, CR_T)) {
                 CL_T = 0;
                 CR_T = 0;
@@ -414,8 +415,8 @@ void AGVController::pubSerialSpin() {
     // payload.set_forkposey(forkY_ptr_->getSenosorValue());
     payload.set_forkposey(0);
     payload.set_forkposep(forkP_ptr_->getSenosorValue());
-    payload.set_forkposecl(forkCLF1_ptr_->getSenosorValue() + (FROK_MIN_SPAC / 2));
-    payload.set_forkposecr(forkCRF1_ptr_->getSenosorValue() + (FROK_MIN_SPAC / 2));
+    payload.set_forkposecl(forkCRF1_ptr_->getSenosorValue() + (FROK_MIN_SPAC / 2));
+    payload.set_forkposecr(forkCLF1_ptr_->getSenosorValue() + (FROK_MIN_SPAC / 2));
 
     payload.set_steering_theta_l(streeL_ptr_->getMotorYaw());
     payload.set_steering_theta_r(streeR_ptr_->getMotorYaw());
