@@ -364,8 +364,6 @@ void AGVController::pubSerialSpin() {
     payload.set_forkposep(forkP_ptr_->getSenosorValue());
     payload.set_forkposecl(forkCRF1_ptr_->getSenosorValue() + FROK_MIN_SPAC / 2);
     payload.set_forkposecr(forkCLF1_ptr_->getSenosorValue() + FROK_MIN_SPAC / 2);
-    double origin_force = forkCLF1_ptr_->getForce() * CLAMP_FACTOR;
-    payload.set_clamppressure(origin_force);
     payload.set_steering_theta(stree_ptr_->getMotorYaw());
 
     payload.set_l_wheel(l_ptr_->getWheelArcLength());
