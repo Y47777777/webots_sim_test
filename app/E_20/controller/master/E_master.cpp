@@ -31,7 +31,11 @@ using namespace webots;
 const double WHEELBASE = 1.46;       // 前后轮间距
 const double REAR_TREAD = 1.0;       // 驱动轮间距
 const double FROK_MIN_SPAC = 0.666;  //外叉内间距最小值 FIXME: E20
-const double CLAMP_FACTOR = 48;
+const double CLAMP_FACTOR = 24;
+
+const int FORK_NOT_CARE = 0;
+const int FORK_MOVE_LEFT = 1;
+const int FORK_MOVE_RIGHT = 2;
 
 // 计算tan角度
 inline double CalcTan(double len, double yaw) {
@@ -112,7 +116,7 @@ AGVController::AGVController() : BaseController("webots_master") {
     forkCLF1_ptr_ = std::make_shared<WFork>("CLMotor", "LF1", "", "", false,
                                             0.0, true, 200, true, 10);
     forkCRF1_ptr_ = std::make_shared<WFork>("CRMotor", "RF1", "", "", false,
-                                            0.0, false, 200, true, 10);
+                                            0.0, true, 200, true, 10);
 
     stree_ptr_ =
         std::make_shared<WWheel>("", "SteerWheel", "SteerSolid", "FLWheel");
@@ -198,7 +202,7 @@ void AGVController::manualSetState(const std::map<std::string, double> &msg) {
 
         fork_ptr_->setVelocityAll(fork_speed);
         forkP_ptr_->setVelocityAll(forkP_speed);
-        forkY_ptr_->setMemorySpeed(forkC_speed);
+        forkY_ptr_->setMemorySpeed(forkY_speed);
         double CL_T = forkC_speed - forkY_speed;
         double CR_T = forkC_speed + forkY_speed;
         if (determineForceCAxisReset(CL_T, CR_T)) {
@@ -207,6 +211,8 @@ void AGVController::manualSetState(const std::map<std::string, double> &msg) {
             CL_T = 0;
             CR_T = 0;
         }
+        int direction = determineDirection(CL_T, CR_T);
+        addMoreV(direction, CL_T, CR_T);
         forkCLF1_ptr_->setVelocityAll(CL_T);
         forkCRF1_ptr_->setVelocityAll(CR_T);
     }
@@ -224,8 +230,8 @@ void AGVController::manualGetState(std::map<std::string, double> &msg) {
     msg["forkY_height"] = forkY_ptr_->getMemoryHeight();
     msg["forkP_height"] = forkP_ptr_->getSenosorValue();
     msg["forkC_height"] = forkCLF1_ptr_->getSenosorValue() + forkCRF1_ptr_->getSenosorValue() + FROK_MIN_SPAC;
-    msg["forkCL_height"] = forkCLF1_ptr_->getSenosorValue() + 0.5 * FROK_MIN_SPAC;
-    msg["forkCR_height"] = forkCRF1_ptr_->getSenosorValue() + 0.5 * FROK_MIN_SPAC;
+    msg["forkCL_height"] = forkCRF1_ptr_->getSenosorValue() + 0.5 * FROK_MIN_SPAC;
+    msg["forkCR_height"] = forkCLF1_ptr_->getSenosorValue() + 0.5 * FROK_MIN_SPAC;
     msg["forkC_force"] = (forkCLF1_ptr_->getForce() + forkCRF1_ptr_->getForce()) * 0.5 * CLAMP_FACTOR;
     msg["real_speed"] = forkCRF1_ptr_->getSenosorValue();
 }
@@ -304,6 +310,31 @@ void AGVController::determineForceCAxisReset() {
     forkCRF1_ptr_->forceReset(flag);
 }
 
+int AGVController::determineDirection(double CL_T, double CR_T){
+    if(CL_T * CR_T > 0){
+        // dont care about open or close
+        return FORK_NOT_CARE;
+    }
+    else{
+        if(CL_T > 0){
+            //  LEFT
+            return FORK_MOVE_LEFT;
+        }else if(CL_T < 0){
+            // RIGHT
+            return FORK_MOVE_RIGHT;
+        }
+        // STOP
+        return FORK_NOT_CARE;
+    }
+}
+
+void AGVController::addMoreV(int direction, double& CL_T, double& CR_T){
+    if(direction == FORK_MOVE_LEFT)
+        CR_T -= 0.02;
+    if(direction == FORK_MOVE_RIGHT)
+        CL_T -= 0.02;
+}
+
 void AGVController::movePerLidarSpin() {
     double fork_z = fork_ptr_->getSenosorValue();  // 米制
 
@@ -367,14 +398,16 @@ void AGVController::subEMsgCallBack(const char *topic_name,
         fork_ptr_->setVelocity(payload.forkspeedz());
         forkP_ptr_->setVelocity(payload.forkspeedp());
         forkY_ptr_->setMemorySpeed(payload.forkspeedy());
-        double CL_T = payload.forkspeedc() + payload.forkspeedy();
-        double CR_T = payload.forkspeedc() - payload.forkspeedy();
+        double CL_T = payload.forkspeedc() - payload.forkspeedy();
+        double CR_T = payload.forkspeedc() + payload.forkspeedy();
         if (determineForceCAxisReset(CL_T, CR_T)) {
             // CL_T = payload.forkspeedc();
             // CR_T = payload.forkspeedc();
             CL_T = 0;
             CR_T = 0;
         }
+        int direction = determineDirection(CL_T, CR_T);
+        addMoreV(direction, CL_T, CR_T);
         forkCLF1_ptr_->setVelocity(CL_T);
         forkCRF1_ptr_->setVelocity(CR_T);
     }
@@ -383,7 +416,7 @@ void AGVController::subEMsgCallBack(const char *topic_name,
 void AGVController::moveShadowForkSpin() {
     double forkLC = forkCLF1_ptr_->getSenosorValue();
     double forkLR = forkCRF1_ptr_->getSenosorValue();
-    forkY_ptr_->setMemoryHeight((forkLC - forkLR)/2);
+    forkY_ptr_->setMemoryHeight((-1) * (forkLC - forkLR)/2);
 }
 
 void AGVController::pubSerialSpin() {
@@ -392,9 +425,9 @@ void AGVController::pubSerialSpin() {
     payload.set_forkposez(fork_ptr_->getSenosorValue());
     payload.set_forkposey(0);
     payload.set_forkposep(forkP_ptr_->getSenosorValue());
-    payload.set_forkposecl(forkCLF1_ptr_->getSenosorValue() +
+    payload.set_forkposecl(forkCRF1_ptr_->getSenosorValue() +
                            FROK_MIN_SPAC / 2);
-    payload.set_forkposecr(forkCRF1_ptr_->getSenosorValue() +
+    payload.set_forkposecr(forkCLF1_ptr_->getSenosorValue() +
                            FROK_MIN_SPAC / 2);
     double origin_force = (forkCLF1_ptr_->getForce() + forkCRF1_ptr_->getForce()) * 0.5 * CLAMP_FACTOR;
     payload.set_clamppressure(origin_force);
@@ -405,7 +438,6 @@ void AGVController::pubSerialSpin() {
     payload.set_hswitchl(hswitchL_ptr_->getValue());
 
     payload.set_gyroscope(imu_ptr_->getInertialYaw());
-
     foxglove::Imu *imu = payload.mutable_imu();
     imu->mutable_angular_velocity()->CopyFrom(imu_ptr_->getGyroValue());
     imu->mutable_linear_acceleration()->CopyFrom(imu_ptr_->getAccValue());

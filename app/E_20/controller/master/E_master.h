@@ -44,6 +44,8 @@ class AGVController : public BaseController {
     void pubLiftDoorTag();
     void determineForceCAxisReset();
     bool determineForceCAxisReset(double CL_T, double CR_T);
+    int determineDirection(double CL_T, double CR_T);
+    void addMoreV(int direct, double& CL_T, double& CR_T);
     void moveShadowForkSpin();
 
    private:
