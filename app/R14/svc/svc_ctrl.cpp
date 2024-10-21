@@ -68,17 +68,27 @@ void SVCMaster::subDownStreamCallBack(uint8_t *msg, int len) {
 }
 
 void SVCMaster::pubRMsgsToWebots() {
-    double ForkDeviceZ;
-    double SteeringDevice;
     double MoveDevice;
+    double SteeringDevice;
+    double ForkDeviceX;
+    double ForkDeviceY;
+    double ForkDeviceZ;
+    double ForkDeviceP;
 
     decoder_.getValue("MoveDevice", &MoveDevice);          // steer wheel
     decoder_.getValue("SteeringDevice", &SteeringDevice);  // steer yaw
-    decoder_.getValue("ForkDevice", &ForkDeviceZ, "Z");    // fork Speed
+    decoder_.getValue("ForkDevice", &ForkDeviceX, "X");    // forkX Speed
+    decoder_.getValue("ForkDevice", &ForkDeviceY, "Y");    // forkY Speed
+    decoder_.getValue("ForkDevice", &ForkDeviceZ, "Z");    // forkZ Speed
+    decoder_.getValue("ForkDevice", &ForkDeviceP, "P");    // forkP Speed
 
+    msg_to_webots_.set_timestamp(Timer::getInstance()->getCurrentFromSystem());
     msg_to_webots_.set_steering_speed(MoveDevice);
     msg_to_webots_.set_steering_theta(SteeringDevice);
+    msg_to_webots_.set_forkspeedx(ForkDeviceX);
+    msg_to_webots_.set_forkspeedy(ForkDeviceY);
     msg_to_webots_.set_forkspeedz(ForkDeviceZ);
+    msg_to_webots_.set_forkspeedp(ForkDeviceP);
 
     // publish
     uint8_t buf[msg_to_webots_.ByteSize()];
@@ -93,29 +103,30 @@ void SVCMaster::pubUpStream() {
         first_pub_report_ = false;
         LOG_INFO("set base timer %d", Timer::getInstance()->getBaseTime());
     }
-
+    foxglove::Imu *imu = msg_from_webots_.mutable_imu();
     // 数据转换
-    encoder_.updateValue("IncrementalSteeringCoder", 1, "",
-                         msg_from_webots_.steering_theta());
-    encoder_.updateValue("Gyroscope", 1, "", msg_from_webots_.gyroscope());
+    encoder_.updateValue("IncrementalSteeringCoder", 1, "", msg_from_webots_.steering_theta());
     encoder_.updateValue("HeightCoder", 1, "", msg_from_webots_.forkposez());
-    encoder_.updateValue("ForkDisplacementSencer", 1, "Z",
-                         msg_from_webots_.forkposez());
+    encoder_.updateValue("Gyroscope", 1, "", msg_from_webots_.gyroscope());
+    encoder_.updateValue("ForkDisplacementSencer", 1, "Y", msg_from_webots_.forkposey()); //货叉横移
+    encoder_.updateValue("DisplacementSencer", 1, "X", msg_from_webots_.forkposex()); //货叉左右移动
+    encoder_.updateValue("ForkDisplacementSencer", 1, "Z", msg_from_webots_.forkposez());
+    encoder_.updateValue("DisplacementSencer", 1, "P", msg_from_webots_.forkposep()); //货叉俯仰角度
     encoder_.updateValue2("DataIndex", &dataidx_upload_, sizeof(uint32_t));
 
     uint16_t battery_device = 100;
     encoder_.updateValue2("BatterySencer", &battery_device, sizeof(uint16_t));
 
+    //从动轮编码位置计算
     static double wheel_coder_l = 0;
     static double wheel_coder_r = 0;
     wheel_coder_l += msg_from_webots_.l_wheel() * 0.5;
     wheel_coder_r += msg_from_webots_.r_wheel() * 0.5;
     encoder_.updateValue("WheelCoder", 2, "", wheel_coder_l, wheel_coder_r);
-    // encoder_.updateSwitchValue("SwitchSencer", 48, msg_from_webots_.hswitchl());
-    // encoder_.updateSwitchValue("SwitchSencer", 49, msg_from_webots_.hswitchr());
-    // encoder_.updateSwitchValue("SwitchSencer", 50, msg_from_webots_.vswitchl());
-    // encoder_.updateSwitchValue("SwitchSencer", 51, msg_from_webots_.vswitchr());
-
+    encoder_.updateSwitchValue("SwitchSencer", 36, msg_from_webots_.hswitchl()); //左横向到位开关 这里采用双压杆到位开关
+    encoder_.updateSwitchValue("SwitchSencer", 37, msg_from_webots_.hswitchr()); //右横向到位开关
+    encoder_.updateSwitchValue("SwitchSencer", 38, msg_from_webots_.vswitchl()); //左纵向到位开关
+    encoder_.updateSwitchValue("SwitchSencer", 39, msg_from_webots_.vswitchr()); //右纵向到位开关
     {
         // 该数据多线程读写
         std::lock_guard<std::mutex> lock(msgs_lock_);

@@ -149,7 +149,8 @@ void SencerDirector::create(const char *name, const char *function,
     } else if (strcmp(name, "Gyroscope") == 0) {
         ptr = std::make_shared<Gyroscope>();
         // std::cout << "create Gyroscope = " << name << std::endl;
-    } else if (strcmp(name, "ForkDisplacementSencer") == 0) {
+    } else if (strcmp(name, "ForkDisplacementSencer") == 0 || 
+    strcmp(name, "DisplacementSencer") == 0) {
         ptr = std::make_shared<ForkDisplacementSencer>();
         // std::cout << "create ForkDisplacementSencer = " << name <<
         // std::endl;

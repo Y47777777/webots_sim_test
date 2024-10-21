@@ -1,4 +1,6 @@
 syntax = "proto3";
+import "Imu.proto";
+
 package sim_data_flow;
 
 message RMsgUp{
@@ -13,6 +15,11 @@ message RMsgUp{
   double r_wheel = 9;
   double steering_theta = 10;
   uint32 dataidx_upload = 11;
+  foxglove.Imu imu = 12;
+  bool HSwitchL = 13;
+  bool HSwitchR = 14;
+  bool VSwitchL = 15;
+  bool VSwitchR = 16;
 }
 
 message RMsgDown{

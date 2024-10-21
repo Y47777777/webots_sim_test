@@ -35,6 +35,9 @@ class KeyboardForm : public QWidget {
     void on_pushButton_liftUp_clicked();
     void on_pushButton_liftDown_clicked();
     void on_pushButton_liftStop_clicked();
+    void on_pushButton_liftXForward_clicked();
+    void on_pushButton_liftXStop_clicked();
+    void on_pushButton_liftXBackward_clicked();
     void on_pushButton_liftYLeft_clicked();
     void on_pushButton_liftYRight_clicked();
     void on_pushButton_liftYStop_clicked();
@@ -48,13 +51,17 @@ class KeyboardForm : public QWidget {
     void on_pushButton_reset_steer_clicked();
     void setStatus();
 
-   private:
+
+
+private:
     void sendMsg();
     struct ManualState {
         double steer_speed = 0;
         double steer_yaw = 0;
         double fork_speed = 0;
         double fork_height = 0;
+        double forkX_speed = 0;
+        double forkX_height = 0;
         double forkY_speed = 0;
         double forkY_height = 0;
         double forkP_speed = 0;

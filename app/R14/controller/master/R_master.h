@@ -59,6 +59,10 @@ class AGVController : public BaseController {
     std::shared_ptr<WCollision> collision_ptr_;
     std::shared_ptr<WTransfer> transfer_ptr_;
     std::shared_ptr<WLiftDoor> liftdoor_ptr_;
+    std::shared_ptr<photoelectric> hswitchL_ptr_;
+    std::shared_ptr<photoelectric> hswitchR_ptr_;
+    std::shared_ptr<manchanical> vswitchL_ptr_;
+    std::shared_ptr<manchanical> vswitchR_ptr_;
 
 
    public:

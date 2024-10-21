@@ -46,6 +46,16 @@ void KeyboardForm::setStatus() {
             QString::number(msg["fork_height"]));
     }
 
+    if (msg.find("forkX_speed") != msg.end()) {
+        ui->label_forkXSpeed_value->setText(
+            QString::number(msg["forkX_speed"]));
+    }
+
+    if (msg.find("forkX_height") != msg.end()) {
+        ui->label_forkXHeight_value->setText(
+            QString::number(msg["forkX_height"]));
+    }
+
     if (msg.find("forkY_speed") != msg.end()) {
         ui->label_forkYSpeed_value->setText(
             QString::number(msg["forkY_speed"]));
@@ -104,13 +114,14 @@ void KeyboardForm::on_checkBox_stateChanged(int arg1) {
     manual_state_.steer_speed = 0;
     manual_state_.steer_yaw = 0;
     manual_state_.fork_speed = 0;
+    manual_state_.forkX_speed = 0;
     manual_state_.forkY_speed = 0;
     manual_state_.forkP_speed = 0;
 }
 
 void KeyboardForm::on_pushButton_speedUp_clicked() {
     double c_value = manual_state_.steer_speed;
-    if (c_value < 4) {
+    if (c_value < 4) {;
         c_value += 0.2;
     }
     manual_state_.steer_speed = c_value;
@@ -163,6 +174,10 @@ void KeyboardForm::on_pushButton_liftUp_clicked() {
     manual_state_.fork_speed = c_value;
     sendMsg();
 }
+void KeyboardForm::on_pushButton_liftStop_clicked(){
+    manual_state_.fork_speed = 0;
+    sendMsg();
+}
 
 void KeyboardForm::on_pushButton_liftDown_clicked() {
     double c_value = manual_state_.fork_speed;
@@ -173,10 +188,31 @@ void KeyboardForm::on_pushButton_liftDown_clicked() {
     sendMsg();
 }
 
-void KeyboardForm::on_pushButton_liftStop_clicked() {
-    manual_state_.fork_speed = 0;
+void KeyboardForm::on_pushButton_liftXForward_clicked(){
+    double c_value = manual_state_.forkX_speed;
+    if (c_value < 1) {
+        c_value += 0.1;
+    }
+    manual_state_.forkX_speed = c_value;
     sendMsg();
 }
+
+
+void KeyboardForm::on_pushButton_liftXStop_clicked(){
+    manual_state_.forkX_speed = 0;
+    sendMsg();
+}
+
+
+void KeyboardForm::on_pushButton_liftXBackward_clicked(){
+    double c_value = manual_state_.forkX_speed;
+    if (c_value > -1){
+        c_value -= 0.1;
+    }
+    manual_state_.forkX_speed = c_value;
+    sendMsg();
+}
+
 
 void KeyboardForm::on_pushButton_liftYLeft_clicked() {
     double c_value = manual_state_.forkY_speed;
@@ -266,6 +302,8 @@ void KeyboardForm::sendMsg() {
     msg["steer_yaw"] = manual_state_.steer_yaw;
     msg["fork_speed"] = manual_state_.fork_speed;
     msg["fork_height"] = manual_state_.fork_height;
+    msg["forkX_speed"] = manual_state_.forkX_speed;
+    msg["forkX_height"] = manual_state_.forkX_height;
     msg["forkY_speed"] = manual_state_.forkY_speed;
     msg["forkY_height"] = manual_state_.forkY_height;
     msg["forkP_speed"] = manual_state_.forkP_speed;
@@ -285,3 +323,5 @@ void KeyboardForm::decodeMsg(const char *msg,
                              std::map<std::string, double> &decode_msg) {}
 void KeyboardForm::encodeMsg(const std::map<std::string, double> &msg,
                              std::string &encode_msg) {}
+
+

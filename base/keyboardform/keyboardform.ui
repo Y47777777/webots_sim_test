@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>634</width>
-    <height>590</height>
+    <height>596</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -42,6 +42,20 @@
           </widget>
          </item>
          <item>
+          <widget class="QLabel" name="label_forkXSpeed">
+           <property name="text">
+            <string>forkXSpeed:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_forkYSpeed">
+           <property name="text">
+            <string>forkYSpeed:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
           <widget class="QLabel" name="label_forkSpeed">
            <property name="text">
             <string>ForkSpeed:</string>
@@ -56,16 +70,16 @@
           </widget>
          </item>
          <item>
-          <widget class="QLabel" name="label_forkYSpeed">
+          <widget class="QLabel" name="label_forkCSpeed">
            <property name="text">
-            <string>forkYSpeed:</string>
+            <string>forkCSpeed:</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QLabel" name="label_forkCSpeed">
+          <widget class="QLabel" name="label_forkXHeight">
            <property name="text">
-            <string>forkCSpeed:</string>
+            <string>forkXHeight:</string>
            </property>
           </widget>
          </item>
@@ -130,6 +144,20 @@
           </widget>
          </item>
          <item>
+          <widget class="QLabel" name="label_forkXSpeed_value">
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_forkYSpeed_value">
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item>
           <widget class="QLabel" name="label_forkSpeed_value">
            <property name="text">
             <string/>
@@ -144,14 +172,14 @@
           </widget>
          </item>
          <item>
-          <widget class="QLabel" name="label_forkYSpeed_value">
+          <widget class="QLabel" name="label_forkCSpeed_value">
            <property name="text">
             <string/>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QLabel" name="label_forkCSpeed_value">
+          <widget class="QLabel" name="label_forkXHeight_value">
            <property name="text">
             <string/>
            </property>
@@ -228,25 +256,25 @@
      <item>
       <layout class="QHBoxLayout" name="ForkButtonLayout">
        <item>
-        <layout class="QVBoxLayout" name="ForkZ">
+        <layout class="QVBoxLayout" name="ForkX">
          <item>
-          <widget class="QPushButton" name="pushButton_liftUp">
+          <widget class="QPushButton" name="pushButton_liftXForward">
            <property name="text">
-            <string>LiftZUp</string>
+            <string>LiftXForward</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="pushButton_liftStop">
+          <widget class="QPushButton" name="pushButton_liftXStop">
            <property name="text">
-            <string>LiftZStop</string>
+            <string>LiftXStop</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="pushButton_liftDown">
+          <widget class="QPushButton" name="pushButton_liftXBackward">
            <property name="text">
-            <string>LiftZDown</string>
+            <string>LiftXBackward</string>
            </property>
           </widget>
          </item>
@@ -272,6 +300,31 @@
           <widget class="QPushButton" name="pushButton_liftYRight">
            <property name="text">
             <string>LiftYRight</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QVBoxLayout" name="ForkZ">
+         <item>
+          <widget class="QPushButton" name="pushButton_liftUp">
+           <property name="text">
+            <string>LiftZUp</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="pushButton_liftStop">
+           <property name="text">
+            <string>LiftZStop</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="pushButton_liftDown">
+           <property name="text">
+            <string>LiftZDown</string>
            </property>
           </widget>
          </item>
@@ -336,10 +389,10 @@
          <item>
           <spacer name="verticalSpacer_3">
            <property name="orientation">
-            <enum>Qt::Vertical</enum>
+            <enum>Qt::Orientation::Vertical</enum>
            </property>
            <property name="sizeType">
-            <enum>QSizePolicy::Preferred</enum>
+            <enum>QSizePolicy::Policy::Preferred</enum>
            </property>
            <property name="sizeHint" stdset="0">
             <size>
@@ -365,10 +418,10 @@
          <item>
           <spacer name="verticalSpacer">
            <property name="orientation">
-            <enum>Qt::Vertical</enum>
+            <enum>Qt::Orientation::Vertical</enum>
            </property>
            <property name="sizeType">
-            <enum>QSizePolicy::Preferred</enum>
+            <enum>QSizePolicy::Policy::Preferred</enum>
            </property>
            <property name="sizeHint" stdset="0">
             <size>
@@ -394,10 +447,10 @@
          <item>
           <spacer name="verticalSpacer_2">
            <property name="orientation">
-            <enum>Qt::Vertical</enum>
+            <enum>Qt::Orientation::Vertical</enum>
            </property>
            <property name="sizeType">
-            <enum>QSizePolicy::Expanding</enum>
+            <enum>QSizePolicy::Policy::Expanding</enum>
            </property>
            <property name="sizeHint" stdset="0">
             <size>
@@ -414,10 +467,10 @@
          <item>
           <spacer name="verticalSpacer_7">
            <property name="orientation">
-            <enum>Qt::Vertical</enum>
+            <enum>Qt::Orientation::Vertical</enum>
            </property>
            <property name="sizeType">
-            <enum>QSizePolicy::Preferred</enum>
+            <enum>QSizePolicy::Policy::Preferred</enum>
            </property>
            <property name="sizeHint" stdset="0">
             <size>
@@ -443,10 +496,10 @@
          <item>
           <spacer name="verticalSpacer_4">
            <property name="orientation">
-            <enum>Qt::Vertical</enum>
+            <enum>Qt::Orientation::Vertical</enum>
            </property>
            <property name="sizeType">
-            <enum>QSizePolicy::Preferred</enum>
+            <enum>QSizePolicy::Policy::Preferred</enum>
            </property>
            <property name="sizeHint" stdset="0">
             <size>
@@ -472,10 +525,10 @@
          <item>
           <spacer name="verticalSpacer_5">
            <property name="orientation">
-            <enum>Qt::Vertical</enum>
+            <enum>Qt::Orientation::Vertical</enum>
            </property>
            <property name="sizeType">
-            <enum>QSizePolicy::Preferred</enum>
+            <enum>QSizePolicy::Policy::Preferred</enum>
            </property>
            <property name="sizeHint" stdset="0">
             <size>
@@ -501,10 +554,10 @@
          <item>
           <spacer name="verticalSpacer_6">
            <property name="orientation">
-            <enum>Qt::Vertical</enum>
+            <enum>Qt::Orientation::Vertical</enum>
            </property>
            <property name="sizeType">
-            <enum>QSizePolicy::Expanding</enum>
+            <enum>QSizePolicy::Policy::Expanding</enum>
            </property>
            <property name="sizeHint" stdset="0">
             <size>
@@ -521,10 +574,10 @@
          <item>
           <spacer name="verticalSpacer_8">
            <property name="orientation">
-            <enum>Qt::Vertical</enum>
+            <enum>Qt::Orientation::Vertical</enum>
            </property>
            <property name="sizeType">
-            <enum>QSizePolicy::Preferred</enum>
+            <enum>QSizePolicy::Policy::Preferred</enum>
            </property>
            <property name="sizeHint" stdset="0">
             <size>
@@ -550,10 +603,10 @@
          <item>
           <spacer name="verticalSpacer_9">
            <property name="orientation">
-            <enum>Qt::Vertical</enum>
+            <enum>Qt::Orientation::Vertical</enum>
            </property>
            <property name="sizeType">
-            <enum>QSizePolicy::Preferred</enum>
+            <enum>QSizePolicy::Policy::Preferred</enum>
            </property>
            <property name="sizeHint" stdset="0">
             <size>
@@ -579,10 +632,10 @@
          <item>
           <spacer name="verticalSpacer_10">
            <property name="orientation">
-            <enum>Qt::Vertical</enum>
+            <enum>Qt::Orientation::Vertical</enum>
            </property>
            <property name="sizeType">
-            <enum>QSizePolicy::Expanding</enum>
+            <enum>QSizePolicy::Policy::Expanding</enum>
            </property>
            <property name="sizeHint" stdset="0">
             <size>

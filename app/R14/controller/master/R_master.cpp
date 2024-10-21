@@ -55,6 +55,10 @@ AGVController::AGVController() : BaseController("webots_master") {
     transfer_ptr_ = std::make_shared<WTransfer>();
     collision_ptr_ = std::make_shared<WCollision>(false);
     liftdoor_ptr_ = std::make_shared<WLiftDoor>(false);
+    hswitchL_ptr_ = std::make_shared<photoelectric>("HL", "HSwitchL");
+    hswitchR_ptr_ = std::make_shared<photoelectric>("HR", "HSwitchR");
+    vswitchL_ptr_ = std::make_shared<manchanical>("VL", "VSwitchL");
+    vswitchR_ptr_ = std::make_shared<manchanical>("VR", "VSwitchR");
 
     whileSpinPushBack((stree_ptr_));
     whileSpinPushBack((l_ptr_));
@@ -68,6 +72,10 @@ AGVController::AGVController() : BaseController("webots_master") {
     whileSpinPushBack((transfer_ptr_));
     whileSpinPushBack((collision_ptr_));
     whileSpinPushBack((liftdoor_ptr_));
+    whileSpinPushBack((hswitchL_ptr_));
+    whileSpinPushBack((hswitchR_ptr_));
+    whileSpinPushBack((vswitchL_ptr_));
+    whileSpinPushBack((vswitchR_ptr_));
     //为了解决阻塞的问题，将pose_ptr_放到最后
     whileSpinPushBack(bind(&WBase::spin, pose_ptr_));
 
@@ -86,35 +94,35 @@ void AGVController::manualSetState(const std::map<std::string, double> &msg) {
     static double steer_speed = 0;
     static double steer_yaw = 0;
     static double forkX_speed = 0;
+    static double forkY_speed = 0;
     static double forkZ_speed = 0;
     static double forkP_speed = 0;
-    static double forkY_speed = 0;
     if (msg.find("refresh_world") != msg.end()) {
         transfer_ptr_->noticeAll();
     }
     if (isManual_) {
         steer_speed = msg.at("steer_speed");
         steer_yaw = msg.at("steer_yaw");
-        forkX_speed = msg.at("forkY_speed");
+        forkX_speed = msg.at("forkX_speed");
+        forkY_speed = msg.at("forkY_speed");
         forkZ_speed = msg.at("fork_speed");
         forkP_speed = msg.at("forkP_speed");
-        forkY_speed = msg.at("forkC_speed");
 
         stree_ptr_->stree_run(steer_speed, steer_yaw);
         forkX_ptr_->setVelocityAll(forkX_speed);
+        forkY_ptr_->setVelocityAll(forkY_speed);   
         forkZ_ptr_->setVelocityAll(forkZ_speed);
-        forkP_ptr_->setVelocityAll(forkP_speed);
-        forkY_ptr_->setVelocityAll(forkY_speed);    
+        forkP_ptr_->setVelocityAll(forkP_speed);      
     }
 }
 
 void AGVController::manualGetState(std::map<std::string, double> &msg) {
     msg["steer_speed"] = stree_ptr_->getSpeed();
     msg["steer_yaw"] = stree_ptr_->getMotorYaw();
-    msg["forkY_speed"] = forkX_ptr_->getVelocityValue();
-    msg["forkY_height"] = forkX_ptr_->getSenosorValue();
-    msg["forkC_speed"] = forkY_ptr_->getVelocityValue();
-    msg["forkC_height"] = forkY_ptr_->getSenosorValue();
+    msg["forkX_speed"] = forkX_ptr_->getVelocityValue();
+    msg["forkX_height"] = forkX_ptr_->getSenosorValue();
+    msg["forkY_speed"] = forkY_ptr_->getVelocityValue();
+    msg["forkY_height"] = forkY_ptr_->getSenosorValue();
     msg["fork_speed"] = forkZ_ptr_->getVelocityValue();    
     msg["fork_height"] = forkZ_ptr_->getSenosorValue();
     msg["forkP_speed"] = forkP_ptr_->getVelocityValue();
@@ -206,6 +214,10 @@ void AGVController::pubSerialSpin() {
 
     payload.set_steering_theta(stree_ptr_->getMotorYaw());
     payload.set_gyroscope(imu_ptr_->getInertialYaw());
+    payload.set_hswitchl(hswitchL_ptr_->getValue());
+    payload.set_hswitchr(hswitchR_ptr_->getValue());
+    payload.set_vswitchl(vswitchL_ptr_->getValue());
+    payload.set_vswitchr(vswitchR_ptr_->getValue());
 
     uint8_t buf[payload.ByteSize()];
     payload.SerializePartialToArray(buf, payload.ByteSize());
