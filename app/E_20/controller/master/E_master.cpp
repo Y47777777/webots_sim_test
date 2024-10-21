@@ -437,7 +437,7 @@ void AGVController::pubSerialSpin() {
     payload.set_r_wheel(r_ptr_->getWheelArcLength());
     payload.set_hswitchl(hswitchL_ptr_->getValue());
 
-    payload.set_gyroscope(imu_ptr_->getInertialYaw());
+    payload.mutable_gyroscope()->CopyFrom(imu_ptr_->getInertialRollPitchYaw());
     foxglove::Imu *imu = payload.mutable_imu();
     imu->mutable_angular_velocity()->CopyFrom(imu_ptr_->getGyroValue());
     imu->mutable_linear_acceleration()->CopyFrom(imu_ptr_->getAccValue());

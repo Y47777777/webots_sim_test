@@ -109,7 +109,7 @@ void SVCMaster::pubUpStream() {
     // 数据转换
     encoder_.updateValue("IncrementalSteeringCoder", 1, "",
                          msg_from_webots_.steering_theta());
-    encoder_.updateValue("Gyroscope", 1, "", msg_from_webots_.gyroscope());
+    encoder_.updateValue("Gyroscope", 1, "", msg_from_webots_.gyroscope().z());
     encoder_.updateValue("ForkDisplacementSencer", 1, "LC",
                          msg_from_webots_.forkposecl());
     encoder_.updateValue("ForkDisplacementSencer", 1, "RC", msg_from_webots_.forkposecr());
