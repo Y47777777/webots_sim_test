@@ -325,7 +325,7 @@ void AGVController::moveShadowForkSpin() {
         forkCLF2_ptr_->setShadowPos(-(fabs(forkLC) - FOLLOW_START));
     if (std::fabs(forkLR) > FOLLOW_START)
         forkCRF2_ptr_->setShadowPos((fabs(forkLR) - FOLLOW_START));
-    forkY_ptr_->setMemoryHeight((forkLC - forkLR) / 2);
+    forkY_ptr_->setMemoryHeight((-1) * (forkLC - forkLR) / 2);
 }
 
 void AGVController::pubTransferSpin() {

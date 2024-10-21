@@ -353,7 +353,7 @@ void AGVController::subEMsgCallBack(const char *topic_name, const eCAL::SReceive
 void AGVController::moveShadowForkSpin() {
     double forkLC = forkCLF1_ptr_->getSenosorValue();
     double forkLR = forkCRF1_ptr_->getSenosorValue();
-    forkY_ptr_->setMemoryHeight((forkLC - forkLR) / 2);
+    forkY_ptr_->setMemoryHeight((-1) * (forkLC - forkLR) / 2);
 }
 
 void AGVController::pubSerialSpin() {
