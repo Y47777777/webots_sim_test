@@ -104,8 +104,8 @@ AGVController::AGVController() : BaseController("webots_master") {
     fork_ptr_ = std::make_shared<WFork>("fork height motor", "ForkZAxis", "fork height");
     forkY_ptr_ = std::make_shared<WFork>("", "", "");
     forkP_ptr_ = std::make_shared<WFork>("PMotor", "ForkPAxis");
-    forkCLF1_ptr_ = std::make_shared<WFork>("CLMotor", "LF1", "CLSensor", "", false, 0.0, true, 200, true, 10);
-    forkCRF1_ptr_ = std::make_shared<WFork>("CRMotor", "RF1", "CRSensor", "", false, 0.0, false, 200);
+    forkCLF1_ptr_ = std::make_shared<WFork>("CLMotor", "LF1", "CLSensor");
+    forkCRF1_ptr_ = std::make_shared<WFork>("CRMotor", "RF1", "CRSensor", "", false, 0.03);
 
     stree_ptr_ = std::make_shared<WWheel>("", "SteerWheel", "SteerSolid", "FLWheel");
 
@@ -170,7 +170,7 @@ void AGVController::manualSetState(const std::map<std::string, double> &msg) {
 
         fork_ptr_->setVelocityAll(fork_speed);
         forkP_ptr_->setVelocityAll(forkP_speed);
-        forkY_ptr_->setMemorySpeed(forkC_speed);
+        forkY_ptr_->setMemorySpeed(forkY_speed);
         double CL_T = forkC_speed - forkY_speed;
         double CR_T = forkC_speed + forkY_speed;
         if (determineForceCAxisReset(CL_T, CR_T)) {
@@ -196,6 +196,8 @@ void AGVController::manualGetState(std::map<std::string, double> &msg) {
     msg["forkY_height"] = forkY_ptr_->getMemoryHeight();
     msg["forkP_height"] = forkP_ptr_->getSenosorValue();
     msg["forkC_height"] = forkCLF1_ptr_->getSenosorValue();
+    msg["forkCL_height"] = forkCRF1_ptr_->getSenosorValue() + 0.5 * FROK_MIN_SPAC;
+    msg["forkCR_height"] = forkCLF1_ptr_->getSenosorValue() + 0.5 * FROK_MIN_SPAC;
     msg["real_speed"] = forkCRF1_ptr_->getSenosorValue();
 }
 
@@ -335,8 +337,8 @@ void AGVController::subEMsgCallBack(const char *topic_name, const eCAL::SReceive
         fork_ptr_->setVelocity(payload.forkspeedz());
         forkP_ptr_->setVelocity(payload.forkspeedp());
         forkY_ptr_->setMemorySpeed(payload.forkspeedy());
-        double CL_T = payload.forkspeedc() + payload.forkspeedy();
-        double CR_T = payload.forkspeedc() - payload.forkspeedy();
+        double CL_T = payload.forkspeedc() - payload.forkspeedy();
+        double CR_T = payload.forkspeedc() + payload.forkspeedy();
         if (determineForceCAxisReset(CL_T, CR_T)) {
             // CL_T = payload.forkspeedc();
             // CR_T = payload.forkspeedc();
@@ -360,8 +362,8 @@ void AGVController::pubSerialSpin() {
     payload.set_forkposez(fork_ptr_->getSenosorValue());
     payload.set_forkposey(0);
     payload.set_forkposep(forkP_ptr_->getSenosorValue());
-    payload.set_forkposecl(forkCLF1_ptr_->getSenosorValue() + FROK_MIN_SPAC / 2);
-    payload.set_forkposecr(forkCRF1_ptr_->getSenosorValue() + FROK_MIN_SPAC / 2);
+    payload.set_forkposecl(forkCRF1_ptr_->getSenosorValue() + FROK_MIN_SPAC / 2);
+    payload.set_forkposecr(forkCLF1_ptr_->getSenosorValue() + FROK_MIN_SPAC / 2);
     double origin_force = forkCLF1_ptr_->getForce() * CLAMP_FACTOR;
     payload.set_clamppressure(origin_force);
     payload.set_steering_theta(stree_ptr_->getMotorYaw());
