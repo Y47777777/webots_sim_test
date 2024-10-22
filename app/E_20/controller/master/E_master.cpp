@@ -423,7 +423,7 @@ void AGVController::pubSerialSpin() {
     sim_data_flow::E20MsgUp payload;
     payload.set_timestamp(time_stamp_);
     payload.set_forkposez(fork_ptr_->getSenosorValue());
-    payload.set_forkposey(0);
+    payload.set_forkposey(forkY_ptr_->getMemoryHeight());
     payload.set_forkposep(forkP_ptr_->getSenosorValue());
     payload.set_forkposecl(forkCRF1_ptr_->getSenosorValue() +
                            FROK_MIN_SPAC / 2);
