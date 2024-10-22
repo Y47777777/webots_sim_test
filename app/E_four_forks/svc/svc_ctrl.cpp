@@ -91,6 +91,7 @@ void SVCMaster::pubEMsgsToWebots() {
         LOG_WARN("%s --> Poweroff read value = %d", __FUNCTION__, isPowerOff);
     }
 
+    msg_to_webots_.set_timestamp(Timer::getInstance()->getCurrentFromSystem());
     msg_to_webots_.set_steering_speed(MoveDevice);
     msg_to_webots_.set_steering_theta_l(SteeringDeviceL);
     msg_to_webots_.set_steering_theta_r(SteeringDeviceR);
