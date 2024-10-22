@@ -1,5 +1,6 @@
 DEF RobotNode Robot {
-  translation 13.1945 5.4977 0.193042
+  translation 13.194399920108127 5.497702104824354 0.19144797853300788
+  rotation -0.02102199186325239 -0.999779013479972 -7.944507580517836e-06 0.0005104185193994915
   children [
     Pose {
       translation 0 0 -0.1961
@@ -49,6 +50,7 @@ DEF RobotNode Robot {
               children [
                 HingeJoint {
                   jointParameters HingeJointParameters {
+                    position -9.57385282163159e-11
                     axis 0 0 1
                   }
                   device [
@@ -97,6 +99,7 @@ DEF RobotNode Robot {
               children [
                 HingeJoint {
                   jointParameters HingeJointParameters {
+                    position -6.264677665512863e-11
                     axis 0 0 1
                   }
                   device [
@@ -135,6 +138,7 @@ DEF RobotNode Robot {
                   children [
                     HingeJoint {
                       jointParameters DEF FJJ HingeJointParameters {
+                        position -9.764086276132683e-07
                         axis 0 0 1
                       }
                       device [
@@ -143,8 +147,8 @@ DEF RobotNode Robot {
                         }
                       ]
                       endPoint DEF SteerSolidR Solid {
-                        translation 1.6278609148354215e-07 6.504370622833833e-08 4.142566289999649e-09
-                        rotation 0 0 -1 2.268062959039295
+                        translation 3.3528124243024057e-08 -1.9326832916462555e-07 -1.7702141974496048e-09
+                        rotation 0 0 1 3.9185200634763384
                         children [
                           Shape {
                             appearance Appearance {
@@ -181,6 +185,7 @@ DEF RobotNode Robot {
                   children [
                     HingeJoint {
                       jointParameters DEF FJJ2 HingeJointParameters {
+                        position -9.510824587369353e-07
                         axis 0 0 1
                       }
                       device [
@@ -189,8 +194,8 @@ DEF RobotNode Robot {
                         }
                       ]
                       endPoint DEF SteerSolidL Solid {
-                        translation 1.6275686383903056e-07 6.483433096395494e-08 4.231810457611119e-09
-                        rotation 0 0 -1 2.249235570419999
+                        translation 1.4759858022040706e-07 -1.0886476562906103e-07 5.642846190312413e-09
+                        rotation 0 0 -1 3.436252770098495
                         children [
                           Shape {
                             appearance Appearance {
@@ -220,16 +225,9 @@ DEF RobotNode Robot {
         }
         DEF BODY Solid {
           children [
-            Pose {
+            E30_4Forks-Body {
               translation 0.19 0 0
               rotation 0 0 1 3.1415
-              children [
-                CadShape {
-                  url [
-                    "../protos/VNE/CN012023147-E40-scale.obj"
-                  ]
-                }
-              ]
             }
             Solid {
               translation 1.03 0 0.7
@@ -264,6 +262,7 @@ DEF RobotNode Robot {
           children [
             DEF ForkPJoint HingeJoint {
               jointParameters HingeJointParameters {
+                position -3.488583644184473e-09
                 axis 0 1 0
                 minStop -0.3
                 maxStop 0.3
@@ -282,11 +281,12 @@ DEF RobotNode Robot {
                 }
               ]
               endPoint DEF ForkPAxis Solid {
-                translation 0 0 -0.04
+                translation 1.3954334576737892e-10 0 -0.04
                 rotation 0 1 0 0
                 children [
                   DEF fork SliderJoint {
                     jointParameters JointParameters {
+                      position -7.550085523869822e-09
                       minStop -0.1
                       maxStop 1.66
                     }
@@ -304,7 +304,7 @@ DEF RobotNode Robot {
                       }
                     ]
                     endPoint DEF ForkZAxis Solid {
-                      translation -0.94 0 0.01
+                      translation -0.94 0 0.009999992449914476
                       rotation 0 1 0 0
                       children [
                         Pose {
@@ -317,6 +317,7 @@ DEF RobotNode Robot {
                               children [
                                 DEF ForkCLJoint SliderJoint {
                                   jointParameters JointParameters {
+                                    position 3.0095019607179526e-11
                                     axis 0 -1 0
                                     minStop -0.1
                                     maxStop 0.82
@@ -335,6 +336,7 @@ DEF RobotNode Robot {
                                     }
                                   ]
                                   endPoint DEF ForkCLAxis Solid {
+                                    translation 0 -3.0095019607179526e-11 0
                                     children [
                                       Pose {
                                         translation 0.65 0 0.3
@@ -428,6 +430,7 @@ DEF RobotNode Robot {
                               children [
                                 DEF ForkCRJoint SliderJoint {
                                   jointParameters JointParameters {
+                                    position -4.139176092758855e-11
                                     axis 0 1 0
                                     minStop -0.1
                                     maxStop 0.82
@@ -446,6 +449,7 @@ DEF RobotNode Robot {
                                     }
                                   ]
                                   endPoint DEF ForkCRAxis Solid {
+                                    translation 0 -4.139176092758855e-11 0
                                     children [
                                       USE LF1_Fork_Shape
                                       Pose {
@@ -522,7 +526,7 @@ DEF RobotNode Robot {
                           ]
                         }
                         Mid360 {
-                          translation 0.89 -0.01 0.075
+                          translation 0.89 -0.01 0.07500000755011423
                           rotation 0 1 0 -2.7489003061004254
                           name "lidar_0"
                         }

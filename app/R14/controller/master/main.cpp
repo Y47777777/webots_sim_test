@@ -12,8 +12,8 @@ int main(int argc, char *argv[]) {
     g_Logger.initLog("../../configs/log_config/webots_log_config.ini","/home/visionnav/logs/master.log");
     
     LOG_INFO("log init...");
-    LOG_INFO("try start svc_R");
-    system("./../svc_R/svc_R &");
+    LOG_INFO("try start svc_R14");
+    system("./../svc_R14/svc_R14 &");
     QApplication a(argc, argv);
     // init ctrl
     std::shared_ptr<BaseController> ctrl_ptr = std::make_shared<AGVController>();
@@ -27,8 +27,8 @@ int main(int argc, char *argv[]) {
     f.show();
 
     a.exec();
-    LOG_INFO("try stop svc_R");
-    system("killall svc_R");
+    LOG_INFO("try stop svc_R14");
+    system("killall svc_R14");
     
     return 0;
 }

@@ -22,11 +22,12 @@ int main(int argc, char *argv[]) {
     // serial service
     // TODO: 生成不同的log
     g_Logger.initLog("../../configs/log_config/webots_log_config.ini","/home/visionnav/logs/svc.log");
-    LOG_INFO("start svc_R");
+    std::string svc_model = "svc_R14";
+    LOG_INFO("start %s", svc_model.c_str());
 
     std::shared_ptr<BaseSvc> serial_service =
         std::make_shared<SVCMaster>();
-    serial_service->init(true, "svc_R");
+    serial_service->init(true, svc_model.c_str());
 
     std::shared_ptr<BaseSvc> lidar_service =
         std::make_shared<SVCShadow>();
