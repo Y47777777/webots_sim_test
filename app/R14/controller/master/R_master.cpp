@@ -219,6 +219,10 @@ void AGVController::pubSerialSpin() {
     payload.set_vswitchl(vswitchL_ptr_->getValue());
     payload.set_vswitchr(vswitchR_ptr_->getValue());
 
+    foxglove::Imu *imu = payload.mutable_imu();
+    imu->mutable_angular_velocity()->CopyFrom(imu_ptr_->getGyroValue());
+    imu->mutable_linear_acceleration()->CopyFrom(imu_ptr_->getAccValue());
+
     uint8_t buf[payload.ByteSize()];
     payload.SerializePartialToArray(buf, payload.ByteSize());
     ecal_ptr_->send("webot/R_msg", buf, payload.ByteSize());
