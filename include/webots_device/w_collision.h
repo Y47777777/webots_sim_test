@@ -95,6 +95,11 @@ class WCollision : public WBase {
             Field *iter = this_ptr->getField("endPoint");
             Node *endPoint = iter->getSFNode();
             getChildNode(endPoint);
+        } else if (this_ptr->getTypeName().compare("Hinge2Joint") == 0) {
+            LOG_INFO("there is Hinge2Joint");
+            Field *iter = this_ptr->getField("endPoint");
+            Node *endPoint = iter->getSFNode();
+            getChildNode(endPoint);
         }
 
         if (is_shadow_) {

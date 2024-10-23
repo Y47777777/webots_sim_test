@@ -229,7 +229,13 @@ class WTransfer : public WBase {
             Field *iter = this_ptr->getField("endPoint");
             Node *endPoint = iter->getSFNode();
             getChildNode(endPoint, l_root_solid_name);
+        } else if (this_ptr->getTypeName().compare("Hinge2Joint") == 0) {
+            LOG_INFO("there is Hinge2Joint");
+            Field *iter = this_ptr->getField("endPoint");
+            Node *endPoint = iter->getSFNode();
+            getChildNode(endPoint, l_root_solid_name);
         }
+
 
         Field *rotation_ptr_ = this_ptr->getField("rotation");
         Field *translation_ptr_ = this_ptr->getField("translation");
