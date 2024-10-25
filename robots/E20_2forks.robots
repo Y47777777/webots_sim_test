@@ -16,12 +16,12 @@ DEF RobotNode Robot {
       rotation 0 1 0 1.57
       children [
         Mid360 {
-          translation 0 0.65 -0.15
+          translation 0 0.56 -0.15
           rotation 1 0 0 -1.5707953071795862
           name "lidar_3"
         }
         Mid360 {
-          translation 0 -0.65 -0.15
+          translation 0 -0.56 -0.15
           rotation 1 0 0 1.5708
           name "lidar_4"
         }

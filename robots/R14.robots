@@ -1,6 +1,6 @@
 DEF RobotNode Robot {
-  translation 992.043833572309 84.87421677237617 -0.0006434204505477714
-  rotation 0.00010751327673917915 -0.00040559923275273 -0.999999911965075 1.555304217291186
+  translation 992.0372229680346 85.29324415941927 -0.0004214478570532254
+  rotation 4.342967607786297e-06 1.6937838751564683e-05 -0.9999999998471242 1.554857298368785
   children [
     DEF IMU Group {
       children [
@@ -38,77 +38,69 @@ DEF RobotNode Robot {
       translation 1.277 -0.017 0.17
       children [
         Pose {
+          rotation -1 0 0 1.57
           children [
-            Pose {
-              rotation -1 0 0 1.57
-              children [
-                Hinge2Joint {
-                  jointParameters HingeJointParameters {
-                    position -1.8098770947962158e-10
-                    axis 0 1 0
-                  }
-                  jointParameters2 JointParameters {
-                    position 47.32380384169394
-                  }
-                  device [
-                    RotationalMotor {
-                      name "SteerTurn_Motor"
-                      maxVelocity 100
-                      maxTorque 1000
-                    }
-                    PositionSensor {
-                      name "SteerTurn_Sensor"
-                    }
-                    Brake {
-                    }
-                  ]
-                  device2 [
-                    RotationalMotor {
-                      name "SteerRun_Motor"
-                      maxVelocity 100
-                      maxTorque 1000
-                    }
-                    PositionSensor {
-                      name "SteerRun_Sensor"
-                    }
-                    Brake {
-                    }
-                  ]
-                  endPoint DEF SteerSolid Solid {
-                    translation 7.885871730537574e-07 2.1239781330239944e-06 2.330426154900908e-06
-                    rotation -0.00013278216099646897 -0.0001720276502430955 0.9999999763876923 1.7145251293450252
-                    children [
-                      Shape {
-                        appearance Appearance {
-                          material Material {
-                            diffuseColor 0 0 0
-                          }
-                        }
-                        geometry DEF StreeWheelRadius Cylinder {
-                          height 0.12
-                          radius 0.172
-                        }
-                      }
-                    ]
-                    name "SteerWheel(1)"
-                    contactMaterial "B"
-                    boundingObject Pose {
-                      children [
-                        Cylinder {
-                          height 0.12
-                          radius 0.172
-                        }
-                      ]
-                    }
-                    physics Physics {
-                      density 20
-                      centerOfMass [
-                        0 0 0
-                      ]
-                    }
-                  }
+            Hinge2Joint {
+              jointParameters HingeJointParameters {
+                position -1.6762878550129413e-10
+                axis 0 1 0
+              }
+              jointParameters2 JointParameters {
+                position 44.66227576930588
+              }
+              device [
+                RotationalMotor {
+                  name "SteerTurn_Motor"
+                  maxVelocity 100
+                  maxTorque 1000
+                }
+                PositionSensor {
+                  name "SteerTurn_Sensor"
                 }
               ]
+              device2 [
+                RotationalMotor {
+                  name "SteerRun_Motor"
+                  maxVelocity 100
+                  maxTorque 1000
+                }
+                PositionSensor {
+                  name "SteerRun_Sensor"
+                }
+              ]
+              endPoint DEF SteerSolid Solid {
+                translation 2.81481236823955e-07 -2.2480927811881706e-06 2.33042615480537e-06
+                rotation -0.0003293808193776362 0.00014603329696271004 -0.9999999350912739 0.9470030190962664
+                children [
+                  Shape {
+                    appearance Appearance {
+                      material Material {
+                        diffuseColor 0 0 0
+                      }
+                    }
+                    geometry DEF StreeWheelRadius Cylinder {
+                      height 0.12
+                      radius 0.172
+                    }
+                  }
+                ]
+                name "SteerWheel(1)"
+                contactMaterial "B"
+                boundingObject Pose {
+                  children [
+                    Cylinder {
+                      height 0.12
+                      radius 0.172
+                    }
+                  ]
+                }
+                physics Physics {
+                  density 20
+                  centerOfMass [
+                    0 0 0
+                  ]
+                }
+              }
             }
           ]
         }
@@ -122,19 +114,17 @@ DEF RobotNode Robot {
           children [
             HingeJoint {
               jointParameters HingeJointParameters {
-                position 55.89216959185705
+                position 52.999598682051506
                 axis 0 0 1
               }
               device [
                 PositionSensor {
                   name "L_D_Sensor"
                 }
-                Brake {
-                }
               ]
               endPoint DEF L_D_SteerSolid Solid {
-                translation -1.0921503756024534e-05 -5.5248264829864103e-05 6.360277211570063e-07
-                rotation 0 0 1 2.4536594643738594
+                translation 2.3973922522090934e-05 -4.7817358034732904e-05 7.05185243532469e-07
+                rotation 0 0 -1 2.4926738306259613
                 children [
                   Shape {
                     appearance Appearance {
@@ -174,19 +164,17 @@ DEF RobotNode Robot {
           children [
             HingeJoint {
               jointParameters HingeJointParameters {
-                position 56.01809343654201
+                position 53.127760850727725
                 axis 0 0 1
               }
               device [
                 PositionSensor {
                   name "R_D_Sensor"
                 }
-                Brake {
-                }
               ]
               endPoint DEF R_D_SteerSolid Solid {
-                translation 9.558496481351804e-06 -0.00015856627594437305 8.388169590034522e-07
-                rotation 0 0 1 1.1615320266626563
+                translation -0.0001352442314827363 2.0210416200871752e-05 6.319934300336171e-07
+                rotation 0 0 -1 0.7863165695584244
                 children [
                   Shape {
                     appearance Appearance {
@@ -228,16 +216,16 @@ DEF RobotNode Robot {
         DEF Linear_forward_backward SliderJoint {
           jointParameters JointParameters {
             axis 1 0 0
-            minStop -0.28
-            maxStop 0.28
+            minStop -0.4
+            maxStop 0.38
           }
           device [
             Brake {
             }
             LinearMotor {
               name "Linear_FB_Motor"
-              minPosition -0.28
-              maxPosition 0.28
+              minPosition -0.4
+              maxPosition 0.38
               maxForce 600
             }
             PositionSensor {
@@ -245,23 +233,26 @@ DEF RobotNode Robot {
             }
           ]
           endPoint DEF ALL_Linear_FB_Solid Solid {
-            translation -3.8404048482423846e-05 -0.015 0
+            translation 2.182303516856665e-05 -0.01499900926069131 -0.00023950241513367998
+            rotation 0.017595231360825005 -0.9998451522724183 0.0002816215608404183 8.250531299446628e-05
             children [
               R-Gantry {
               }
               DEF Forks_LiftingComponent Pose {
-                translation 0 0 0.158
+                translation 0 0 0.09
                 children [
                   DEF Lifting_movement SliderJoint {
                     jointParameters JointParameters {
-                      maxStop 1.1
+                      minStop -0.1
+                      maxStop 3.1
                     }
                     device [
                       Brake {
                       }
                       LinearMotor {
                         name "Lifting_Motor"
-                        maxPosition 1.1
+                        minPosition -0.1
+                        maxPosition 3.1
                         maxForce 1000
                       }
                       PositionSensor {
@@ -269,17 +260,12 @@ DEF RobotNode Robot {
                       }
                     ]
                     endPoint DEF Lifting_Component_Solid Solid {
-                      translation 0 0 0.00012614657216147949
-                      rotation 0 0 1 4.692820414042842e-06
+                      translation 0 0 0.0001261465721614785
                       children [
-                        DEF lidar_0 Pose {
-                          children [
-                            Mid360 {
-                              translation 0.022 0.034 0.0005414819874641444
-                              rotation 0 -1 0 2.79
-                              name "lidar_0"
-                            }
-                          ]
+                        Mid360 {
+                          translation 0.022 0.034 0.04
+                          rotation 0 -1 0 2.79
+                          name "lidar_0"
                         }
                         R-Attachments {
                         }
@@ -289,16 +275,15 @@ DEF RobotNode Robot {
                           children [
                             DEF Forks_Pitching HingeJoint {
                               jointParameters HingeJointParameters {
-                                position -5.838171146335864e-05
                                 axis 0 1 0
                                 minStop -0.1
-                                maxStop 0.7
+                                maxStop 0.8
                               }
                               device [
                                 RotationalMotor {
                                   name "Forks_Pitching_Motor"
                                   minPosition -0.1
-                                  maxPosition 0.7
+                                  maxPosition 0.8
                                   maxTorque 600
                                 }
                                 PositionSensor {
@@ -308,14 +293,14 @@ DEF RobotNode Robot {
                                 }
                               ]
                               endPoint DEF Picking_Component_Solid Solid {
-                                translation 2.2264846272466802e-05 0 -0.7029999996474199
-                                rotation 0 -1 0 5.8381715064480124e-05
+                                translation 0 0 -0.703
+                                rotation 0 1 0 0
                                 children [
                                   DEF Forks_YMove SliderJoint {
                                     jointParameters JointParameters {
                                       axis 0 1 0
-                                      minStop -0.4
-                                      maxStop 0.4
+                                      minStop -0.5
+                                      maxStop 0.5
                                     }
                                     device [
                                       PositionSensor {
@@ -323,8 +308,8 @@ DEF RobotNode Robot {
                                       }
                                       LinearMotor {
                                         name "Fork_YMove_Motor"
-                                        minPosition -0.4
-                                        maxPosition 0.4
+                                        minPosition -0.5
+                                        maxPosition 0.5
                                         maxForce 450
                                       }
                                       Brake {
@@ -468,6 +453,9 @@ DEF RobotNode Robot {
             physics Physics {
               density 100
               mass 10
+              centerOfMass [
+                0 0 -1
+              ]
             }
           }
         }

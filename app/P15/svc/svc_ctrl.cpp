@@ -76,6 +76,7 @@ void SVCMaster::pubPMsgsToWebots() {
     decoder_.getValue("SteeringDevice", &SteeringDevice);  // steer yaw
     decoder_.getValue("ForkDevice", &ForkDeviceZ, "Z");    // fork Speed
 
+    msg_to_webots_.set_timestamp(Timer::getInstance()->getCurrentFromSystem());
     msg_to_webots_.set_steering_speed(MoveDevice);
     msg_to_webots_.set_steering_theta(SteeringDevice);
     msg_to_webots_.set_forkspeedz(ForkDeviceZ);

@@ -128,7 +128,7 @@ AGVController::AGVController() : BaseController("webots_master") {
     whileSpinPushBack((imu_ptr_));
     whileSpinPushBack((transfer_ptr_));
     whileSpinPushBack((collision_ptr_));
-    whileSpinPushBack((liftdoor_ptr_));
+    whileSpinPushBack(bind(&WBase::spin, liftdoor_ptr_));
     whileSpinPushBack(bind(&WBase::spin, pose_ptr_));
 
     // pub
@@ -387,7 +387,10 @@ void VNSim::AGVController::pubLiftDoorTag() {
     sim_data_flow::MTransfer payload;
     liftdoor_ptr_->getTag(payload);
 
-    uint8_t buf[payload.ByteSize()];
-    payload.SerializePartialToArray(buf, payload.ByteSize());
-    ecal_ptr_->send("webot/liftdoor", buf, payload.ByteSize());
+    if (payload.ByteSize() != 0) {
+        uint8_t buf[payload.ByteSize()];
+
+        payload.SerializePartialToArray(buf, payload.ByteSize());
+        ecal_ptr_->send("webot/liftdoor", buf, payload.ByteSize());
+    }
 }
