@@ -50,6 +50,10 @@ AGVController::AGVController() : BaseLidarControl("shadow_lidar3_and_lidar4") {
     // 删除所有物理属性，碰撞属性
     collision_ptr_ = std::make_shared<WCollision>();
 
+    // 升降门
+    liftdoor_ptr_ = std::make_shared<WLiftDoor>(true);
+
+
     // 高反
     reflector_ptr_ = std::make_shared<WReflector>("HighReflector");
     reflector_check_ptr_ = ReflectorChecker::getInstance();
@@ -60,6 +64,7 @@ AGVController::AGVController() : BaseLidarControl("shadow_lidar3_and_lidar4") {
     reflector_check_ptr_->setSensorMatrix4d("lidar_4", lidar_4_ptr_->getMatrixFromLidar());
 
     whileSpinPushBack((transfer_ptr_));
+    whileSpinPushBack(bind(&WBase::spin, liftdoor_ptr_));
     whileSpinPushBack(bind(&WBase::spin, pose_ptr_));
 
     whileSpinPushBack((lidar_3_ptr_));
@@ -72,6 +77,9 @@ AGVController::AGVController() : BaseLidarControl("shadow_lidar3_and_lidar4") {
     ecal_ptr_->addEcal(lidar_4_webots_base_topic.c_str());
 
     // creat subscribe
+    ecal_ptr_->addEcal("webot/liftdoor",
+                       std::bind(&AGVController::liftdoorCallBack, this, std::placeholders::_1, std::placeholders::_2));
+
     ecal_ptr_->addEcal("webot/pose",
                        std::bind(&AGVController::poseCallBack, this, std::placeholders::_1, std::placeholders::_2));
 
@@ -114,4 +122,10 @@ void AGVController::Lidar3ReportSpin() {
 void AGVController::Lidar4ReportSpin() {
     LOG_INFO("lidar_4ReportSpin start\n");
     while (!webotsExited_) { sendPointCloud(lidar_4_webots_topic, lidar_4_ptr_, pose_ptr_, lidar_4_webots_base_topic); }
+}
+
+void VNSim::AGVController::liftdoorCallBack(const char *topic_name, const eCAL::SReceiveCallbackData *data) {
+    sim_data_flow::MTransfer transfer;
+    transfer.ParseFromArray(data->buf, data->size);
+    liftdoor_ptr_->setTag(transfer);
 }

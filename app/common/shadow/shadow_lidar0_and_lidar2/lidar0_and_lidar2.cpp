@@ -60,10 +60,9 @@ AGVController::AGVController() : BaseLidarControl("shadow_lidar0_and_lidar2") {
     reflector_check_ptr_->setSensorMatrix4d("lidar_0", lidar_0_ptr_->getMatrixFromLidar());
 
     whileSpinPushBack((transfer_ptr_));
-    whileSpinPushBack((liftdoor_ptr_));
-
-    // pose 使用读写锁
+    whileSpinPushBack(bind(&WBase::spin, liftdoor_ptr_));
     whileSpinPushBack(bind(&WBase::spin, pose_ptr_));
+
     whileSpinPushBack((lidar_2_ptr_));
     whileSpinPushBack((lidar_0_ptr_));
 
@@ -79,6 +78,8 @@ AGVController::AGVController() : BaseLidarControl("shadow_lidar0_and_lidar2") {
     ecal_ptr_->addEcal("webot/transfer",
                        std::bind(&AGVController::transferCallBack, this, std::placeholders::_1, std::placeholders::_2));
 
+    ecal_ptr_->addEcal("webot/liftdoor",
+                       std::bind(&AGVController::liftdoorCallBack, this, std::placeholders::_1, std::placeholders::_2));
     // 创建线程
     m_thread_.insert(
         std::pair<std::string, std::thread>("lidar_2_report", std::bind(&AGVController::Lidar2ReportSpin, this)));

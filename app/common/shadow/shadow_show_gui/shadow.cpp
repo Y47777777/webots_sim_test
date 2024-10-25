@@ -38,8 +38,13 @@ AGVController::AGVController() : BaseLidarControl("webots_shadow_show_gui") {
 
     // 删除所有物理属性，碰撞属性
     collision_ptr_ = std::make_shared<WCollision>();
+        // 升降门
+    liftdoor_ptr_ = std::make_shared<WLiftDoor>(true);
 
     // creat subscribe
+    ecal_ptr_->addEcal("webot/liftdoor",
+                       std::bind(&AGVController::liftdoorCallBack, this, std::placeholders::_1, std::placeholders::_2));
+
     ecal_ptr_->addEcal("webot/pose",
                        std::bind(&AGVController::poseCallBack, this, std::placeholders::_1, std::placeholders::_2));
 
@@ -47,6 +52,7 @@ AGVController::AGVController() : BaseLidarControl("webots_shadow_show_gui") {
                        std::bind(&AGVController::transferCallBack, this, std::placeholders::_1, std::placeholders::_2));
 
     whileSpinPushBack((transfer_ptr_));
+    whileSpinPushBack(bind(&WBase::spin, liftdoor_ptr_));
     whileSpinPushBack(bind(&WBase::spin, pose_ptr_));
 }
 
@@ -69,4 +75,10 @@ void AGVController::transferCallBack(const char *topic_name, const eCAL::SReceiv
     sim_data_flow::MTransfer transfer;
     transfer.ParseFromArray(data->buf, data->size);
     transfer_ptr_->setTransfer(transfer);
+}
+
+void VNSim::AGVController::liftdoorCallBack(const char *topic_name, const eCAL::SReceiveCallbackData *data) {
+    sim_data_flow::MTransfer transfer;
+    transfer.ParseFromArray(data->buf, data->size);
+    liftdoor_ptr_->setTag(transfer);
 }

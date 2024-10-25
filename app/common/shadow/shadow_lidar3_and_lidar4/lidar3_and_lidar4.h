@@ -17,6 +17,8 @@
 #include "webots_device/w_reflector.h"
 #include "webots_device/w_transfer.h"
 #include "webots_device/w_collision.h"
+#include "webots_device/w_liftdoor.h"
+
 
 namespace VNSim {
 
@@ -49,12 +51,17 @@ class AGVController : public BaseLidarControl {
     std::shared_ptr<WCollision> collision_ptr_;
     std::shared_ptr<ReflectorChecker> reflector_check_ptr_;
 
+   std::shared_ptr<WLiftDoor> liftdoor_ptr_;
+
    private:
     void poseCallBack(const char *topic_name,
                       const eCAL::SReceiveCallbackData *data);
 
-    void transferCallBack(const char *topic_name,
+   void transferCallBack(const char *topic_name,
                           const eCAL::SReceiveCallbackData *data);
+
+   void liftdoorCallBack(const char *topic_name, const eCAL::SReceiveCallbackData *data);
+
 };
 
 }  // namespace VNSim
