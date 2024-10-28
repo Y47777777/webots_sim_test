@@ -139,7 +139,7 @@ int InputDecoder::getSwitchValue(const char *key, int bits, bool *output,
         int length = ptr->getLength();
         int bytes_index = (bits / 8);
         int shift = (bits - bytes_index * 8);
-        *output = header[bytes_index] & (0x01 << (7 - shift));
+        *output = header[bytes_index] & (0x01 << (shift));
     } while (0);
     return ret;
 }

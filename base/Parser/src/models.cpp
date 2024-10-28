@@ -963,8 +963,8 @@ int SwitchSencer::setValue(const std::vector<struct UpdateValue *> &val) {
     const bool *v = (const bool *) val[0]->val;
     int bytes_index = (int) ((val[0]->subId / 8));
     int shift = (val[0]->subId - bytes_index * 8);
-    *v ? (buf_[bytes_index] |= (0x01 << (7 - shift)))
-       : (buf_[bytes_index] &= ~(0x01 << (7 - shift)));
+    *v ? (buf_[bytes_index] |= (0x01 << (shift)))
+       : (buf_[bytes_index] &= ~(0x01 << (shift)));
     return 0;
 }
 
