@@ -42,11 +42,9 @@ DEF RobotNode Robot {
           children [
             Hinge2Joint {
               jointParameters HingeJointParameters {
-                position -1.6762878550129413e-10
-                axis 0 1 0
+                axis 0 -1 0
               }
               jointParameters2 JointParameters {
-                position 44.66227576930588
               }
               device [
                 RotationalMotor {
@@ -69,8 +67,8 @@ DEF RobotNode Robot {
                 }
               ]
               endPoint DEF SteerSolid Solid {
-                translation 2.81481236823955e-07 -2.2480927811881706e-06 2.33042615480537e-06
-                rotation -0.0003293808193776362 0.00014603329696271004 -0.9999999350912739 0.9470030190962664
+                translation -1.1946717676060537e-06 -1.9250745978842622e-06 2.3304261547581855e-06
+                rotation 0.00016429964566774832 -0.00015531837237337163 0.9999999744409145 4.656203696200183
                 children [
                   Shape {
                     appearance Appearance {
@@ -123,8 +121,8 @@ DEF RobotNode Robot {
                 }
               ]
               endPoint DEF L_D_SteerSolid Solid {
-                translation 2.3973922522090934e-05 -4.7817358034732904e-05 7.05185243532469e-07
-                rotation 0 0 -1 2.4926738306259613
+                translation -8.552232048337716e-06 -6.038075056092945e-05 7.2508453285991e-07
+                rotation 0 0 0.9999999999999999 2.6300891824452712
                 children [
                   Shape {
                     appearance Appearance {
@@ -173,8 +171,8 @@ DEF RobotNode Robot {
                 }
               ]
               endPoint DEF R_D_SteerSolid Solid {
-                translation -0.0001352442314827363 2.0210416200871752e-05 6.319934300336171e-07
-                rotation 0 0 -1 0.7863165695584244
+                translation 6.76145834970582e-05 0.00011776766223314545 6.545734549945335e-07
+                rotation 0 0 1 2.361655588358196
                 children [
                   Shape {
                     appearance Appearance {
@@ -298,7 +296,7 @@ DEF RobotNode Robot {
                                 children [
                                   DEF Forks_YMove SliderJoint {
                                     jointParameters JointParameters {
-                                      axis 0 1 0
+                                      axis 0 -1 0
                                       minStop -0.5
                                       maxStop 0.5
                                     }

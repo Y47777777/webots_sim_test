@@ -20,6 +20,7 @@
 #include "webots_device/w_transfer.h"
 #include "webots_device/w_collision.h"
 #include "webots_device/w_liftdoor.h"
+#include "webots_device/w_switch.h"
 
 namespace VNSim {
 
@@ -40,9 +41,6 @@ class AGVController : public BaseController {
     void pubRobotPoseSpin();
     void movePerLidarSpin();
     void pubLiftDoorTag();
-    void determineForceCAxisReset();
-    bool determineForceCAxisReset(double CL_T, double CR_T);
-    void moveShadowForkSpin();
 
    private:
     std::shared_ptr<WImu> imu_ptr_;
@@ -52,9 +50,10 @@ class AGVController : public BaseController {
     std::shared_ptr<WFork> fork_ptr_;
     std::shared_ptr<WFork> forkY_ptr_;
     std::shared_ptr<WFork> forkP_ptr_;
-    std::shared_ptr<WFork> forkCLF1_ptr_;
-    std::shared_ptr<WFork> forkCRF1_ptr_;
-
+    std::shared_ptr<photoelectric> hswitchL_ptr_;
+    std::shared_ptr<photoelectric> hswitchR_ptr_;
+    std::shared_ptr<manchanical> vswitchL_ptr_;
+    std::shared_ptr<manchanical> vswitchR_ptr_;
     std::shared_ptr<WPose> pose_ptr_;
     std::shared_ptr<WLidar> lidar_pose_ptr_;
     std::shared_ptr<WTransfer> transfer_ptr_;

@@ -21,6 +21,8 @@ message E20MsgUp{
   double ClampPressure = 15;
   bool HSwitchL = 16;
   bool HSwitchR = 17;
+  bool VSwitchL = 18;
+  bool VSwitchR = 19;
 }
 
 message E20MsgDown{

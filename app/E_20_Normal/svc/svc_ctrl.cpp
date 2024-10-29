@@ -71,7 +71,6 @@ void SVCMaster::pubEMsgsToWebots() {
     double ForkDeviceZ;
     double ForkDeviceY;
     double ForkDeviceP;
-    double ForkDeviceC;
     double SteeringDevice;
     double MoveDevice;
 
@@ -81,7 +80,6 @@ void SVCMaster::pubEMsgsToWebots() {
     decoder_.getValue("ForkDevice", &ForkDeviceZ, "Z");  // fork Speed
     decoder_.getValue("ForkDevice", &ForkDeviceY, "Y");
     decoder_.getValue("ForkDevice", &ForkDeviceP, "P");
-    decoder_.getValue("ForkDevice", &ForkDeviceC, "C");
 
     msg_to_webots_.set_timestamp(Timer::getInstance()->getCurrentFromSystem());
     msg_to_webots_.set_steering_speed(MoveDevice);
@@ -89,7 +87,6 @@ void SVCMaster::pubEMsgsToWebots() {
     msg_to_webots_.set_forkspeedz(ForkDeviceZ);
     msg_to_webots_.set_forkspeedy(ForkDeviceY);
     msg_to_webots_.set_forkspeedp(ForkDeviceP);
-    msg_to_webots_.set_forkspeedc(ForkDeviceC);
 
     // publish
     uint8_t buf[msg_to_webots_.ByteSize()];
@@ -112,9 +109,6 @@ void SVCMaster::pubUpStream() {
     encoder_.updateValue("Gyroscope", 1, "", msg_from_webots_.gyroscope().z());
     encoder_.updateValue("Gyroscope", 1, "X", msg_from_webots_.gyroscope().y());
     encoder_.updateValue("Gyroscope", 1, "Y", msg_from_webots_.gyroscope().x());
-    encoder_.updateValue("ForkDisplacementSencer", 1, "LC",
-                         msg_from_webots_.forkposecl());
-    encoder_.updateValue("ForkDisplacementSencer", 1, "RC", msg_from_webots_.forkposecr());
     encoder_.updateValue("ForkDisplacementSencer", 1, "Y",
                          msg_from_webots_.forkposey());
     encoder_.updateValue("ForkDisplacementSencer", 1, "P",
@@ -124,6 +118,11 @@ void SVCMaster::pubUpStream() {
 
     uint16_t battery_device = 100;
     encoder_.updateValue2("BatterySencer", &battery_device, sizeof(uint16_t));
+
+    encoder_.updateSwitchValue("SwitchSencer", 50, msg_from_webots_.hswitchl());
+    encoder_.updateSwitchValue("SwitchSencer", 51, msg_from_webots_.hswitchr());
+    encoder_.updateSwitchValue("SwitchSencer", 52, msg_from_webots_.vswitchl());
+    encoder_.updateSwitchValue("SwitchSencer", 53, msg_from_webots_.vswitchr());
 
     static double wheel_coder_l = 0;
     static double wheel_coder_r = 0;

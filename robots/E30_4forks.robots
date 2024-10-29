@@ -1,5 +1,5 @@
 DEF RobotNode Robot {
-  translation 13.194399920108127 5.497702104824354 0.19144797853300788
+  translation -1.4256 5.4977 0.183986
   rotation -0.02102199186325239 -0.999779013479972 -7.944507580517836e-06 0.0005104185193994915
   children [
     Pose {
@@ -147,8 +147,8 @@ DEF RobotNode Robot {
                         }
                       ]
                       endPoint DEF SteerSolidR Solid {
-                        translation 3.3528124243024057e-08 -1.9326832916462555e-07 -1.7702141974496048e-09
-                        rotation 0 0 1 3.9185200634763384
+                        translation -7.634799441628436e-05 -0.0021171791386834986 1.7593732648535374e-06
+                        rotation 0 0 1 0.753619285320508
                         children [
                           Shape {
                             appearance Appearance {
@@ -194,8 +194,8 @@ DEF RobotNode Robot {
                         }
                       ]
                       endPoint DEF SteerSolidL Solid {
-                        translation 1.4759858022040706e-07 -1.0886476562906103e-07 5.642846190312413e-09
-                        rotation 0 0 -1 3.436252770098495
+                        translation -7.989849057635942e-05 -0.002119615119856814 1.7698945597999236e-06
+                        rotation 0 0 1 2.8418935718229528
                         children [
                           Shape {
                             appearance Appearance {
@@ -281,12 +281,11 @@ DEF RobotNode Robot {
                 }
               ]
               endPoint DEF ForkPAxis Solid {
-                translation 1.3954334576737892e-10 0 -0.04
+                translation 0 0 -0.04
                 rotation 0 1 0 0
                 children [
                   DEF fork SliderJoint {
                     jointParameters JointParameters {
-                      position -7.550085523869822e-09
                       minStop -0.1
                       maxStop 1.66
                     }
@@ -304,231 +303,263 @@ DEF RobotNode Robot {
                       }
                     ]
                     endPoint DEF ForkZAxis Solid {
-                      translation -0.94 0 0.009999992449914476
+                      translation -0.94 0 0.01
                       rotation 0 1 0 0
                       children [
-                        Pose {
-                          children [
-                            DEF MASt Pose {
-                              translation 0.71 0 0.3
-                            }
-                            DEF LF1 Pose {
-                              translation 0 -0.26 0.005
-                              children [
-                                DEF ForkCLJoint SliderJoint {
-                                  jointParameters JointParameters {
-                                    position 3.0095019607179526e-11
-                                    axis 0 -1 0
-                                    minStop -0.1
-                                    maxStop 0.82
-                                  }
-                                  device [
-                                    Brake {
-                                    }
-                                    PositionSensor {
-                                      name "CLSensor"
-                                    }
-                                    LinearMotor {
-                                      name "CLMotor"
-                                      minPosition -0.1
-                                      maxPosition 0.82
-                                      maxForce 150
-                                    }
-                                  ]
-                                  endPoint DEF ForkCLAxis Solid {
-                                    translation 0 -3.0095019607179526e-11 0
-                                    children [
-                                      Pose {
-                                        translation 0.65 0 0.3
-                                        children [
-                                          DEF ForkShape2 Shape {
-                                            appearance PBRAppearance {
-                                              baseColor 0 0 0
-                                            }
-                                            geometry Box {
-                                              size 0.02 0.1 0.5
-                                            }
-                                          }
-                                        ]
-                                      }
-                                      DEF LF1_Fork_Shape Shape {
-                                        appearance PBRAppearance {
-                                          baseColor 0 0 0
-                                        }
-                                        geometry DEF LF1_Fork_Box Box {
-                                          size 1.065 0.08 0.0225
-                                        }
-                                      }
-                                    ]
-                                    name "solid(1)"
-                                    boundingObject Group {
-                                      children [
-                                        Pose {
-                                          translation 0.65 0 0.3
-                                          children [
-                                            DEF LF1_Fork2_Box Box {
-                                              size 0.02 0.1 0.5
-                                            }
-                                          ]
-                                        }
-                                        USE LF1_Fork_Box
-                                      ]
-                                    }
-                                    physics Physics {
-                                      density -1
-                                      mass 1
-                                    }
-                                  }
-                                }
-                              ]
-                            }
-                            DEF RF2 Pose {
-                              translation 0 0.18 0
-                              children [
-                                DEF RF2_M Pose {
-                                  children [
-                                    BarcodeScan {
-                                      translation 0.67 0.15 0.1
-                                      rotation 0 0 1 3.14
-                                      name "ScanerR"
-                                      minRange 0.05
-                                      maxRange 1.2
-                                    }
-                                    Solid {
-                                      children [
-                                        Pose {
-                                          translation 0.65 0 0.3
-                                          children [
-                                            USE ForkShape2
-                                          ]
-                                        }
-                                        USE LF1_Fork_Shape
-                                      ]
-                                      name "solid(3)"
-                                      boundingObject Group {
-                                        children [
-                                          Pose {
-                                            translation 0.65 0 0.3
-                                            children [
-                                              USE LF1_Fork2_Box
-                                            ]
-                                          }
-                                          USE LF1_Fork_Box
-                                        ]
-                                      }
-                                      physics Physics {
-                                        density -1
-                                        mass 1
-                                      }
-                                    }
-                                  ]
-                                }
-                              ]
-                            }
-                            DEF RF1 Pose {
-                              translation 0 0.26 0.005
-                              children [
-                                DEF ForkCRJoint SliderJoint {
-                                  jointParameters JointParameters {
-                                    position -4.139176092758855e-11
-                                    axis 0 1 0
-                                    minStop -0.1
-                                    maxStop 0.82
-                                  }
-                                  device [
-                                    Brake {
-                                    }
-                                    PositionSensor {
-                                      name "CRSensor"
-                                    }
-                                    LinearMotor {
-                                      name "CRMotor"
-                                      minPosition -0.1
-                                      maxPosition 0.82
-                                      maxForce 150
-                                    }
-                                  ]
-                                  endPoint DEF ForkCRAxis Solid {
-                                    translation 0 -4.139176092758855e-11 0
-                                    children [
-                                      USE LF1_Fork_Shape
-                                      Pose {
-                                        translation 0.65 0 0.3
-                                        children [
-                                          USE ForkShape2
-                                        ]
-                                      }
-                                    ]
-                                    name "solid(2)"
-                                    boundingObject Group {
-                                      children [
-                                        Pose {
-                                          translation 0.65 0 0.3
-                                          children [
-                                            DEF LF1_Fork2_Box Box {
-                                              size 0.02 0.1 0.5
-                                            }
-                                          ]
-                                        }
-                                        USE LF1_Fork_Box
-                                      ]
-                                    }
-                                    physics Physics {
-                                      density -1
-                                      mass 1
-                                    }
-                                  }
-                                }
-                              ]
-                            }
-                            DEF LF2 Pose {
-                              translation 0 -0.18 0
-                              children [
-                                DEF LF2_M Pose {
-                                  children [
-                                    BarcodeScan {
-                                      translation 0.67 -0.15 0.1
-                                      rotation 0 0 1 3.14
-                                      name "ScanerL"
-                                      minRange 0.05
-                                      maxRange 1.2
-                                    }
-                                    Solid {
-                                      children [
-                                        Pose {
-                                          translation 0.65 0 0.3
-                                          children [
-                                            USE ForkShape2
-                                          ]
-                                        }
-                                        USE LF1_Fork_Shape
-                                      ]
-                                      boundingObject Group {
-                                        children [
-                                          Pose {
-                                            translation 0.65 0 0.3
-                                            children [
-                                              USE LF1_Fork2_Box
-                                            ]
-                                          }
-                                          USE LF1_Fork_Box
-                                        ]
-                                      }
-                                      physics Physics {
-                                        density -1
-                                        mass 1
-                                      }
-                                    }
-                                  ]
-                                }
-                              ]
-                            }
-                          ]
-                        }
                         Mid360 {
                           translation 0.89 -0.01 0.07500000755011423
                           rotation 0 1 0 -2.7489003061004254
                           name "lidar_0"
+                        }
+                        DEF ForkYJoint SliderJoint {
+                          jointParameters JointParameters {
+                            axis 0 1 0
+                          }
+                          device [
+                            Brake {
+                            }
+                            PositionSensor {
+                              name "Fork_Y_Sensor"
+                            }
+                            LinearMotor {
+                              name "Fork_Y_Motor"
+                              minPosition -1
+                              maxPosition 1
+                              maxForce 450
+                            }
+                          ]
+                          endPoint DEF ForkYAxis Solid {
+                            children [
+                              DEF RF1 Pose {
+                                translation 0 -0.26 0.005
+                                children [
+                                  DEF ForkCRJoint SliderJoint {
+                                    jointParameters JointParameters {
+                                      position 3.0095019607179526e-11
+                                      axis 0 -1 0
+                                      minStop -0.1
+                                      maxStop 0.82
+                                    }
+                                    device [
+                                      Brake {
+                                      }
+                                      PositionSensor {
+                                        name "CRSensor"
+                                      }
+                                      LinearMotor {
+                                        name "CRMotor"
+                                        minPosition -0.1
+                                        maxPosition 0.82
+                                        maxForce 150
+                                      }
+                                    ]
+                                    endPoint DEF ForkCRAxis Solid {
+                                      children [
+                                        Pose {
+                                          translation 0.65 0 0.3
+                                          children [
+                                            DEF ForkShape2 Shape {
+                                              appearance PBRAppearance {
+                                                baseColor 0 0 0
+                                              }
+                                              geometry Box {
+                                                size 0.02 0.1 0.5
+                                              }
+                                            }
+                                          ]
+                                        }
+                                        DEF RF1_Fork_Shape Shape {
+                                          appearance PBRAppearance {
+                                            baseColor 0 0 0
+                                          }
+                                          geometry DEF RF1_Fork_Box Box {
+                                            size 1.065 0.08 0.0225
+                                          }
+                                        }
+                                      ]
+                                      name "solid(1)"
+                                      boundingObject Group {
+                                        children [
+                                          Pose {
+                                            translation 0.65 0 0.3
+                                            children [
+                                              DEF RF1_Fork2_Box Box {
+                                                size 0.02 0.1 0.5
+                                              }
+                                            ]
+                                          }
+                                          USE RF1_Fork_Box
+                                        ]
+                                      }
+                                      physics Physics {
+                                        density -1
+                                        mass 1
+                                      }
+                                    }
+                                  }
+                                ]
+                              }
+                              DEF RF2 Pose {
+                                translation 0 -0.18 0
+                                children [
+                                  DEF RF2_M Pose {
+                                    children [
+                                      BarcodeScan {
+                                        translation 0.67 -0.15 0.1
+                                        rotation 0 0 1 3.14
+                                        name "ScanerR"
+                                        minRange 0.05
+                                        maxRange 1.2
+                                      }
+                                      Solid {
+                                        children [
+                                          Pose {
+                                            translation 0.65 0 0.3
+                                            children [
+                                              USE ForkShape2
+                                            ]
+                                          }
+                                          USE RF1_Fork_Shape
+                                        ]
+                                        boundingObject Group {
+                                          children [
+                                            Pose {
+                                              translation 0.65 0 0.3
+                                              children [
+                                                USE RF1_Fork2_Box
+                                              ]
+                                            }
+                                            USE RF1_Fork_Box
+                                          ]
+                                        }
+                                        physics Physics {
+                                          density -1
+                                          mass 1
+                                        }
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                              DEF LF1 Pose {
+                                translation 0 0.26 0.005
+                                children [
+                                  DEF ForkCLJoint SliderJoint {
+                                    jointParameters JointParameters {
+                                      position -4.139176092758855e-11
+                                      axis 0 1 0
+                                      minStop -0.1
+                                      maxStop 0.82
+                                    }
+                                    device [
+                                      Brake {
+                                      }
+                                      PositionSensor {
+                                        name "CLSensor"
+                                      }
+                                      LinearMotor {
+                                        name "CLMotor"
+                                        minPosition -0.1
+                                        maxPosition 0.82
+                                        maxForce 150
+                                      }
+                                    ]
+                                    endPoint DEF ForkCLAxis Solid {
+                                      rotation -0.8178264546021723 -0.5754634815056684 0.0012929061127852086 8.196847566410952e-06
+                                      children [
+                                        USE RF1_Fork_Shape
+                                        Pose {
+                                          translation 0.65 0 0.3
+                                          children [
+                                            USE ForkShape2
+                                          ]
+                                        }
+                                      ]
+                                      name "solid(2)"
+                                      boundingObject Group {
+                                        children [
+                                          Pose {
+                                            translation 0.65 0 0.3
+                                            children [
+                                              DEF LF1_Fork2_Box Box {
+                                                size 0.02 0.1 0.5
+                                              }
+                                            ]
+                                          }
+                                          USE RF1_Fork_Box
+                                        ]
+                                      }
+                                      physics Physics {
+                                        density -1
+                                        mass 1
+                                      }
+                                    }
+                                  }
+                                ]
+                              }
+                              DEF LF2 Pose {
+                                translation 0 0.18 0
+                                children [
+                                  DEF LF2_M Pose {
+                                    children [
+                                      BarcodeScan {
+                                        translation 0.67 0.15 0.1
+                                        rotation 0 0 1 3.14
+                                        name "ScanerL"
+                                        minRange 0.05
+                                        maxRange 1.2
+                                      }
+                                      Solid {
+                                        children [
+                                          Pose {
+                                            translation 0.65 0 0.3
+                                            children [
+                                              USE ForkShape2
+                                            ]
+                                          }
+                                          USE RF1_Fork_Shape
+                                        ]
+                                        name "solid(3)"
+                                        boundingObject Group {
+                                          children [
+                                            Pose {
+                                              translation 0.65 0 0.3
+                                              children [
+                                                USE LF1_Fork2_Box
+                                              ]
+                                            }
+                                            USE RF1_Fork_Box
+                                          ]
+                                        }
+                                        physics Physics {
+                                          density -1
+                                          mass 1
+                                        }
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                              DEF MASt Pose {
+                                translation 0.71 0 0.3
+                              }
+                            ]
+                            name "solid(4)"
+                            boundingObject Pose {
+                              translation 0.8 -0.00017519 0
+                              rotation 1 0 0 -1.57
+                              children [
+                                Cylinder {
+                                  height 0.1
+                                  radius 0.01
+                                }
+                              ]
+                            }
+                            physics Physics {
+                              density 100
+                              mass 10
+                            }
+                          }
                         }
                       ]
                       name "solid(5)"
