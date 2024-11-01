@@ -25,8 +25,7 @@ namespace VNSim {
 using namespace webots;
 
 typedef struct WTransferNode {
-    WTransferNode(Node *node_p = nullptr, Field *rotation_p = nullptr,
-                  Field *translation_p = nullptr) {
+    WTransferNode(Node *node_p = nullptr, Field *rotation_p = nullptr, Field *translation_p = nullptr) {
         node_ptr_ = node_p;
         rotation_f_ptr_ = rotation_p;
         translation_f_ptr_ = translation_p;
@@ -67,9 +66,10 @@ class WTransfer : public WBase {
         robot_ = super_->getFromDef("RobotNode");
 
         idx = 0;
-
+        int tree_depth = 0;
+        // printf("base base base TypeName = %s, add = %p, name = %s\n", root_->getBaseTypeName().c_str(), root_);
         // get all node
-        getChildNode(root_);
+        getChildNode(root_, tree_depth);
 
         LOG_INFO("size of tran map %d", m_tanfer_.size());
     }
@@ -87,8 +87,7 @@ class WTransfer : public WBase {
         if (m_updated_trans_.empty()) {
             return;
         }
-        for (auto it = m_updated_trans_.begin(); it != m_updated_trans_.end();
-             ++it) {
+        for (auto it = m_updated_trans_.begin(); it != m_updated_trans_.end(); ++it) {
             auto ptr = tanfer_msgs.add_map();
             ptr->set_nodeid(it->first);
 
@@ -124,8 +123,7 @@ class WTransfer : public WBase {
             m_tanfer_[node_id].rota_set[1] = msgs.map().at(i).rotation().y();
             m_tanfer_[node_id].rota_set[2] = msgs.map().at(i).rotation().z();
             m_tanfer_[node_id].rota_set[3] = msgs.map().at(i).rotation().w();
-            m_updated_trans_.insert(
-                std::make_pair(node_id, m_tanfer_[node_id]));
+            m_updated_trans_.insert(std::make_pair(node_id, m_tanfer_[node_id]));
         }
     }
 
@@ -134,8 +132,7 @@ class WTransfer : public WBase {
         const float BASE_RANGE = 3;
         if (set_flag) {
             // 写入(shadow)
-            for (auto it = m_updated_trans_.begin();
-                 it != m_updated_trans_.end(); ++it) {
+            for (auto it = m_updated_trans_.begin(); it != m_updated_trans_.end(); ++it) {
                 Field *tran_ptr = it->second.translation_f_ptr_;
                 Field *rota_ptr = it->second.rotation_f_ptr_;
                 tran_ptr->setSFVec3f(it->second.tran_set);
@@ -150,31 +147,21 @@ class WTransfer : public WBase {
                 auto last_posi = it->second.tran_world;
                 // 以下判断逻辑只为优化自动任务时master和shadow间的transform同步
                 // 手动移动需手动同步或者手动使用refreshworld按钮
-                if (send_all ||
-                    (std::abs(robot_tran[0] - last_posi[0]) <= BASE_RANGE &&
-                     std::abs(robot_tran[1] - last_posi[1]) <=
-                         BASE_RANGE)) {  // 在车体周围
+                if (send_all || (std::abs(robot_tran[0] - last_posi[0]) <= BASE_RANGE &&
+                                 std::abs(robot_tran[1] - last_posi[1]) <= BASE_RANGE)) {  // 在车体周围
                     auto curr_posi = it->second.node_ptr_->getPosition();
                     if (send_all || it->second.may_need_check_local ||
-                        std::abs(curr_posi[0] - last_posi[0]) >=
-                            POSI_THRESHOLD ||
-                        std::abs(curr_posi[1] - last_posi[1]) >=
-                            POSI_THRESHOLD ||
-                        std::abs(curr_posi[2] - last_posi[2]) >=
-                            POSI_THRESHOLD) {  // 世界坐标是否发生变化
+                        std::abs(curr_posi[0] - last_posi[0]) >= POSI_THRESHOLD ||
+                        std::abs(curr_posi[1] - last_posi[1]) >= POSI_THRESHOLD ||
+                        std::abs(curr_posi[2] - last_posi[2]) >= POSI_THRESHOLD) {  // 世界坐标是否发生变化
 
                         // 可判断局部坐标是否变化进一步减少数据量(移动Pose的情况)
-                        auto curr_tran =
-                            it->second.translation_f_ptr_->getSFVec3f();
-                        auto curr_rota =
-                            it->second.rotation_f_ptr_->getSFRotation();
+                        auto curr_tran = it->second.translation_f_ptr_->getSFVec3f();
+                        auto curr_rota = it->second.rotation_f_ptr_->getSFRotation();
 
-                        memcpy(it->second.translation, curr_tran,
-                               sizeof((*curr_tran)) * 3);
-                        memcpy(it->second.rotation, curr_rota,
-                               sizeof((*curr_rota)) * 4);
-                        memcpy(it->second.tran_world, curr_posi,
-                               sizeof(*curr_posi) * 3);
+                        memcpy(it->second.translation, curr_tran, sizeof((*curr_tran)) * 3);
+                        memcpy(it->second.rotation, curr_rota, sizeof((*curr_rota)) * 4);
+                        memcpy(it->second.tran_world, curr_posi, sizeof(*curr_posi) * 3);
                         auto tmp = *it;
                         tmp_trans.insert(tmp);
                     }
@@ -190,7 +177,7 @@ class WTransfer : public WBase {
     }
 
    private:
-    void getChildNode(Node *this_ptr, std::string root_solid_name = "") {
+    void getChildNode(Node *this_ptr, int tree_depth, std::string root_solid_name = "") {
         if (this_ptr == nullptr) {
             return;
         }
@@ -200,29 +187,37 @@ class WTransfer : public WBase {
             int cnt = children->getCount();
             for (int i = 0; i < cnt; i++) {
                 Node *iter = children->getMFNode(i);
-                if(manager_ != nullptr){
-                    if((iter->getTypeName().compare("ConvoyerBelt") == 0) && (manager_ != nullptr)){
-                        // LOG_INFO("find belt %s", iter->getField("name")->getSFString().c_str());
-                        manager_->addBelt(iter->getField("name")->getSFString(), \
-                        iter->getField("p_groups")->getSFString(), iter);
+                if (manager_ != nullptr) {
+                    if ((iter->getTypeName().compare("ConvoyerBelt") == 0) && (manager_ != nullptr)) {
+                        manager_->addBelt(iter->getField("name")->getSFString(),
+                                          iter->getField("p_groups")->getSFString(), iter);
                     }
-                    if(this_ptr->getBaseTypeName().compare("Robot") == 0){
+                    if (this_ptr->getBaseTypeName().compare("Robot") == 0) {
                         l_root_solid_name = "NOTUSE";
                     }
-                    if((l_root_solid_name == "") && (this_ptr->getField("translation") != nullptr) \
-                    && (this_ptr->getBaseTypeName().compare("Solid") == 0) && (this_ptr->getParentNode()->getBaseTypeName().compare("Robot") !=  0)){
-                        // has translation and is the first solid
-                        // printf("huoqu Solidchenggong,l_root_solid_name = %s\n", this_ptr->getField("name")->getSFString().c_str());
-                        printf("robot?%s\n", this_ptr->getParentNode()->getBaseTypeName());
-                        if(this_ptr->getParentNode() != nullptr){
-                            l_root_solid_name = this_ptr->getField("name")->getSFString();
-                            printf("buweikongl_root_solid_name = %s\n", l_root_solid_name.c_str());
-                        }
-
+                    if ((l_root_solid_name == "") && (this_ptr->getField("translation") != nullptr) &&
+                        (this_ptr->getBaseTypeName().compare("Solid") == 0)) {
+                        if (this_ptr->getParentNode() != nullptr) {
+                            if (this_ptr->getParentNode()->getBaseTypeName().compare("Robot") != 0) {
+                                l_root_solid_name = this_ptr->getField("name")->getSFString();
+                            }
+                        } 
+                        // else {
+                        //     l_root_solid_name = this_ptr->getField("name")->getSFString();
+                        //     printf("init l_root_solid_name = \n");
+                            
+                        // }
                     }
-            
+                    else{
+                        
+                        if((iter->getField("translation") != nullptr) &&
+                        (iter->getBaseTypeName().compare("Solid") == 0) && (tree_depth == 0)) {
+                            if(iter->getField("name") != nullptr)
+                                l_root_solid_name = iter->getField("name")->getSFString();
+                        }
+                    }
                 }
-                getChildNode(iter, l_root_solid_name);
+                getChildNode(iter, tree_depth + 1, l_root_solid_name);
             }
         }
 
@@ -230,28 +225,26 @@ class WTransfer : public WBase {
             LOG_INFO("there is HingeJoint");
             Field *iter = this_ptr->getField("endPoint");
             Node *endPoint = iter->getSFNode();
-            getChildNode(endPoint, l_root_solid_name);
+            getChildNode(endPoint, tree_depth + 1,  l_root_solid_name);
 
         } else if (this_ptr->getTypeName().compare("SliderJoint") == 0) {
             LOG_INFO("there is SliderJoint");
-            Field *iter = this_ptr->getField("endPoint");
+            Field *iter = this_ptr->getField("endPoint"); 
             Node *endPoint = iter->getSFNode();
-            getChildNode(endPoint, l_root_solid_name);
+            getChildNode(endPoint, tree_depth + 1,l_root_solid_name);
         } else if (this_ptr->getTypeName().compare("Hinge2Joint") == 0) {
             LOG_INFO("there is Hinge2Joint");
             Field *iter = this_ptr->getField("endPoint");
             Node *endPoint = iter->getSFNode();
-            getChildNode(endPoint, l_root_solid_name);
+            getChildNode(endPoint, tree_depth + 1, l_root_solid_name);
         }
-
 
         Field *rotation_ptr_ = this_ptr->getField("rotation");
         Field *translation_ptr_ = this_ptr->getField("translation");
 
-
         if (rotation_ptr_ != nullptr && translation_ptr_ != nullptr) {
-            auto node_type = this_ptr->getTypeName();// 用于区分自定义的ProtoType
-            auto node_base_type = this_ptr->getBaseTypeName();// 只区分基本的类型
+            auto node_type = this_ptr->getTypeName();           // 用于区分自定义的ProtoType
+            auto node_base_type = this_ptr->getBaseTypeName();  // 只区分基本的类型
             auto parent_node = this_ptr->getParentNode();
 
             if (node_type.compare("Robot") != 0) {
@@ -271,21 +264,19 @@ class WTransfer : public WBase {
             }
             std::regex pattern("Pallets_[a-zA-Z0-9]+");
             bool IsPallet = false;
-            if(manager_ != nullptr){
-                auto base_type_name = this_ptr->getBaseTypeName();// 用于区分自定义的ProtoType
-                if(std::regex_match(parent_node->getDef(), pattern) && (base_type_name.compare("Solid") == 0)){
-                    // LOG_INFO("find pallets %s, Node Tyoe %s", parent_node->getDef().c_str(), node_type.c_str());
-                    // LOG_INFO("Match pallets %s", parent_node->getDef().c_str());
+            if (manager_ != nullptr) {
+                auto base_type_name = this_ptr->getBaseTypeName();  // 用于区分自定义的ProtoType
+                if (std::regex_match(parent_node->getDef(), pattern) && (base_type_name.compare("Solid") == 0)) {
+                    std::cout << "now this name:" << this_ptr->getField("name")->getSFString() << std::endl;
                     manager_->initPallets(parent_node->getDef(), this_ptr);
                     IsPallet = true;
                 }
-                // LOG_INFO("CURRENT_TYPE = %s\n", this_ptr->getTypeName().c_str());
-                Field* name_field = this_ptr->getField("name");
-                if(name_field != nullptr){
-                    printf("name_field = %s --> l_root_solid_name = %s\n", name_field->getSFString().c_str(), l_root_solid_name.c_str());
-                    if(!IsPallet && (name_field->getSFString().compare(l_root_solid_name)) == 0){
-                        // not input pallets not , not Robot node, possible item on the belt...
-                        // LOG_INFO("not input pallets not , not Robot node, possible item on the belt... %s", name_field->getSFString().c_str());
+                Field *name_field = this_ptr->getField("name");
+                if (name_field != nullptr) {
+                    // printf("NODE = %p ,name_field = %s --> l_root_solid_name = %s\n", this_ptr, name_field->getSFString().c_str(),
+                    //        l_root_solid_name.c_str());
+                    if (!IsPallet && (name_field->getSFString().compare(l_root_solid_name)) == 0) {
+                        // printf("find addPossibleNode %s\n", name_field->getSFString().c_str());
                         manager_->addPossibleNode(this_ptr);
                     }
                 }
