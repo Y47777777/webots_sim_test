@@ -397,11 +397,12 @@ void AGVController::pubSerialSpin() {
     sim_data_flow::E40MsgUp payload;
     payload.set_timestamp(time_stamp_);
     payload.set_forkposez(fork_ptr_->getSenosorValue());
-    payload.set_forkposey(forkY_ptr_->getSenosorValue());
+    // payload.set_forkposey(forkY_ptr_->getSenosorValue());
     // payload.set_forkposey(forkY_ptr_->getMemoryHeight());
     payload.set_forkposep(forkP_ptr_->getSenosorValue());
     payload.set_forkposecl(forkCLF1_ptr_->getSenosorValue() + (FROK_MIN_SPAC / 2));
     payload.set_forkposecr(forkCRF1_ptr_->getSenosorValue() + (FROK_MIN_SPAC / 2));
+    payload.set_forkposey(forkY_ptr_->getSenosorValue() + forkCLF1_ptr_->getSenosorValue() - forkCRF1_ptr_->getSenosorValue());
 
     payload.set_steering_theta_l(streeL_ptr_->getMotorYaw());
     payload.set_steering_theta_r(streeR_ptr_->getMotorYaw());
