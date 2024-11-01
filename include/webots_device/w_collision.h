@@ -135,6 +135,28 @@ class WCollision : public WBase {
                     // bounding_object->removeSF();
                     physics->removeSF();
                     this_ptr->resetPhysics();
+                    // std::cout << "physic和bounding都有:"<< this_ptr->getField("name")->getSFString()<<std::endl;
+
+                }
+            }
+            //SloidBox没有boundingObject，有physics，需要单独处理
+            if (bounding_object == nullptr && physics != nullptr) {
+                Node *physics_node = physics->getSFNode();
+
+                if (physics_node != nullptr) {
+                    WCollisionNode node(this_ptr, physics, nullptr);
+                    node.initWorldPosi(this_ptr->getPosition());
+
+                    node.physics_str_ = physics_node->exportString();
+
+                    // 记录当前节点物理属性
+                    m_node_.insert(std::make_pair(idx_, node));
+                    idx_++;
+
+                    // bounding_object->removeSF();
+                    physics->removeSF();
+                    this_ptr->resetPhysics();
+                    // std::cout << "没有bounding:" << this_ptr->getField("name")->getSFString()<<std::endl;
                 }
             }
         }
