@@ -202,17 +202,25 @@ class WTransfer : public WBase {
                 Node *iter = children->getMFNode(i);
                 if(manager_ != nullptr){
                     if((iter->getTypeName().compare("ConvoyerBelt") == 0) && (manager_ != nullptr)){
+                        // LOG_INFO("find belt %s", iter->getField("name")->getSFString().c_str());
                         manager_->addBelt(iter->getField("name")->getSFString(), \
                         iter->getField("p_groups")->getSFString(), iter);
                     }
-                    if(this_ptr->getTypeName().compare("Robot") == 0){
+                    if(this_ptr->getBaseTypeName().compare("Robot") == 0){
                         l_root_solid_name = "NOTUSE";
                     }
                     if((l_root_solid_name == "") && (this_ptr->getField("translation") != nullptr) \
-                    && (this_ptr->getTypeName().compare("Solid") == 0) && (this_ptr->getParentNode()->getTypeName().compare("Robot") !=  0)){
+                    && (this_ptr->getBaseTypeName().compare("Solid") == 0) && (this_ptr->getParentNode()->getBaseTypeName().compare("Robot") !=  0)){
                         // has translation and is the first solid
-                        l_root_solid_name = this_ptr->getField("name")->getSFString();
+                        // printf("huoqu Solidchenggong,l_root_solid_name = %s\n", this_ptr->getField("name")->getSFString().c_str());
+                        printf("robot?%s\n", this_ptr->getParentNode()->getBaseTypeName());
+                        if(this_ptr->getParentNode() != nullptr){
+                            l_root_solid_name = this_ptr->getField("name")->getSFString();
+                            printf("buweikongl_root_solid_name = %s\n", l_root_solid_name.c_str());
+                        }
+
                     }
+            
                 }
                 getChildNode(iter, l_root_solid_name);
             }
@@ -264,15 +272,20 @@ class WTransfer : public WBase {
             std::regex pattern("Pallets_[a-zA-Z0-9]+");
             bool IsPallet = false;
             if(manager_ != nullptr){
-                if(std::regex_match(parent_node->getDef(), pattern) && (node_type.compare("Solid") == 0)){
+                auto base_type_name = this_ptr->getBaseTypeName();// 用于区分自定义的ProtoType
+                if(std::regex_match(parent_node->getDef(), pattern) && (base_type_name.compare("Solid") == 0)){
+                    // LOG_INFO("find pallets %s, Node Tyoe %s", parent_node->getDef().c_str(), node_type.c_str());
+                    // LOG_INFO("Match pallets %s", parent_node->getDef().c_str());
                     manager_->initPallets(parent_node->getDef(), this_ptr);
                     IsPallet = true;
                 }
-                //printf("CURRENT_TYPE = %s\n", this_ptr->getTypeName().c_str());
+                // LOG_INFO("CURRENT_TYPE = %s\n", this_ptr->getTypeName().c_str());
                 Field* name_field = this_ptr->getField("name");
                 if(name_field != nullptr){
+                    printf("name_field = %s --> l_root_solid_name = %s\n", name_field->getSFString().c_str(), l_root_solid_name.c_str());
                     if(!IsPallet && (name_field->getSFString().compare(l_root_solid_name)) == 0){
                         // not input pallets not , not Robot node, possible item on the belt...
+                        // LOG_INFO("not input pallets not , not Robot node, possible item on the belt... %s", name_field->getSFString().c_str());
                         manager_->addPossibleNode(this_ptr);
                     }
                 }

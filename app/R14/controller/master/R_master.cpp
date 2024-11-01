@@ -59,6 +59,8 @@ AGVController::AGVController() : BaseController("webots_master") {
     hswitchR_ptr_ = std::make_shared<photoelectric>("HR", "HSwitchR");
     vswitchL_ptr_ = std::make_shared<manchanical>("VL", "VSwitchL");
     vswitchR_ptr_ = std::make_shared<manchanical>("VR", "VSwitchR");
+    safetyswitchFL_ptr_ = std::make_shared<photoelectric>("LFS", "LForkSafe");
+    safetyswitchFR_ptr_ = std::make_shared<photoelectric>("RFS", "RForkSafe");
 
     whileSpinPushBack((stree_ptr_));
     whileSpinPushBack((l_ptr_));
@@ -76,6 +78,8 @@ AGVController::AGVController() : BaseController("webots_master") {
     whileSpinPushBack((hswitchR_ptr_));
     whileSpinPushBack((vswitchL_ptr_));
     whileSpinPushBack((vswitchR_ptr_));
+    whileSpinPushBack((safetyswitchFL_ptr_));
+    whileSpinPushBack((safetyswitchFR_ptr_));
     //为了解决阻塞的问题，将pose_ptr_放到最后
     whileSpinPushBack(bind(&WBase::spin, pose_ptr_));
 
@@ -218,6 +222,8 @@ void AGVController::pubSerialSpin() {
     payload.set_hswitchr(hswitchR_ptr_->getValue());
     payload.set_vswitchl(vswitchL_ptr_->getValue());
     payload.set_vswitchr(vswitchR_ptr_->getValue());
+    payload.set_lforksafety(safetyswitchFL_ptr_->getValue());
+    payload.set_rforksafety(safetyswitchFR_ptr_->getValue());
 
     foxglove::Imu *imu = payload.mutable_imu();
     imu->mutable_angular_velocity()->CopyFrom(imu_ptr_->getGyroValue());

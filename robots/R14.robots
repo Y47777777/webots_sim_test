@@ -1,6 +1,6 @@
 DEF RobotNode Robot {
-  translation 992.0372229680346 85.29324415941927 -0.0004214478570532254
-  rotation 4.342967607786297e-06 1.6937838751564683e-05 -0.9999999998471242 1.554857298368785
+  translation 992.037 85.2932 0
+  rotation 0 0 -1 1.554857298368785
   children [
     DEF IMU Group {
       children [
@@ -35,9 +35,10 @@ DEF RobotNode Robot {
       ]
     }
     DEF SteerWhel Pose {
-      translation 1.277 -0.017 0.17
+      translation 1.275 0 0
       children [
         Pose {
+          translation 0 0 0.17
           rotation -1 0 0 1.57
           children [
             Hinge2Joint {
@@ -121,8 +122,8 @@ DEF RobotNode Robot {
                 }
               ]
               endPoint DEF L_D_SteerSolid Solid {
-                translation -8.552232048337716e-06 -6.038075056092945e-05 7.2508453285991e-07
-                rotation 0 0 0.9999999999999999 2.6300891824452712
+                translation -6.94301896949081e-05 -8.115787438064053e-05 6.72979467708501e-07
+                rotation 0 0 0.9999999999999999 0.0017008820423063992
                 children [
                   Shape {
                     appearance Appearance {
@@ -171,8 +172,8 @@ DEF RobotNode Robot {
                 }
               ]
               endPoint DEF R_D_SteerSolid Solid {
-                translation 6.76145834970582e-05 0.00011776766223314545 6.545734549945335e-07
-                rotation 0 0 1 2.361655588358196
+                translation -8.45401053645077e-05 4.48770747328235e-05 6.071855978007077e-07
+                rotation 0 0 1 2.3166857914700096
                 children [
                   Shape {
                     appearance Appearance {
@@ -214,16 +215,16 @@ DEF RobotNode Robot {
         DEF Linear_forward_backward SliderJoint {
           jointParameters JointParameters {
             axis 1 0 0
-            minStop -0.4
-            maxStop 0.38
+            minStop -0.524
+            maxStop 0.1
           }
           device [
             Brake {
             }
             LinearMotor {
               name "Linear_FB_Motor"
-              minPosition -0.4
-              maxPosition 0.38
+              minPosition -0.524
+              maxPosition 0.1
               maxForce 600
             }
             PositionSensor {
@@ -231,26 +232,26 @@ DEF RobotNode Robot {
             }
           ]
           endPoint DEF ALL_Linear_FB_Solid Solid {
-            translation 2.182303516856665e-05 -0.01499900926069131 -0.00023950241513367998
-            rotation 0.017595231360825005 -0.9998451522724183 0.0002816215608404183 8.250531299446628e-05
+            translation 0 -0.014999 0
+            rotation 0.017595232058570137 -0.9998451919216321 0 0
             children [
               R-Gantry {
               }
               DEF Forks_LiftingComponent Pose {
-                translation 0 0 0.09
+                translation 0 0 0.07
                 children [
                   DEF Lifting_movement SliderJoint {
                     jointParameters JointParameters {
-                      minStop -0.1
-                      maxStop 3.1
+                      minStop -0.13
+                      maxStop 5.6
                     }
                     device [
                       Brake {
                       }
                       LinearMotor {
                         name "Lifting_Motor"
-                        minPosition -0.1
-                        maxPosition 3.1
+                        minPosition -0.13
+                        maxPosition 5.6
                         maxForce 1000
                       }
                       PositionSensor {
@@ -275,13 +276,13 @@ DEF RobotNode Robot {
                               jointParameters HingeJointParameters {
                                 axis 0 1 0
                                 minStop -0.1
-                                maxStop 0.8
+                                maxStop 0.2
                               }
                               device [
                                 RotationalMotor {
                                   name "Forks_Pitching_Motor"
                                   minPosition -0.1
-                                  maxPosition 0.8
+                                  maxPosition 0.2
                                   maxTorque 600
                                 }
                                 PositionSensor {
@@ -297,8 +298,8 @@ DEF RobotNode Robot {
                                   DEF Forks_YMove SliderJoint {
                                     jointParameters JointParameters {
                                       axis 0 -1 0
-                                      minStop -0.5
-                                      maxStop 0.5
+                                      minStop -0.9
+                                      maxStop 0.9
                                     }
                                     device [
                                       PositionSensor {
@@ -306,30 +307,29 @@ DEF RobotNode Robot {
                                       }
                                       LinearMotor {
                                         name "Fork_YMove_Motor"
-                                        minPosition -0.5
-                                        maxPosition 0.5
+                                        minPosition -0.9
+                                        maxPosition 0.9
                                         maxForce 450
                                       }
                                       Brake {
                                       }
                                     ]
                                     endPoint DEF Forks_YMove_Solid Solid {
-                                      translation 0 -3.323391492036792e-08 0
                                       children [
                                         DEF VSwitchL manchanicalSwitch {
-                                          translation -0.1 -0.19 0
+                                          translation -0.1 -0.33 0
                                           rotation 0 -1 0 1.57
                                           boxSize 0.02
                                           name "VL"
                                         }
                                         DEF VSwitchR manchanicalSwitch {
-                                          translation -0.1 0.26 0
+                                          translation -0.1 0.4 0
                                           rotation 0 1 0 -1.57
                                           boxSize 0.02
                                           name "VR"
                                         }
                                         DEF HSwitchL lightSwitch {
-                                          translation -0.06 -0.26 0.11
+                                          translation -0.0599841 -0.33 0.11
                                           rotation 0 0 1 3.14
                                           boxSize 0.01 0.04 0.2
                                           name "HL"
@@ -339,7 +339,7 @@ DEF RobotNode Robot {
                                           aperture 0.785
                                         }
                                         DEF HSwitchR lightSwitch {
-                                          translation -0.06 0.33 0.11
+                                          translation -0.06 0.4 0.11
                                           rotation 0 0 1 3.14
                                           boxSize 0.01 0.04 0.2
                                           name "HR"
@@ -347,6 +347,26 @@ DEF RobotNode Robot {
                                           signThreshold 0.1
                                           numberOfRays 100
                                           aperture 0.785
+                                        }
+                                        DEF LForkSafe lightSwitch {
+                                          translation -1.194 0.327 -0.02
+                                          rotation 0 0 1 3.14159
+                                          boxSize 0.005 0.05 0.01
+                                          name "LFS"
+                                          detectDistance 0.03
+                                          signThreshold 0.01
+                                          numberOfRays 100
+                                          aperture 0.78
+                                        }
+                                        DEF RForkSafe lightSwitch {
+                                          translation -1.194 -0.257 -0.02
+                                          rotation 0 0 1 3.14159
+                                          boxSize 0.005 0.05 0.01
+                                          name "RFS"
+                                          detectDistance 0.03
+                                          signThreshold 0.01
+                                          numberOfRays 100
+                                          aperture 0.78
                                         }
                                         R-All-Forks {
                                         }
@@ -460,21 +480,20 @@ DEF RobotNode Robot {
       ]
     }
     DEF Top_Mid360 Pose {
-      translation 1.56 0 2.2
+      translation 1.56 0 2.226
+      rotation 0 1 0 1.57
       children [
         Mid360 {
-          translation 0 0 0.026
-          rotation 0 1 0 1.57
           name "lidar_2"
         }
         Mid360 {
-          translation -0.105 -0.651 0.0259
-          rotation 0.4582188673577999 0.7584307804544193 -0.4634848658334331 1.82286
+          translation 0 -0.652 -0.109
+          rotation 1 0 0 1.17
           name "lidar_4"
         }
         Mid360 {
-          translation -0.105 0.651 0.032
-          rotation 0.46401111369897713 -0.7470471830527289 -0.47604011664650425 -1.82519
+          translation 0 0.652 -0.109
+          rotation -1 0 0 1.17
           name "lidar_3"
         }
       ]

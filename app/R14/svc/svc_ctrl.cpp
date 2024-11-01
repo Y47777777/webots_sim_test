@@ -107,11 +107,9 @@ void SVCMaster::pubUpStream() {
     // 数据转换
     encoder_.updateValue("IncrementalSteeringCoder", 1, "", msg_from_webots_.steering_theta());
     encoder_.updateValue("HeightCoder", 1, "", msg_from_webots_.forkposez());
+    encoder_.updateValue("ForkDisplacementSencer", 1, "X", msg_from_webots_.forkposex()); //货叉前后移动
+    encoder_.updateValue("ForkDisplacementSencer", 1, "Y", msg_from_webots_.forkposey()); //货叉左右横移
     encoder_.updateValue("Gyroscope", 1, "", msg_from_webots_.gyroscope());
-    encoder_.updateValue("ForkDisplacementSencer", 1, "Y", msg_from_webots_.forkposey()); //货叉横移
-    encoder_.updateValue("DisplacementSencer", 1, "X", msg_from_webots_.forkposex()); //货叉左右移动
-    encoder_.updateValue("ForkDisplacementSencer", 1, "Z", msg_from_webots_.forkposez());
-    encoder_.updateValue("DisplacementSencer", 1, "P", msg_from_webots_.forkposep()); //货叉俯仰角度
     encoder_.updateValue2("DataIndex", &dataidx_upload_, sizeof(uint32_t));
 
     uint16_t battery_device = 100;
@@ -123,10 +121,27 @@ void SVCMaster::pubUpStream() {
     wheel_coder_l += msg_from_webots_.l_wheel() * 0.5;
     wheel_coder_r += msg_from_webots_.r_wheel() * 0.5;
     encoder_.updateValue("WheelCoder", 2, "", wheel_coder_l, wheel_coder_r);
-    encoder_.updateSwitchValue("SwitchSencer", 36, msg_from_webots_.hswitchl()); //左横向到位开关 这里采用双压杆到位开关
-    encoder_.updateSwitchValue("SwitchSencer", 37, msg_from_webots_.hswitchr()); //右横向到位开关
-    encoder_.updateSwitchValue("SwitchSencer", 38, msg_from_webots_.vswitchl()); //左纵向到位开关
-    encoder_.updateSwitchValue("SwitchSencer", 39, msg_from_webots_.vswitchr()); //右纵向到位开关
+    encoder_.updateSwitchValue("SwitchSencer", 8, msg_from_webots_.lforksafety()); //左货叉安全开关
+    encoder_.updateSwitchValue("SwitchSencer", 9, msg_from_webots_.rforksafety()); //右货叉安全开关
+    LOG_INFO("lf %s, rf %s", msg_from_webots_.lforksafety()? "on" : "off", msg_from_webots_.rforksafety()? "on" : "off");
+    encoder_.updateSwitchValue("SwitchSencer", 50, msg_from_webots_.hswitchl()); //左横向到位开关 这里采用双压杆到位开关
+    encoder_.updateSwitchValue("SwitchSencer", 51, msg_from_webots_.hswitchr()); //右横向到位开关
+    encoder_.updateSwitchValue("SwitchSencer", 52, msg_from_webots_.vswitchl()); //左垂直到位开关
+    encoder_.updateSwitchValue("SwitchSencer", 53, msg_from_webots_.vswitchr()); //右垂直到位开关
+    
+
+    encoder_.updateValue("Accelerometer", 1, "X",
+                         imu->linear_acceleration().x());
+    encoder_.updateValue("Accelerometer", 1, "Y",
+                         imu->linear_acceleration().y());
+    encoder_.updateValue("Accelerometer", 1, "Z",
+                         imu->linear_acceleration().z());
+    encoder_.updateValue("AngularVelocitySensor", 1, "X",
+                         imu->angular_velocity().x());
+    encoder_.updateValue("AngularVelocitySensor", 1, "Y",
+                         imu->angular_velocity().y());
+    encoder_.updateValue("AngularVelocitySensor", 1, "Z",
+                         imu->angular_velocity().z());
     {
         // 该数据多线程读写
         std::lock_guard<std::mutex> lock(msgs_lock_);

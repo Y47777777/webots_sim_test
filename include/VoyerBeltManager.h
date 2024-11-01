@@ -253,8 +253,9 @@ namespace VNSim{
             }
             void initPallets(std::string groups, Node* node){
                 for(const auto& [key, value] : belts_){
+                    // LOG_INFO("init pallet --> %s, group = %s", key.c_str(), value->getGroup().c_str());
                     if(value->getGroup() == groups){
-                        value->init(node); 
+                        value->init(node);
                     }
                 }
             }

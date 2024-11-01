@@ -20,6 +20,8 @@ message RMsgUp{
   bool HSwitchR = 14;
   bool VSwitchL = 15;
   bool VSwitchR = 16;
+  bool LForkSafety = 17;
+  bool RForkSafety = 18;
 }
 
 message RMsgDown{

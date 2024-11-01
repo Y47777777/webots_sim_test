@@ -59,11 +59,12 @@ class AGVController : public BaseController {
     std::shared_ptr<WCollision> collision_ptr_;
     std::shared_ptr<WTransfer> transfer_ptr_;
     std::shared_ptr<WLiftDoor> liftdoor_ptr_;
-    std::shared_ptr<photoelectric> hswitchL_ptr_;
-    std::shared_ptr<photoelectric> hswitchR_ptr_;
-    std::shared_ptr<manchanical> vswitchL_ptr_;
-    std::shared_ptr<manchanical> vswitchR_ptr_;
-
+    std::shared_ptr<photoelectric> hswitchL_ptr_;  //水平物料到位传感器左叉
+    std::shared_ptr<photoelectric> hswitchR_ptr_;  //水平物料到位传感器右叉
+    std::shared_ptr<manchanical> vswitchL_ptr_;    //垂直物料到位传感器左叉
+    std::shared_ptr<manchanical> vswitchR_ptr_;    //垂直物料到位传感器右叉
+    std::shared_ptr<photoelectric> safetyswitchFL_ptr_;  //左货叉安全防护
+    std::shared_ptr<photoelectric> safetyswitchFR_ptr_;  //右货叉安全防护
 
    public:
     void subRMsgCallBack(const char *topic_name,
