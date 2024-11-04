@@ -107,9 +107,12 @@ void pbTopb2(const sim_data_flow::WBPointCloud &payload,
         if (i == 0) {
             point_base_time = time;
         }
-        time = time - point_base_time;
-        time = time * 1000 * 1000;  // 换算成微秒
-        time = time + (double) payload_send.header().timestamp();
+        // time = time - point_base_time;
+        // time = time * 1000 * 1000;  // 换算成微秒
+        // time = time + (double) payload_send.header().timestamp();
+
+        time = (double) payload_send.header().timestamp();
+
 
         if (std::abs(x) != INFINITY && std::abs(y) != INFINITY &&
             std::abs(z) != INFINITY) {
