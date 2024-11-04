@@ -23,7 +23,6 @@
 #include "webots_device/w_switch.h"
 #include "webots_device/w_collision.h"
 
-
 namespace VNSim {
 
 class AGVController : public BaseController {
@@ -34,6 +33,7 @@ class AGVController : public BaseController {
     // Manual
     virtual void manualSetState(const std::map<std::string, double> &msg);
     virtual void manualGetState(std::map<std::string, double> &msg);
+    virtual void onConveyorKeyboardMsg(const std::map<std::string, std::string> &msg) override;
 
    protected:
     // task
@@ -57,15 +57,16 @@ class AGVController : public BaseController {
     std::shared_ptr<WLiftDoor> liftdoor_ptr_;
     std::shared_ptr<photoelectric> hswitchL_ptr_;
     std::shared_ptr<photoelectric> hswitchR_ptr_;
-   //  std::shared_ptr<manchanical> hswitchL_ptr_;
-   //  std::shared_ptr<manchanical> hswitchR_ptr_;
+    //  std::shared_ptr<manchanical> hswitchL_ptr_;
+    //  std::shared_ptr<manchanical> hswitchR_ptr_;
     std::shared_ptr<manchanical> vswitchL_ptr_;
     std::shared_ptr<manchanical> vswitchR_ptr_;
-    //std::shared_ptr<OrgDistance> org_ptr_;
+    // std::shared_ptr<OrgDistance> org_ptr_;
+    std::shared_ptr<VoyerBeltManager> manager_ptr_;
 
    public:
-    void subPMsgCallBack(const char *topic_name,
-                         const eCAL::SReceiveCallbackData *data);
+    void subPMsgCallBack(const char *topic_name, const eCAL::SReceiveCallbackData *data);
+    void onConveyorStateMsg(const char *topic_name, const eCAL::SReceiveCallbackData *data);
 };
 
 }  // namespace VNSim

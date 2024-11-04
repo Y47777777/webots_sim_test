@@ -15,6 +15,7 @@
 
 #include "sim_data_flow/point_cloud.pb.h"
 #include "sim_data_flow/pose.pb.h"
+#include "sim_data_flow/voyerbelt_msg.pb.h"
 
 #include "geometry/geometry.h"
 #include "time/time.h"
@@ -111,6 +112,7 @@ std::shared_ptr<EcalWrapper> EcalWrapper::instance_ptr_ = nullptr;
 std::shared_ptr<ReflectorChecker> ReflectorChecker::instance_ptr_ = nullptr;
 
 AGVController::AGVController() : BaseController("webots_master") {
+    manager_ptr_ = std::make_shared<VoyerBeltManager>();
     imu_ptr_ = std::make_shared<WImu>("inertial unit", "gyro", "accelerometer");
     fork_ptr_ = std::make_shared<WFork>("fork height motor", "ForkZAxis", "fork height");
     forkY_ptr_ = std::make_shared<WFork>("Fork_Y_Motor", "ForkYAxis", "Fork_Y_Sensor");
@@ -125,7 +127,7 @@ AGVController::AGVController() : BaseController("webots_master") {
     r_ptr_ = std::make_shared<WWheel>("FR", "", "", "RS", "");
     pose_ptr_ = std::make_shared<WPose>("RobotNode");
     lidar_pose_ptr_ = std::make_shared<WLidar>("lidar_0", nullptr, 100, false);
-    transfer_ptr_ = std::make_shared<WTransfer>();
+    transfer_ptr_ = std::make_shared<WTransfer>(manager_ptr_);
     collision_ptr_ = std::make_shared<WCollision>(false);
     liftdoor_ptr_ = std::make_shared<WLiftDoor>(false);
 
@@ -145,15 +147,29 @@ AGVController::AGVController() : BaseController("webots_master") {
     whileSpinPushBack(bind(&WBase::spin, liftdoor_ptr_));
     whileSpinPushBack(bind(&WBase::spin, pose_ptr_));
 
+    //获取当前滚筒线
+    std::list<std::string> convoyer_list;
+    manager_ptr_->getServerList(convoyer_list);
     // pub
     ecal_ptr_->addEcal("webot/E_msg");
     ecal_ptr_->addEcal("webot/transfer");
     ecal_ptr_->addEcal("webot/pose");
     ecal_ptr_->addEcal("webot/liftdoor");
+    //增加滚筒线pub
+    for (auto const &it : convoyer_list) {
+        LOG_INFO("E20 cmd topic = %s, state stopic = %s", std::string(it + "/CmdInfo").c_str(),
+                 std::string(it + "/Goods/Events").c_str());
+        ecal_ptr_->addEcal(std::string(it + "/CmdInfo").c_str());
+        ecal_ptr_->addEcal(
+            std::string(it + "/Goods/Events").c_str(),
+            std::bind(&AGVController::onConveyorStateMsg, this, std::placeholders::_1, std::placeholders::_2));
+    }
 
     // sub
     ecal_ptr_->addEcal("svc/E_msg",
                        std::bind(&AGVController::subEMsgCallBack, this, std::placeholders::_1, std::placeholders::_2));
+    ecal_ptr_->addEcal("Goods/Events", std::bind(&AGVController::onConveyorStateMsg, this, std::placeholders::_1,
+                                                 std::placeholders::_2));
 }
 
 void AGVController::manualSetState(const std::map<std::string, double> &msg) {
@@ -378,8 +394,8 @@ void AGVController::subEMsgCallBack(const char *topic_name, const eCAL::SReceive
             fork_ptr_->setVelocity(payload.forkspeedz());
             forkP_ptr_->setVelocity(payload.forkspeedp());
             forkY_ptr_->setVelocity(payload.forkspeedy());
-            forkCLF1_ptr_->setVelocity(payload.forkspeedc() );
-            forkCRF1_ptr_->setVelocity(payload.forkspeedc() );
+            forkCLF1_ptr_->setVelocity(payload.forkspeedc());
+            forkCRF1_ptr_->setVelocity(payload.forkspeedc());
         } else {
             l_ptr_->setVelocity(0);
             r_ptr_->setVelocity(0);
@@ -434,5 +450,41 @@ void VNSim::AGVController::pubLiftDoorTag() {
 
         payload.SerializePartialToArray(buf, payload.ByteSize());
         ecal_ptr_->send("webot/liftdoor", buf, payload.ByteSize());
+    }
+}
+void AGVController::onConveyorKeyboardMsg(const std::map<std::string, std::string> &msg){
+    // TODO: add state consideration....
+    std::string function = msg.at("function");
+    // std::cout << "belt发过来的function: " << function << msg.at("belt") << std::endl;
+    if(function == "0")
+        manager_ptr_->addRandomPallet(msg.at("belt"),true,false);
+    else
+        manager_ptr_->addRemovePallet(msg.at("belt"),true);
+}
+
+void AGVController::onConveyorStateMsg(const char *topic_name,
+                         const eCAL::SReceiveCallbackData *data){
+    sim_data_flow::StateInfo payload;
+    payload.ParseFromArray(data->buf, data->size);
+    int ret = 1;
+    if(payload.state() == 0){
+        // belt is full
+        // TODO: may be add more topic
+        ret = manager_ptr_->addRemovePallet(payload.belt_name(), false, payload.who());
+    }else if(payload.state() == 1){
+        // belt is empty
+        ret = manager_ptr_->addRandomPallet(payload.belt_name(), false, true, payload.who());
+    }
+    if(ret == 1){
+        // convoyer belt initialization is over
+        std::string res_topic = "";
+        res_topic = payload.belt_name() + "/CmdInfo";
+        LOG_INFO("%s --> try send stop cmd to %s", __FUNCTION__, res_topic.c_str());
+        //printf("%s --> try send stop cmd to %s\n", __FUNCTION__, res_topic.c_str());
+        sim_data_flow::CmdInfo res_payload;
+        res_payload.set_cmd(0);
+        uint8_t buf[res_payload.ByteSize()];
+        res_payload.SerializePartialToArray(buf, res_payload.ByteSize());
+        ecal_ptr_->send(res_topic.c_str(), buf, res_payload.ByteSize());
     }
 }

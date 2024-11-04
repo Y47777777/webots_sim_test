@@ -6,14 +6,34 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>634</width>
-    <height>590</height>
+    <width>549</width>
+    <height>356</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>ManualControl</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout_8">
+  <layout class="QVBoxLayout" name="verticalLayout_2" stretch="1,1">
+   <item>
+    <widget class="QPlainTextEdit" name="plainTextEdit">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::Shape::NoFrame</enum>
+     </property>
+     <property name="readOnly">
+      <bool>true</bool>
+     </property>
+     <property name="plainText">
+      <string>滚筒线手动控制界面：
+将ConoyerBelt的manual设为True后，输入被控制滚筒线(如T1)名字,Add产生物料,Remove移走物料。其他参数参考说明</string>
+     </property>
+     <property name="centerOnScroll">
+      <bool>false</bool>
+     </property>
+    </widget>
+   </item>
    <item>
     <layout class="QVBoxLayout" name="verticalLayout">
      <item>

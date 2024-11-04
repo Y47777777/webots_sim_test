@@ -1,6 +1,7 @@
 #include <QApplication>
 #include <unistd.h>
 #include "keyboardform/keyboardform.h"
+#include "keyboardform/convoyerKeyboard.h"
 #include "R_master.h"
 #include "logvn/logvn.h"
 
@@ -25,6 +26,9 @@ int main(int argc, char *argv[]) {
     // init keyboard
     KeyboardForm f(ctrl_ptr);
     f.show();
+    
+    ConvoyerKeyboard f2(ctrl_ptr);
+    f2.show();
 
     a.exec();
     LOG_INFO("try stop svc_R14");
