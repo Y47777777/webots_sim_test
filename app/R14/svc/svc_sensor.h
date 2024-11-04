@@ -20,8 +20,6 @@ class SVCShadow : public BaseSvc {
     void onLidar3Mssg(const char *topic_name, const eCAL::SReceiveCallbackData *data);
     void onLidar0Mssg(const char *topic_name, const eCAL::SReceiveCallbackData *data);
     void onBrighteyeMsg(const char *topic_name, const eCAL::SReceiveCallbackData *data);
-    void onMultiMid360Msg(const char *topic_name, const eCAL::SReceiveCallbackData *data);
-    void onBPMsg(const char *topic_name, const eCAL::SReceiveCallbackData *data);
 
    private:
 };
