@@ -293,12 +293,9 @@ namespace VNSim{
             }
             int addRandomPallet(std::string belt, bool isManual = false, bool isDelay = true, uint32_t who = 0){
                 int ret = -1;
-                std::cout << "addRandomPallet --> " << belt << std::endl;
                 auto it = belts_.find(belt);
                 if(it != belts_.end()){
                     do{
-                        printf("isOnStart = %d\n", it->second->isOnStart() ? 1 : 0);
-                        printf("isManual = %d\n", it->second->isManual() ? 1 : 0);;
                         ret = it->second->isOnStart() ? 1 : 0;
                         if(!isManual && ret && (who == 1)){
                             it->second->setOnStart(false);

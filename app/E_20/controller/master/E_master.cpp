@@ -466,8 +466,7 @@ void VNSim::AGVController::pubLiftDoorTag() {
 void AGVController::onConveyorKeyboardMsg(const std::map<std::string, std::string> &msg){
     // TODO: add state consideration....
     std::string function = msg.at("function");
-    std::cout << "belt发过来的function: " << function << msg.at("belt") << std::endl;
-    if(msg.at("belt") == "") printf("Sendbelt is empty\n");
+    // std::cout << "belt发过来的function: " << function << msg.at("belt") << std::endl;
     if(function == "0")
         manager_ptr_->addRandomPallet(msg.at("belt"),true,false);
     else
@@ -479,7 +478,6 @@ void AGVController::onConveyorStateMsg(const char *topic_name,
     sim_data_flow::StateInfo payload;
     payload.ParseFromArray(data->buf, data->size);
     int ret = 1;
-    std::cout << "Belt state: " << payload.state() << std::endl;
     if(payload.state() == 0){
         // belt is full
         // TODO: may be add more topic

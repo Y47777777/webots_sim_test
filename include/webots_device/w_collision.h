@@ -159,6 +159,21 @@ class WCollision : public WBase {
                     // std::cout << "没有bounding:" << this_ptr->getField("name")->getSFString()<<std::endl;
                 }
             }
+            if(this_ptr->isProto() && physics != nullptr){
+                Node *physics_node = physics->getSFNode();
+                if(physics_node != nullptr){
+                    WCollisionNode node(this_ptr, physics, nullptr);
+                    node.initWorldPosi(this_ptr->getPosition());
+                    // 获得物理属性
+                    node.physics_str_ = physics_node->exportString();
+                    // 记录当前节点物理属性
+                    m_node_.insert(std::make_pair(idx_, node));
+                    idx_++;
+                    // 物理属性删除
+                    physics->removeSF();
+                    this_ptr->resetPhysics();
+                }
+            }
         }
     }
 

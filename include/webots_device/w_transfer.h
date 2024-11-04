@@ -267,7 +267,6 @@ class WTransfer : public WBase {
             if (manager_ != nullptr) {
                 auto base_type_name = this_ptr->getBaseTypeName();  // 用于区分自定义的ProtoType
                 if (std::regex_match(parent_node->getDef(), pattern) && (base_type_name.compare("Solid") == 0)) {
-                    std::cout << "now this name:" << this_ptr->getField("name")->getSFString() << std::endl;
                     manager_->initPallets(parent_node->getDef(), this_ptr);
                     IsPallet = true;
                 }
