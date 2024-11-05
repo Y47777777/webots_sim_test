@@ -331,7 +331,19 @@ class Gyroscope : public CommonParsedSencerModel {
                         int length = -1, bool is32bits = false,
                         bool isSigned = false);
 };
+class ElePerceptionCameraDistance : public CommonParsedSencerModel {
+   private:
+    std::map<std::string, double> extra_val_;
 
+   public:
+    ElePerceptionCameraDistance();
+    ~ElePerceptionCameraDistance();
+    virtual void solveValue(const std::vector<double> &input,
+                            std::vector<double> &output) override;
+    virtual void config(const std::vector<struct SpecialParam> &param, int last,
+                        int length = -1, bool is32bits = false,
+                        bool isSigned = false);
+};
 class SDataIndex : public CommonParsedSencerModel {
    public:
     SDataIndex();

@@ -56,6 +56,7 @@ class AGVController : public BaseController {
     std::shared_ptr<WFork> forkY_ptr_;    // Y方向左右平移
     std::shared_ptr<WPose> pose_ptr_;
     std::shared_ptr<WLidar> lidar_pose_ptr_;
+    std::shared_ptr<WFork> lidar0_move_ptr_;             // lidar0 感知电动移动
     std::shared_ptr<WCollision> collision_ptr_;
     std::shared_ptr<WTransfer> transfer_ptr_;
     std::shared_ptr<WLiftDoor> liftdoor_ptr_;

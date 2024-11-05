@@ -49,6 +49,9 @@ class KeyboardForm : public QWidget {
     void on_pushButton_liftCStop_clicked();
     void on_pushButton_refresh_clicked();
     void on_pushButton_reset_steer_clicked();
+    void on_pushButton_lidar0Up_clicked();
+    void on_pushButton_lidar0Stop_clicked();
+    void on_pushButton_Lidar0Down_clicked();
     void setStatus();
 
 
@@ -69,6 +72,8 @@ private:
         double forkC_speed = 0;
         double forkC_height = 0;
         double real_speed = 0;
+        double lidar0_height = 0;
+        double lidar0_move = 0;
         bool refresh_world = false;
     };
     ManualState manual_state_;

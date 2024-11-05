@@ -736,6 +736,35 @@ void Gyroscope::solveValue(const std::vector<double> &input,
     to4BytesFromint32_t(&gyro, buf_);
 }
 
+ElePerceptionCameraDistance::ElePerceptionCameraDistance() : CommonParsedSencerModel() {}
+
+ElePerceptionCameraDistance::~ElePerceptionCameraDistance() {}
+
+void ElePerceptionCameraDistance::config(const std::vector<struct SpecialParam> &param,
+                       int start_p, int length, bool is32bits, bool isSigned) {
+    start_p_ = start_p;
+    length_ = 4;
+    isSigned_ = true;
+    is32bits_ = true;
+    if (length != -1)
+        length_ = length;
+    end_p_ = start_p_ + length_ - 1;
+    isNeedParsed_ = true;
+    SensorModel::SencerModelConfig();
+    SensorModel::_setType(false);
+    for (auto &it : param) {
+        extra_val_[it.name] = strtod(it.value.c_str(), nullptr);
+    }
+}
+void ElePerceptionCameraDistance::solveValue(const std::vector<double> &input,
+                           std::vector<double> &output) {
+    // double zeroDrift = extra_val_["ZeroDrift"];
+    double magnification = extra_val_["Magnification"];
+    output.resize(1);
+    output[0] = (input[0]) / magnification;  // No zero drift...
+    int32_t ElePerception = (int32_t) output[0];
+    to4BytesFromint32_t(&ElePerception, buf_);
+}
 SDataIndex::SDataIndex() : CommonParsedSencerModel() {}
 
 SDataIndex::~SDataIndex() {}

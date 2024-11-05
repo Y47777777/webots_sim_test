@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>634</width>
-    <height>596</height>
+    <width>650</width>
+    <height>617</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -115,6 +115,13 @@
           <widget class="QLabel" name="label">
            <property name="text">
             <string>forkCForce:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_lidar0Height">
+           <property name="text">
+            <string>lidar0Height:</string>
            </property>
           </widget>
          </item>
@@ -237,6 +244,24 @@
             <string/>
            </property>
           </widget>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_3">
+           <item>
+            <widget class="QLabel" name="label_Lidar0Height_value">
+             <property name="text">
+              <string/>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="label_isLidar0ORHeight_value">
+             <property name="text">
+              <string/>
+             </property>
+            </widget>
+           </item>
+          </layout>
          </item>
          <item>
           <widget class="QLabel" name="label_realspeed_value">
@@ -375,6 +400,31 @@
           <widget class="QPushButton" name="pushButton_liftCClose">
            <property name="text">
             <string>LiftCClose</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QVBoxLayout" name="Lidar0Move">
+         <item>
+          <widget class="QPushButton" name="pushButton_lidar0Up">
+           <property name="text">
+            <string>Lidar0Up</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="pushButton_lidar0Stop">
+           <property name="text">
+            <string>Stop</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="pushButton_Lidar0Down">
+           <property name="text">
+            <string>Lidar0Down</string>
            </property>
           </widget>
          </item>

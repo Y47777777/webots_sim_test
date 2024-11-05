@@ -146,7 +146,7 @@ void SencerDirector::create(const char *name, const char *function,
         ptr = std::make_shared<IncrementalSteeringCoder>();
         // std::cout << "create IncrementalSteeringCoder = " << name <<
         // std::endl;
-    } else if (strcmp(name, "Gyroscope") == 0) {
+    }else if (strcmp(name, "Gyroscope") == 0) {
         ptr = std::make_shared<Gyroscope>();
         // std::cout << "create Gyroscope = " << name << std::endl;
     } else if (strcmp(name, "ForkDisplacementSencer") == 0 || 
@@ -197,6 +197,10 @@ void SencerDirector::create(const char *name, const char *function,
     } else if (strcmp(name, "HydraulicPressureSensor") == 0) {
         ptr = std::make_shared<HydraulicPressureSensor>();
         // std::cout << "create HydraulicPressureSensor = " << name <<
+        // std::endl;
+    } else if (strcmp(name, "ElePerceptionCameraDistance") == 0) {
+        ptr = std::make_shared<ElePerceptionCameraDistance>();
+        // std::cout << "create ElePerceptionCameraDistance = " << name <<
         // std::endl;
     } else {
         ptr = std::make_shared<SDataIgnore>();

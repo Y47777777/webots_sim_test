@@ -20,8 +20,10 @@ message RMsgUp{
   bool HSwitchR = 14;
   bool VSwitchL = 15;
   bool VSwitchR = 16;
-  bool LForkSafety = 17;
-  bool RForkSafety = 18;
+  bool LForkSafety = 17;               //左侧货叉是否安全
+  bool RForkSafety = 18;               //右侧货叉是否安全
+  double lidar0poseZ = 19;             //感知器0的Z位置
+  bool is_lidar0orposeZ = 20;          //感知器是否在初始位置
 }
 
 message RMsgDown{
@@ -32,6 +34,8 @@ message RMsgDown{
   double forkspeedX = 5;               // fork speed 整个龙门架X方向前后进行平移
   double forkspeedY = 6;               // fork speed Y方向平移 
   double forkspeedP = 7;               // fork speed in pitch俯仰
+  bool   lidar0_UP = 8;                // lidar0感知举升
+  bool   lidar0_DOWN = 9;              // lidar0感知下降
 
 }
 

@@ -74,6 +74,8 @@ void SVCMaster::pubRMsgsToWebots() {
     double ForkDeviceY;
     double ForkDeviceZ;
     double ForkDeviceP;
+    bool   Lidar0MoveUp;
+    bool   Lidar0MoveDown;
 
     decoder_.getValue("MoveDevice", &MoveDevice);          // steer wheel
     decoder_.getValue("SteeringDevice", &SteeringDevice);  // steer yaw
@@ -81,6 +83,8 @@ void SVCMaster::pubRMsgsToWebots() {
     decoder_.getValue("ForkDevice", &ForkDeviceY, "Y");    // forkY Speed
     decoder_.getValue("ForkDevice", &ForkDeviceZ, "Z");    // forkZ Speed
     decoder_.getValue("ForkDevice", &ForkDeviceP, "P");    // forkP Speed
+    decoder_.getSwitchValue("SwitchActuator", 48, &Lidar0MoveUp);  // lidar0感知举升
+    decoder_.getSwitchValue("SwitchActuator", 49, &Lidar0MoveDown);  // lidar0感知下降
 
     msg_to_webots_.set_timestamp(Timer::getInstance()->getCurrentFromSystem());
     msg_to_webots_.set_steering_speed(MoveDevice);
@@ -89,6 +93,8 @@ void SVCMaster::pubRMsgsToWebots() {
     msg_to_webots_.set_forkspeedy(ForkDeviceY);
     msg_to_webots_.set_forkspeedz(ForkDeviceZ);
     msg_to_webots_.set_forkspeedp(ForkDeviceP);
+    msg_to_webots_.set_lidar0_up(Lidar0MoveUp);
+    msg_to_webots_.set_lidar0_down(Lidar0MoveDown);
 
     // publish
     uint8_t buf[msg_to_webots_.ByteSize()];
@@ -111,6 +117,7 @@ void SVCMaster::pubUpStream() {
     encoder_.updateValue("ForkDisplacementSencer", 1, "Y", msg_from_webots_.forkposey()); //货叉左右横移
     encoder_.updateValue("Gyroscope", 1, "", msg_from_webots_.gyroscope());
     encoder_.updateValue2("DataIndex", &dataidx_upload_, sizeof(uint32_t));
+    encoder_.updateValue("ElePerceptionCameraDistance", 1, "", msg_from_webots_.lidar0posez()); //感知位置
 
     uint16_t battery_device = 100;
     encoder_.updateValue2("BatterySencer", &battery_device, sizeof(uint16_t));
@@ -128,6 +135,7 @@ void SVCMaster::pubUpStream() {
     encoder_.updateSwitchValue("SwitchSencer", 51, msg_from_webots_.hswitchr()); //右横向到位开关
     encoder_.updateSwitchValue("SwitchSencer", 52, msg_from_webots_.vswitchl()); //左垂直到位开关
     encoder_.updateSwitchValue("SwitchSencer", 53, msg_from_webots_.vswitchr()); //右垂直到位开关
+    encoder_.updateSwitchValue("SwitchSencer", 30, msg_from_webots_.is_lidar0orposez()); //感知是否在初始限位
     
 
     encoder_.updateValue("Accelerometer", 1, "X",

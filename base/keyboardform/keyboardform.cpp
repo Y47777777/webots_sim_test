@@ -28,13 +28,11 @@ void KeyboardForm::setStatus() {
     model_ptr_->manualGetState(msg);
 
     if (msg.find("steer_speed") != msg.end()) {
-        ui->label_steerSpeed_value->setText(
-            QString::number(msg["steer_speed"]));
+        ui->label_steerSpeed_value->setText(QString::number(msg["steer_speed"]));
     }
 
     if (msg.find("steer_yaw") != msg.end()) {
-        ui->label_steerYaw_value->setText(
-            QString::number(msg["steer_yaw"] * 180 / 3.14));
+        ui->label_steerYaw_value->setText(QString::number(msg["steer_yaw"] * 180 / 3.14));
     }
 
     if (msg.find("fork_speed") != msg.end()) {
@@ -42,67 +40,64 @@ void KeyboardForm::setStatus() {
     }
 
     if (msg.find("fork_height") != msg.end()) {
-        ui->label_forkHeight_value->setText(
-            QString::number(msg["fork_height"]));
+        ui->label_forkHeight_value->setText(QString::number(msg["fork_height"]));
     }
 
     if (msg.find("forkX_speed") != msg.end()) {
-        ui->label_forkXSpeed_value->setText(
-            QString::number(msg["forkX_speed"]));
+        ui->label_forkXSpeed_value->setText(QString::number(msg["forkX_speed"]));
     }
 
     if (msg.find("forkX_height") != msg.end()) {
-        ui->label_forkXHeight_value->setText(
-            QString::number(msg["forkX_height"]));
+        ui->label_forkXHeight_value->setText(QString::number(msg["forkX_height"]));
     }
 
     if (msg.find("forkY_speed") != msg.end()) {
-        ui->label_forkYSpeed_value->setText(
-            QString::number(msg["forkY_speed"]));
+        ui->label_forkYSpeed_value->setText(QString::number(msg["forkY_speed"]));
     }
 
     if (msg.find("forkY_height") != msg.end()) {
-        ui->label_forkYHeight_value->setText(
-            QString::number(msg["forkY_height"]));
+        ui->label_forkYHeight_value->setText(QString::number(msg["forkY_height"]));
     }
 
     if (msg.find("forkP_speed") != msg.end()) {
-        ui->label_forkPSpeed_value->setText(
-            QString::number(msg["forkP_speed"]));
+        ui->label_forkPSpeed_value->setText(QString::number(msg["forkP_speed"]));
     }
 
     if (msg.find("forkP_height") != msg.end()) {
-        ui->label_forkPHeight_value->setText(
-            QString::number(msg["forkP_height"]));
+        ui->label_forkPHeight_value->setText(QString::number(msg["forkP_height"]));
     }
 
     if (msg.find("forkC_speed") != msg.end()) {
-        ui->label_forkCSpeed_value->setText(
-            QString::number(msg["forkC_speed"]));
+        ui->label_forkCSpeed_value->setText(QString::number(msg["forkC_speed"]));
     }
 
     if (msg.find("forkC_height") != msg.end()) {
-        ui->label_forkCHeight_value->setText(
-            QString::number(msg["forkC_height"]));
+        ui->label_forkCHeight_value->setText(QString::number(msg["forkC_height"]));
     }
 
     if (msg.find("forkCR_height") != msg.end()) {
-        ui->label_forkCRHeight_value->setText(
-            QString::number(msg["forkCR_height"]));
+        ui->label_forkCRHeight_value->setText(QString::number(msg["forkCR_height"]));
     }
 
     if (msg.find("forkCL_height") != msg.end()) {
-        ui->label_forkCLHeight_value->setText(
-            QString::number(msg["forkCL_height"]));
+        ui->label_forkCLHeight_value->setText(QString::number(msg["forkCL_height"]));
     }
-    
+
     if (msg.find("forkC_force") != msg.end()) {
-        ui->label_forkCForce_value->setText(
-            QString::number(msg["forkC_force"]));
+        ui->label_forkCForce_value->setText(QString::number(msg["forkC_force"]));
     }
 
     if (msg.find("real_speed") != msg.end()) {
         ui->label_realspeed_value->setText(QString::number(msg["real_speed"]));
+    }
+
+    if (msg.find("lidar0_Height") != msg.end()) {
+        ui->label_Lidar0Height_value->setText(QString::number(msg["lidar0_Height"]));
+    }
+
+    if (msg.find("lidar0_isInitHeight") != msg.end()) {
+        ui->label_isLidar0ORHeight_value->setText(msg["lidar0_isInitHeight"] == 1 ? "Lidia0在初始高度"
+                                                                                  : "Lidia0不在初始高度");
     }
 }
 
@@ -117,11 +112,16 @@ void KeyboardForm::on_checkBox_stateChanged(int arg1) {
     manual_state_.forkX_speed = 0;
     manual_state_.forkY_speed = 0;
     manual_state_.forkP_speed = 0;
+    manual_state_.forkC_speed = 0;
+    manual_state_.real_speed = 0;
+    manual_state_.lidar0_move = 0;
+    manual_state_.lidar0_height = 0;
 }
 
 void KeyboardForm::on_pushButton_speedUp_clicked() {
     double c_value = manual_state_.steer_speed;
-    if (c_value < 4) {;
+    if (c_value < 4) {
+        ;
         c_value += 0.2;
     }
     manual_state_.steer_speed = c_value;
@@ -174,7 +174,7 @@ void KeyboardForm::on_pushButton_liftUp_clicked() {
     manual_state_.fork_speed = c_value;
     sendMsg();
 }
-void KeyboardForm::on_pushButton_liftStop_clicked(){
+void KeyboardForm::on_pushButton_liftStop_clicked() {
     manual_state_.fork_speed = 0;
     sendMsg();
 }
@@ -188,7 +188,7 @@ void KeyboardForm::on_pushButton_liftDown_clicked() {
     sendMsg();
 }
 
-void KeyboardForm::on_pushButton_liftXForward_clicked(){
+void KeyboardForm::on_pushButton_liftXForward_clicked() {
     double c_value = manual_state_.forkX_speed;
     if (c_value < 1) {
         c_value += 0.1;
@@ -197,22 +197,19 @@ void KeyboardForm::on_pushButton_liftXForward_clicked(){
     sendMsg();
 }
 
-
-void KeyboardForm::on_pushButton_liftXStop_clicked(){
+void KeyboardForm::on_pushButton_liftXStop_clicked() {
     manual_state_.forkX_speed = 0;
     sendMsg();
 }
 
-
-void KeyboardForm::on_pushButton_liftXBackward_clicked(){
+void KeyboardForm::on_pushButton_liftXBackward_clicked() {
     double c_value = manual_state_.forkX_speed;
-    if (c_value > -1){
+    if (c_value > -1) {
         c_value -= 0.1;
     }
     manual_state_.forkX_speed = c_value;
     sendMsg();
 }
-
 
 void KeyboardForm::on_pushButton_liftYLeft_clicked() {
     double c_value = manual_state_.forkY_speed;
@@ -293,6 +290,21 @@ void KeyboardForm::on_pushButton_reset_steer_clicked() {
     sendMsg();
 }
 
+void KeyboardForm::on_pushButton_lidar0Up_clicked() {
+    manual_state_.lidar0_move = 1;
+    sendMsg();
+}
+
+void KeyboardForm::on_pushButton_lidar0Stop_clicked() {
+    manual_state_.lidar0_move = 0;
+    sendMsg();
+}
+
+void KeyboardForm::on_pushButton_Lidar0Down_clicked() {
+    manual_state_.lidar0_move = -1;
+    sendMsg();
+}
+
 void KeyboardForm::sendMsg() {
     if (model_ptr_ == nullptr) {
         return;
@@ -311,6 +323,8 @@ void KeyboardForm::sendMsg() {
     msg["forkC_speed"] = manual_state_.forkC_speed;
     msg["forkC_height"] = manual_state_.forkC_height;
     msg["real_speed"] = manual_state_.real_speed;
+    msg["lidar0_move"] = manual_state_.lidar0_move;
+    msg["lidar0_height"] = manual_state_.lidar0_height;
 
     if (manual_state_.refresh_world) {
         msg["refresh_world"] = 0;
@@ -319,9 +333,5 @@ void KeyboardForm::sendMsg() {
     model_ptr_->manualSetState(msg);
 }
 
-void KeyboardForm::decodeMsg(const char *msg,
-                             std::map<std::string, double> &decode_msg) {}
-void KeyboardForm::encodeMsg(const std::map<std::string, double> &msg,
-                             std::string &encode_msg) {}
-
-
+void KeyboardForm::decodeMsg(const char *msg, std::map<std::string, double> &decode_msg) {}
+void KeyboardForm::encodeMsg(const std::map<std::string, double> &msg, std::string &encode_msg) {}

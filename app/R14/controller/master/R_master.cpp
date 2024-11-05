@@ -48,6 +48,8 @@ AGVController::AGVController() : BaseController("webots_master") {
     forkP_ptr_ = std::make_shared<WFork>("Forks_Pitching_Motor", "Picking_Component_Solid");  //货叉俯仰
     forkY_ptr_ = std::make_shared<WFork>("Fork_YMove_Motor", "Forks_YMove_Solid");            // Y方向左右平移
 
+    lidar0_move_ptr_ = std::make_shared<WFork>("lidar0_lifting_motor", "lidar0_lifting_solid");  // lidar0 电动移动，暂用货叉类替代控制
+
     //世界信息控制指针
     imu_ptr_ = std::make_shared<WImu>("inertial unit", "gyro", "accelerometer");
     pose_ptr_ = std::make_shared<WPose>("RobotNode");
@@ -70,7 +72,7 @@ AGVController::AGVController() : BaseController("webots_master") {
     whileSpinPushBack((forkP_ptr_));
     whileSpinPushBack((forkY_ptr_));
     whileSpinPushBack((imu_ptr_));
-    // whileSpinPushBack((pose_ptr_));
+    whileSpinPushBack((lidar0_move_ptr_));  // lidar0 电动移动，暂用货叉类替代控制
     whileSpinPushBack((transfer_ptr_));
     whileSpinPushBack((collision_ptr_));
     whileSpinPushBack((liftdoor_ptr_));
@@ -117,6 +119,7 @@ void AGVController::manualSetState(const std::map<std::string, double> &msg) {
     static double forkY_speed = 0;
     static double forkZ_speed = 0;
     static double forkP_speed = 0;
+    static double lidar0_move = 0;  // lidar0 1升举，-1降举，0停止
     if (msg.find("refresh_world") != msg.end()) {
         transfer_ptr_->noticeAll();
     }
@@ -127,12 +130,14 @@ void AGVController::manualSetState(const std::map<std::string, double> &msg) {
         forkY_speed = msg.at("forkY_speed");
         forkZ_speed = msg.at("fork_speed");
         forkP_speed = msg.at("forkP_speed");
+        lidar0_move = msg.at("lidar0_move");
 
         stree_ptr_->stree_run(steer_speed, steer_yaw);
         forkX_ptr_->setVelocityAll(forkX_speed);
         forkY_ptr_->setVelocityAll(forkY_speed);
         forkZ_ptr_->setVelocityAll(forkZ_speed);
         forkP_ptr_->setVelocityAll(forkP_speed);
+        lidar0_move_ptr_->setVelocityAll(lidar0_move);
     }
 }
 
@@ -147,6 +152,8 @@ void AGVController::manualGetState(std::map<std::string, double> &msg) {
     msg["fork_height"] = forkZ_ptr_->getSenosorValue();
     msg["forkP_speed"] = forkP_ptr_->getVelocityValue();
     msg["forkP_height"] = forkP_ptr_->getSenosorValue();
+    msg["lidar0_Height"] = lidar0_move_ptr_->getSenosorValue();
+    msg["lidar0_isInitHeight"] = lidar0_move_ptr_->isOnBoundary() == -1? 1 : 0; // 1: 初始高度(上限位，需要感知时下降)，0: 非初始高度
     msg["real_speed"] = 0;
     // TODO: fork_speed real_speed
 }
@@ -155,9 +162,6 @@ void AGVController::whileSpin() {
     /* 主循环 在super_->step()后*/
     // 发送至svc
     pubSerialSpin();
-
-    // 移动感知激光
-    movePerLidarSpin();
 
     // 发送至shadow
     pubRobotPoseSpin();
@@ -216,6 +220,10 @@ void AGVController::subRMsgCallBack(const char *topic_name, const eCAL::SReceive
         forkZ_ptr_->setVelocity(payload.forkspeedz());
         forkP_ptr_->setVelocity(payload.forkspeedp());
         forkY_ptr_->setVelocity(payload.forkspeedy());
+        if (payload.lidar0_up() || payload.lidar0_down())
+            lidar0_move_ptr_->setVelocity(payload.lidar0_up() ? 1 : -1);
+        else
+            lidar0_move_ptr_->setVelocity(0);
     }
 }
 
@@ -240,6 +248,9 @@ void AGVController::pubSerialSpin() {
     payload.set_vswitchr(vswitchR_ptr_->getValue());
     payload.set_lforksafety(safetyswitchFL_ptr_->getValue());
     payload.set_rforksafety(safetyswitchFR_ptr_->getValue());
+    payload.set_lidar0posez(lidar0_move_ptr_->getSenosorValue());
+    payload.set_is_lidar0orposez(lidar0_move_ptr_->isOnBoundary() == -2 ? true : false);
+
 
     foxglove::Imu *imu = payload.mutable_imu();
     imu->mutable_angular_velocity()->CopyFrom(imu_ptr_->getGyroValue());
@@ -258,35 +269,34 @@ void VNSim::AGVController::pubLiftDoorTag() {
     payload.SerializePartialToArray(buf, payload.ByteSize());
     ecal_ptr_->send("webot/liftdoor", buf, payload.ByteSize());
 }
-void AGVController::onConveyorKeyboardMsg(const std::map<std::string, std::string> &msg){
+void AGVController::onConveyorKeyboardMsg(const std::map<std::string, std::string> &msg) {
     // TODO: add state consideration....
     std::string function = msg.at("function");
     // std::cout << "belt发过来的function: " << function << "，执行的滚筒线:"<< msg.at("belt") << std::endl;
-    if(function == "0")
-        manager_ptr_->addRandomPallet(msg.at("belt"),true,false);
+    if (function == "0")
+        manager_ptr_->addRandomPallet(msg.at("belt"), true, false);
     else
-        manager_ptr_->addRemovePallet(msg.at("belt"),true);
+        manager_ptr_->addRemovePallet(msg.at("belt"), true);
 }
 
-void AGVController::onConveyorStateMsg(const char *topic_name,
-                         const eCAL::SReceiveCallbackData *data){
+void AGVController::onConveyorStateMsg(const char *topic_name, const eCAL::SReceiveCallbackData *data) {
     sim_data_flow::StateInfo payload;
     payload.ParseFromArray(data->buf, data->size);
     int ret = 1;
-    if(payload.state() == 0){
+    if (payload.state() == 0) {
         // belt is full
         // TODO: may be add more topic
         ret = manager_ptr_->addRemovePallet(payload.belt_name(), false, payload.who());
-    }else if(payload.state() == 1){
+    } else if (payload.state() == 1) {
         // belt is empty
         ret = manager_ptr_->addRandomPallet(payload.belt_name(), false, true, payload.who());
     }
-    if(ret == 1){
+    if (ret == 1) {
         // convoyer belt initialization is over
         std::string res_topic = "";
         res_topic = payload.belt_name() + "/CmdInfo";
         LOG_INFO("%s --> try send stop cmd to %s", __FUNCTION__, res_topic.c_str());
-        //printf("%s --> try send stop cmd to %s\n", __FUNCTION__, res_topic.c_str());
+        // printf("%s --> try send stop cmd to %s\n", __FUNCTION__, res_topic.c_str());
         sim_data_flow::CmdInfo res_payload;
         res_payload.set_cmd(0);
         uint8_t buf[res_payload.ByteSize()];

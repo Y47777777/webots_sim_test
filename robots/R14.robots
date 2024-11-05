@@ -68,8 +68,8 @@ DEF RobotNode Robot {
                 }
               ]
               endPoint DEF SteerSolid Solid {
-                translation -1.1946717676060537e-06 -1.9250745978842622e-06 2.3304261547581855e-06
-                rotation 0.00016429964566774832 -0.00015531837237337163 0.9999999744409145 4.656203696200183
+                translation -1.1946717676060543e-06 -1.9250745978842635e-06 2.3304261547581825e-06
+                rotation 0.00016429964566774856 -0.0001553183723733719 0.9999999744409146 4.656203696200187
                 children [
                   Shape {
                     appearance Appearance {
@@ -122,8 +122,8 @@ DEF RobotNode Robot {
                 }
               ]
               endPoint DEF L_D_SteerSolid Solid {
-                translation -6.94301896949081e-05 -8.115787438064053e-05 6.72979467708501e-07
-                rotation 0 0 0.9999999999999999 0.0017008820423063992
+                translation -6.927876439624184e-05 -0.00015579749356112882 6.46761350253655e-07
+                rotation 0 0 1 0.005070766405494278
                 children [
                   Shape {
                     appearance Appearance {
@@ -172,8 +172,8 @@ DEF RobotNode Robot {
                 }
               ]
               endPoint DEF R_D_SteerSolid Solid {
-                translation -8.45401053645077e-05 4.48770747328235e-05 6.071855978007077e-07
-                rotation 0 0 1 2.3166857914700096
+                translation -8.48221025162336e-05 -3.456434782722141e-05 5.849436774951753e-07
+                rotation 0 0 1 2.3195455338302335
                 children [
                   Shape {
                     appearance Appearance {
@@ -261,10 +261,34 @@ DEF RobotNode Robot {
                     endPoint DEF Lifting_Component_Solid Solid {
                       translation 0 0 0.0001261465721614785
                       children [
-                        Mid360 {
-                          translation 0.022 0.034 0.04
-                          rotation 0 -1 0 2.79
-                          name "lidar_0"
+                        SliderJoint {
+                          jointParameters JointParameters {
+                            position 0.15
+                            minStop -0.1
+                            maxStop 0.25
+                          }
+                          device [
+                            Brake {
+                            }
+                            LinearMotor {
+                              name "lidar0_lifting_motor"
+                              minPosition -0.1
+                              maxPosition 0.25
+                            }
+                            PositionSensor {
+                              name "lidar0_lifting_sensor"
+                            }
+                          ]
+                          endPoint DEF lidar0_lifting_solid Solid {
+                            translation 0 0 0.15
+                            children [
+                              Mid360 {
+                                translation 0.022 0.034 0.04000000000000001
+                                rotation 0 -1 0 2.79
+                                name "lidar_0"
+                              }
+                            ]
+                          }
                         }
                         R-Attachments {
                         }
@@ -292,7 +316,7 @@ DEF RobotNode Robot {
                                 }
                               ]
                               endPoint DEF Picking_Component_Solid Solid {
-                                translation 0 0 -0.703
+                                translation -2.541098841762901e-21 0 -0.7029999999999996
                                 rotation 0 1 0 0
                                 children [
                                   DEF Forks_YMove SliderJoint {
