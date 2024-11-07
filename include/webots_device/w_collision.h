@@ -135,12 +135,10 @@ class WCollision : public WBase {
                     // bounding_object->removeSF();
                     physics->removeSF();
                     this_ptr->resetPhysics();
-                    // std::cout << "physic和bounding都有:"<< this_ptr->getField("name")->getSFString()<<std::endl;
-
                 }
             }
             //SloidBox没有boundingObject，有physics，需要单独处理
-            if (bounding_object == nullptr && physics != nullptr) {
+            if (bounding_object == nullptr && physics != nullptr && this_ptr->getParentNode()->getBaseTypeName().compare("Solid") != 0) {
                 Node *physics_node = physics->getSFNode();
 
                 if (physics_node != nullptr) {
@@ -156,10 +154,9 @@ class WCollision : public WBase {
                     // bounding_object->removeSF();
                     physics->removeSF();
                     this_ptr->resetPhysics();
-                    // std::cout << "没有bounding:" << this_ptr->getField("name")->getSFString()<<std::endl;
                 }
             }
-            if(this_ptr->isProto() && physics != nullptr){
+            if(this_ptr->isProto() && physics != nullptr && this_ptr->getParentNode()->getBaseTypeName().compare("Solid") != 0){
                 Node *physics_node = physics->getSFNode();
                 if(physics_node != nullptr){
                     WCollisionNode node(this_ptr, physics, nullptr);
@@ -185,18 +182,22 @@ class WCollision : public WBase {
         for (auto it = m_node_.begin(); it != m_node_.end(); ++it) {
             it->second.still_around_robot_ = false;
             const double *node_tran = it->second.tran_world;
+            // 判断是否发生位移
+            const double *cur_pose = it->second.node_ptr_->getPosition();
+            if (std::abs(cur_pose[0] - node_tran[0]) >= POSI_THRESHOLD ||
+                std::abs(cur_pose[1] - node_tran[1]) >= POSI_THRESHOLD ||
+                std::abs(cur_pose[2] - node_tran[2]) >= POSI_THRESHOLD) {
+                // 世界坐标是否发生变化
+                memcpy(it->second.tran_world, cur_pose,
+                        sizeof(*cur_pose) * 3);
+                // std::cout << "位置发生改变:" << it->second.node_ptr_->getField("name")->getSFString() << std::endl;
+                // std::cout << "节点:"<< it->second.node_ptr_->getField("name")->getSFString() << "位置差:" << std::abs(robot_tran[0] - node_tran[0]) << " " << std::abs(robot_tran[1] - node_tran[1]) << " " << std::abs(robot_tran[2] - node_tran[2]) << std::endl;
+                // std::cout << "solid的位置："<< node_tran[0] << " ," << node_tran[1] << " ," << node_tran[2] << std::endl;
+                // std::cout << "robot的位置："<< robot_tran[0] << " ," << robot_tran[1] << " ," << robot_tran[2] << std::endl;
+            }
+            // 节点在机器人范围内   
             if (std::abs(robot_tran[0] - node_tran[0]) <= BASE_RANGE &&
                 std::abs(robot_tran[1] - node_tran[1]) <= BASE_RANGE) {
-                // 判断是否发生位移
-                const double *cur_pose = it->second.node_ptr_->getPosition();
-                if (std::abs(cur_pose[0] - node_tran[0]) >= POSI_THRESHOLD ||
-                    std::abs(cur_pose[1] - node_tran[1]) >= POSI_THRESHOLD ||
-                    std::abs(cur_pose[2] - node_tran[2]) >= POSI_THRESHOLD) {
-                    // 世界坐标是否发生变化
-                    memcpy(it->second.tran_world, cur_pose,
-                           sizeof(*cur_pose) * 3);
-                }
-
                 // 不在open list 中的添加节点
                 if (m_open_list_.find(it->first) == m_open_list_.end()) {
                     if (it->second.physics_ptr_->getSFNode() == nullptr) {
