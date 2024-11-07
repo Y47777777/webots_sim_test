@@ -21,25 +21,18 @@ namespace VNSim {
 using namespace webots;
 
 typedef struct WCollisionNode {
-    WCollisionNode(Node *node_p = nullptr, Field *physics = nullptr,
-                   Field *bounding = nullptr) {
+    WCollisionNode(Node *node_p = nullptr, Field *physics = nullptr) {
         node_ptr_ = node_p;
         physics_ptr_ = physics;
-        bounding_ptr_ = bounding;
     }
 
     bool still_around_robot_ = false;
-
     std::string physics_str_;
-    std::string bounding_str_;
-
     double tran_world[3] = {0, 0, 0};
     double tran_world_last[3] = {0, 0, 0};
 
     Node *node_ptr_ = nullptr;
     Field *physics_ptr_ = nullptr;
-    Field *bounding_ptr_ = nullptr;
-
     void initWorldPosi(const double *t) {
         for (int i = 0; i < 3; ++i) {
             tran_world[i] = t[i];
@@ -104,10 +97,6 @@ class WCollision : public WBase {
 
         if (is_shadow_) {
             // shadow 删除所有碰撞属性,物理属性
-            Field *bounding_object = this_ptr->getField("boundingObject");
-            if (bounding_object != nullptr) {
-                bounding_object->removeSF();
-            }
             Field *physics = this_ptr->getField("physics");
             if (physics != nullptr) {
                 physics->removeSF();
@@ -115,34 +104,11 @@ class WCollision : public WBase {
             }
         } else {
             Field *physics = this_ptr->getField("physics");
-            Field *bounding_object = this_ptr->getField("boundingObject");
-
-            if (bounding_object != nullptr && physics != nullptr) {
-                Node *bounding_node = bounding_object->getSFNode();
-                Node *physics_node = physics->getSFNode();
-
-                if (bounding_node != nullptr && physics_node != nullptr) {
-                    WCollisionNode node(this_ptr, physics, bounding_object);
-                    node.initWorldPosi(this_ptr->getPosition());
-
-                    node.physics_str_ = physics_node->exportString();
-                    node.bounding_str_ = bounding_node->exportString();
-
-                    // 记录当前节点物理属性
-                    m_node_.insert(std::make_pair(idx_, node));
-                    idx_++;
-
-                    // bounding_object->removeSF();
-                    physics->removeSF();
-                    this_ptr->resetPhysics();
-                }
-            }
-            //SloidBox没有boundingObject，有physics，需要单独处理
-            if (bounding_object == nullptr && physics != nullptr && this_ptr->getParentNode()->getBaseTypeName().compare("Solid") != 0) {
+            if (physics != nullptr) {
                 Node *physics_node = physics->getSFNode();
 
                 if (physics_node != nullptr) {
-                    WCollisionNode node(this_ptr, physics, nullptr);
+                    WCollisionNode node(this_ptr, physics);
                     node.initWorldPosi(this_ptr->getPosition());
 
                     node.physics_str_ = physics_node->exportString();
@@ -152,21 +118,6 @@ class WCollision : public WBase {
                     idx_++;
 
                     // bounding_object->removeSF();
-                    physics->removeSF();
-                    this_ptr->resetPhysics();
-                }
-            }
-            if(this_ptr->isProto() && physics != nullptr && this_ptr->getParentNode()->getBaseTypeName().compare("Solid") != 0){
-                Node *physics_node = physics->getSFNode();
-                if(physics_node != nullptr){
-                    WCollisionNode node(this_ptr, physics, nullptr);
-                    node.initWorldPosi(this_ptr->getPosition());
-                    // 获得物理属性
-                    node.physics_str_ = physics_node->exportString();
-                    // 记录当前节点物理属性
-                    m_node_.insert(std::make_pair(idx_, node));
-                    idx_++;
-                    // 物理属性删除
                     physics->removeSF();
                     this_ptr->resetPhysics();
                 }
