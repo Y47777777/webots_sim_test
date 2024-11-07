@@ -97,6 +97,10 @@ class WCollision : public WBase {
 
         if (is_shadow_) {
             // shadow 删除所有碰撞属性,物理属性
+            Field *bounding_object = this_ptr->getField("boundingObject");
+            if (bounding_object != nullptr) {
+                bounding_object->removeSF();
+            }
             Field *physics = this_ptr->getField("physics");
             if (physics != nullptr) {
                 physics->removeSF();
@@ -139,21 +143,21 @@ class WCollision : public WBase {
                 std::abs(cur_pose[1] - node_tran[1]) >= POSI_THRESHOLD ||
                 std::abs(cur_pose[2] - node_tran[2]) >= POSI_THRESHOLD) {
                 // 世界坐标是否发生变化
-                memcpy(it->second.tran_world, cur_pose,
-                        sizeof(*cur_pose) * 3);
+                memcpy(it->second.tran_world, cur_pose, sizeof(*cur_pose) * 3);
                 // std::cout << "位置发生改变:" << it->second.node_ptr_->getField("name")->getSFString() << std::endl;
-                // std::cout << "节点:"<< it->second.node_ptr_->getField("name")->getSFString() << "位置差:" << std::abs(robot_tran[0] - node_tran[0]) << " " << std::abs(robot_tran[1] - node_tran[1]) << " " << std::abs(robot_tran[2] - node_tran[2]) << std::endl;
-                // std::cout << "solid的位置："<< node_tran[0] << " ," << node_tran[1] << " ," << node_tran[2] << std::endl;
-                // std::cout << "robot的位置："<< robot_tran[0] << " ," << robot_tran[1] << " ," << robot_tran[2] << std::endl;
+                // std::cout << "节点:"<< it->second.node_ptr_->getField("name")->getSFString() << "位置差:" <<
+                // std::abs(robot_tran[0] - node_tran[0]) << " " << std::abs(robot_tran[1] - node_tran[1]) << " " <<
+                // std::abs(robot_tran[2] - node_tran[2]) << std::endl; std::cout << "solid的位置："<< node_tran[0] << "
+                // ," << node_tran[1] << " ," << node_tran[2] << std::endl; std::cout << "robot的位置："<< robot_tran[0]
+                // << " ," << robot_tran[1] << " ," << robot_tran[2] << std::endl;
             }
-            // 节点在机器人范围内   
+            // 节点在机器人范围内
             if (std::abs(robot_tran[0] - node_tran[0]) <= BASE_RANGE &&
                 std::abs(robot_tran[1] - node_tran[1]) <= BASE_RANGE) {
                 // 不在open list 中的添加节点
                 if (m_open_list_.find(it->first) == m_open_list_.end()) {
                     if (it->second.physics_ptr_->getSFNode() == nullptr) {
-                        it->second.physics_ptr_->importSFNodeFromString(
-                            it->second.physics_str_);
+                        it->second.physics_ptr_->importSFNodeFromString(it->second.physics_str_);
 
                         LOG_INFO("add idx %d", it->first);
                     }
