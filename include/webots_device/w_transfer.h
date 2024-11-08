@@ -129,7 +129,7 @@ class WTransfer : public WBase {
 
     void spin() {
         const float POSI_THRESHOLD = 0.00001;
-        const float BASE_RANGE = 3;
+        const float BASE_RANGE = 10;
         if (set_flag) {
             // 写入(shadow)
             for (auto it = m_updated_trans_.begin(); it != m_updated_trans_.end(); ++it) {
@@ -145,10 +145,11 @@ class WTransfer : public WBase {
             const double *robot_tran = robot_->getPosition();
             for (auto it = m_tanfer_.begin(); it != m_tanfer_.end(); ++it) {
                 auto last_posi = it->second.tran_world;
+                auto curr_posi = it->second.node_ptr_->getPosition();
                 // 以下判断逻辑只为优化自动任务时master和shadow间的transform同步
                 // 手动移动需手动同步或者手动使用refreshworld按钮
-                if (send_all || (std::abs(robot_tran[0] - last_posi[0]) <= BASE_RANGE &&
-                                 std::abs(robot_tran[1] - last_posi[1]) <= BASE_RANGE)) {  // 在车体周围
+                if (send_all || (std::abs(robot_tran[0] - curr_posi[0]) <= BASE_RANGE &&
+                                 std::abs(robot_tran[1] - curr_posi[1]) <= BASE_RANGE)) {  // 在车体周围
                     auto curr_posi = it->second.node_ptr_->getPosition();
                     if (send_all || it->second.may_need_check_local ||
                         std::abs(curr_posi[0] - last_posi[0]) >= POSI_THRESHOLD ||
