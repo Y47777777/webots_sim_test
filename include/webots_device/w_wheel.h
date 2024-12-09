@@ -51,7 +51,7 @@ class WWheel : public WBase {
         }
 
         // creat yaw node
-        Node *yaw_node = super_->getFromDef(yaw_node_name);
+        Node *yaw_node = super_->getFromDef("RobotNode");
         if (yaw_node != nullptr) {
             yaw_rotation_ptr_ = yaw_node->getField("rotation");
 
